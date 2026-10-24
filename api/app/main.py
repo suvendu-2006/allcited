@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from typing import Optional
 
 import httpx
-from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -16,6 +16,13 @@ from app.library import (
     SaveToLibraryRequest,
     ask_my_library,
     get_library_store,
+)
+from app.payments import (
+    CheckoutRequest,
+    CheckoutResponse,
+    create_checkout_session,
+    get_subscription_store,
+    handle_stripe_webhook,
 )
 from app.pipeline.answer import stream_answer_pipeline
 from app.security.pii import setup_pii_logging
@@ -148,6 +155,43 @@ async def query_user_library(
         citations=citations,
         sources_count=len(citations),
     )
+
+
+@app.post("/v1/stripe/checkout", response_model=CheckoutResponse)
+async def stripe_checkout(
+    request: CheckoutRequest,
+    user_id: str = Depends(get_current_user),
+):
+    """
+    Create a Stripe Checkout Session for upgrading to Pro tier.
+    Requires authenticated Clerk user.
+    """
+    return await create_checkout_session(
+        user_id=user_id,
+        price_id=request.price_id,
+        success_url=request.success_url,
+        cancel_url=request.cancel_url,
+    )
+
+
+@app.post("/v1/stripe/webhook")
+async def stripe_webhook(request: Request):
+    """
+    Handle incoming Stripe webhook events with cryptographic signature verification
+    and idempotent replay protection.
+    """
+    payload = await request.body()
+    sig_header = request.headers.get("Stripe-Signature")
+    return await handle_stripe_webhook(payload=payload, sig_header=sig_header)
+
+
+@app.get("/v1/stripe/subscription")
+async def get_my_subscription(user_id: str = Depends(get_current_user)):
+    """
+    Get current subscription plan tier for the authenticated user.
+    """
+    store = get_subscription_store()
+    return store.get_subscription(user_id)
 
 
 @app.get("/v1/models")

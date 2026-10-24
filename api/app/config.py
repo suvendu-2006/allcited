@@ -48,6 +48,9 @@ class Settings(BaseSettings):
     # Payments (Stripe)
     STRIPE_SECRET_KEY: Optional[str] = Field(default=None, description="Stripe test secret key")
     STRIPE_WEBHOOK_SECRET: Optional[str] = Field(default=None, description="Stripe webhook signing secret")
+    STRIPE_PRICE_ID_PRO: str = Field(default="price_pro_test_123", description="Stripe price ID for Pro plan")
+    STRIPE_SUCCESS_URL: str = Field(default="http://localhost:3000/pricing?success=true", description="Checkout success URL")
+    STRIPE_CANCEL_URL: str = Field(default="http://localhost:3000/pricing?canceled=true", description="Checkout cancel URL")
 
     # Channels (Telegram)
     TELEGRAM_BOT_TOKEN: Optional[str] = Field(default=None, description="Telegram bot API token")
