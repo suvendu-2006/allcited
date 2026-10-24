@@ -159,7 +159,7 @@
   Do: `trace.py` JSONL per query (stages, candidates, scores, latencies, tokens, provider); `/v1/trace/{id}`; UI "Why this answer?" viewer.
   Done when: any answered question's full decision path is viewable in the UI.
 
-- [ ] **STEP 35 — Feedback loop**
+- [x] **STEP 35 — Feedback loop**
   Do: `POST /v1/feedback` → Supabase; 👍/👎 buttons on every answer.
   Done when: a downvote with note lands in the table and appears in the eval-candidates list.
 
