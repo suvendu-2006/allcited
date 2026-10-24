@@ -147,13 +147,29 @@ def build_reference_map(chunks: List[Chunk]) -> ReferenceMap:
         # Check chunk text for references
         body_refs = extract_references(chunk.text)
         for bref in body_refs:
-            # If the chunk heading itself defines this ref, it is a definition chunk
-            if bref.ref_id in [h.ref_id for h in heading_refs]:
+            # Check definition: in heading path or appears as definition heading/title in text
+            is_def = (
+                bref.ref_id in [h.ref_id for h in heading_refs]
+                or bool(
+                    re.search(
+                        rf"(?:^|\n|\.\s+)\s*{re.escape(bref.raw_text)}\b(?:\s*[:\-\—]|\s+[A-Z])",
+                        chunk.text,
+                        re.IGNORECASE,
+                    )
+                )
+            )
+            # Check explicit mention context
+            is_mention = bool(
+                re.search(
+                    rf"(?:as per|pursuant to|defined in|under|see|in accordance with)\s+{re.escape(bref.raw_text)}\b",
+                    chunk.text,
+                    re.IGNORECASE,
+                )
+            )
+
+            if is_def:
                 ref_map.add_definition(bref.ref_id, chunk.id)
-            # If the text explicitly defines it at sentence start (e.g. "Rule 63.7.4:")
-            elif re.search(rf"\b{re.escape(bref.raw_text)}\b\s*[:\-\—]", chunk.text, re.IGNORECASE):
-                ref_map.add_definition(bref.ref_id, chunk.id)
-            else:
+            if is_mention or not is_def:
                 ref_map.add_mention(bref.ref_id, chunk.id)
 
     return ref_map

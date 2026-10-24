@@ -94,16 +94,15 @@ def create_handbook_pdf(output_path: str):
                 11,
                 False,
             ),
-            ("Rule 63.7.4 Leave Encashment on Resignation", 12, True),
+            ("3.3 Exit Handover Protocols", 13, True),
             (
-                "Upon voluntary resignation or formal separation, accrued annual leave days up to a cap of 30 working days "
-                "shall be encashed at the employee base salary daily rate, computed as monthly basic pay divided by 22 working days. "
-                "Sick leave, compassionate leave, and floating holidays are strictly non-encashable and non-transferable.",
+                "All corporate computing assets, access cards, and confidential proprietary material must be surrendered "
+                "to the department supervisor on the final working day.",
                 11,
                 False,
             ),
         ],
-        # Page 4: Technical & Equipment Guidelines
+        # Page 4: Technical & Equipment Guidelines + Statutory Rules
         [
             ("4. Information Technology and Security", 16, True),
             (
@@ -123,6 +122,15 @@ def create_handbook_pdf(output_path: str):
             (
                 "Employees authorized for remote work must maintain a private, secure workspace. Public unsecured Wi-Fi "
                 "connections without VPN encapsulation are strictly prohibited.",
+                11,
+                False,
+            ),
+            ("5. Statutory Schedules and Specialized Rules", 16, True),
+            ("Rule 63.7.4 Leave Encashment on Resignation", 12, True),
+            (
+                "Upon voluntary resignation or formal separation, accrued annual leave days up to a cap of 30 working days "
+                "shall be encashed at the employee base salary daily rate, computed as monthly basic pay divided by 22 working days. "
+                "Sick leave, compassionate leave, and floating holidays are strictly non-encashable and non-transferable.",
                 11,
                 False,
             ),
