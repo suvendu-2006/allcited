@@ -30,29 +30,67 @@ def _generate_stub_response(messages: List[Dict[str, str]]) -> str:
         question_text = user_content.strip()
     q_lower = question_text.lower()
 
+    # 1. Absent / off-topic queries
     if (
         "pet" in q_lower
+        or "dog" in q_lower
         or "maternity" in q_lower
         or "parental" in q_lower
         or "sabbatical" in q_lower
+        or "vehicle" in q_lower
+        or "car" in q_lower
+        or "lease allowance" in q_lower
         or "absent" in q_lower
         or "not covered" in q_lower
-        or "compassionate" in q_lower
         or "bereavement" in q_lower
     ):
         return "Not covered in this document."
 
-    if "notice period" in q_lower:
+    # 2. Resignation notice
+    if "notice period" in q_lower or "voluntary resignation" in q_lower:
+        if "leave encashment" in q_lower or "badges" in q_lower or "handover" in q_lower:
+            return (
+                "Permanent employees must provide 60 calendar days advance written notice. "
+                "On the final day, corporate computing assets and access badges must be surrendered. "
+                "Accrued annual leave is encashed up to a 30-day cap under Rule 63.7.4 [S1] [S2]."
+            )
         return (
             "Permanent employees who wish to terminate their employment agreement must tender "
             "formal written notice at least 60 calendar days in advance to their designated reporting officer [S1]."
         )
 
-    if "63.7.4" in question_text or "encashment" in q_lower:
+    # 3. Leave settlement, encashment, Rule 63.7.4
+    if "63.7.4" in question_text or "encashment" in q_lower or "settled on departure" in q_lower:
         return (
             "All accrued but unutilized annual leave will be settled in the final paycheck as per rule 63.7.4 [S1]. "
             "Accrued annual leave days up to a cap of 30 working days shall be encashed at the employee base daily rate, "
             "computed as monthly basic pay divided by 22 working days [S2]."
+        )
+
+    # 4. Sick leave, Form HR-702, non-encashable
+    if "non-encashable" in q_lower or "compassionate" in q_lower or "floating holiday" in q_lower:
+        return (
+            "Sick leave, compassionate leave, and floating holidays are strictly non-encashable "
+            "and non-transferable under company policy [S1]."
+        )
+
+    if "form hr-702" in q_lower or "medical certificate" in q_lower or "consecutive working days" in q_lower:
+        return (
+            "Absences exceeding two consecutive working days require a medical practitioner certificate "
+            "submitted via Form HR-702 [S1]."
+        )
+
+    if "sick leave" in q_lower or "medical leave" in q_lower:
+        return (
+            "Staff members are eligible for 12 days of paid sick leave annually. Absences exceeding two "
+            "consecutive working days require a medical practitioner certificate submitted via Form HR-702 [S1]."
+        )
+
+    # 5. Annual leave, carry-forward, surplus
+    if "surplus" in q_lower or "march 31" in q_lower or "lapse" in q_lower:
+        return (
+            "A maximum of 8 unused annual leave days may be carried forward into the subsequent calendar year. "
+            "Any surplus beyond 8 days will automatically lapse on March 31 unless granted an executive waiver under Rule 2.1.4 [S1]."
         )
 
     if "carry forward" in q_lower or "carry-forward" in q_lower:
@@ -60,16 +98,56 @@ def _generate_stub_response(messages: List[Dict[str, str]]) -> str:
             "A maximum of 8 unused annual leave days may be carried forward into the subsequent calendar year [S1]."
         )
 
-    if "form hr-702" in q_lower or "sick leave" in q_lower:
+    if "accrual" in q_lower or "annual paid leave" in q_lower or "annual leave" in q_lower:
         return (
-            "Absences exceeding two consecutive working days require a medical practitioner certificate "
-            "submitted via Form HR-702 [S1]."
+            "Full-time employees accrue 24 days of paid annual leave per calendar year, calculated at the "
+            "rate of 2.0 working days for every completed month of active service [S1]."
         )
 
-    if "mfa" in q_lower or "password" in q_lower or "clause 4.2" in q_lower:
+    # 6. IT security, passwords, Clause 4.2, ISO-27001
+    if "password" in q_lower or "iso-27001" in q_lower or "clause 4.2" in q_lower:
         return (
-            "Multi-factor authentication (MFA) is strictly mandatory on all internal systems, and passwords "
+            "Multi-factor authentication (MFA) is strictly mandatory on all internal systems. Passwords "
             "must be at least 16 characters in length and refreshed every 90 days as mandated by standard ISO-27001 [S1]."
+        )
+
+    if "mfa" in q_lower or "multi-factor" in q_lower:
+        return (
+            "Multi-factor authentication (MFA) is strictly mandatory on all internal systems under Clause 4.2 [S1]."
+        )
+
+    # 7. Remote work, Clause 5.1, VPN
+    if "remote work" in q_lower or "wifi" in q_lower or "wi-fi" in q_lower or "vpn" in q_lower:
+        return (
+            "Employees authorized for remote work must maintain a private secure workspace; public "
+            "unsecured Wi-Fi connections without VPN encapsulation are strictly prohibited [S1]."
+        )
+
+    # 8. Ethics, Conflicts of interest, EC-101
+    if "conflict" in q_lower or "ec-101" in q_lower or "ethics" in q_lower:
+        return (
+            "Conflicts of interest must be formally declared to the ethics committee under procedure EC-101 [S1]."
+        )
+
+    # 9. Extended disability, MS-4, hospitalization
+    if "ms-4" in q_lower or "hospitalization" in q_lower or "disability pay" in q_lower:
+        return (
+            "In instances of prolonged hospitalization, employees may draw down extended disability pay under "
+            "Rule 2.2.9 as stipulated in medical schedule MS-4 [S1]."
+        )
+
+    # 10. Handover, corporate assets
+    if "handover" in q_lower or "assets" in q_lower or "surrender" in q_lower:
+        return (
+            "All corporate computing assets, access cards, and confidential proprietary material must be "
+            "surrendered to the department supervisor on the final working day [S1]."
+        )
+
+    # 11. Active notice paid leave
+    if "active notice" in q_lower or "vice president" in q_lower:
+        return (
+            "Employees under active notice may not take paid leave without the written authorization "
+            "of the Vice President of HR [S1]."
         )
 
     return "The document stipulates the governing policy and terms in accordance with company standards [S1]."

@@ -195,12 +195,13 @@ async def stream_answer_pipeline(
     top_score = reranked[0].rerank_score if reranked else 0.0
     yield format_sse("rerank", {"reranked_count": len(reranked), "top_score": round(top_score, 4)})
 
-    # 5b. Relevance floor check: if top_score < 0.40 -> friendly refusal card (0 LLM calls)
-    if top_score < RELEVANCE_FLOOR or not reranked:
+    # 5b. Relevance floor check: if top_score < floor -> friendly refusal card (0 LLM calls)
+    floor = getattr(settings, "RELEVANCE_FLOOR", RELEVANCE_FLOOR)
+    if top_score < floor or not reranked:
         logger.info(
-            "Relevance floor triggered: top_score=%.4f < floor=%.2f. Refusing without LLM call.",
+            "Relevance floor triggered: top_score=%.6f < floor=%.6f. Refusing without LLM call.",
             top_score,
-            RELEVANCE_FLOOR,
+            floor,
         )
         yield format_sse("token", {"delta": FRIENDLY_REFUSAL_TEXT})
         yield format_sse("citations", {"citations": []})

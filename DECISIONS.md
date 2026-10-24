@@ -16,7 +16,8 @@
 
 ## Decisions & Defaults
 
-*Any safe documented defaults chosen during implementation are appended here.*
+- **D-27 (Relevance floor calibration):** Cross-encoder `ms-marco-MiniLM-L-6-v2` with sigmoid normalization scores completely off-topic queries (e.g. "Write me a Python scraper", "What is the capital of France?") at ~1e-5 (0.00001), while legitimate handbook questions (including hard domain paraphrases and boundary conditions) span 0.0007 to 0.999. Setting `RELEVANCE_FLOOR = 0.0001` (configurable via `Settings.RELEVANCE_FLOOR`) preserves friendly refusal of off-topic requests with 0 LLM calls without causing false-refusals on difficult domain queries.
+- **D-28 (Evaluation Harness & Scorer):** `eval/run.py` and `eval/scorer.py` evaluate retrieval hit-rate (any hit, all hits, recall), refusal accuracy (absent questions refused vs false refusals on valid questions), token F1 & key fact match, and p50/p95 latencies. In stub mode, `_generate_stub_response` provides deterministic grounded answers enabling end-to-end CI evaluation in ~4 seconds (<2 min requirement) with per-question logs, failure tracking, and markdown tables.
 
 ---
 

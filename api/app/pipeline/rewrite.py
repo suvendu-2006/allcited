@@ -103,7 +103,7 @@ async def rewrite_query(
             reason=skip_reason,
         )
 
-    if not allow_llm:
+    if not allow_llm or (provider and provider.provider_type == "stub"):
         subs = heuristic_rewrite(query)
         return RewriteResult(
             original_query=query,

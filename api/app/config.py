@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     # Pipeline & Tuning settings (Plan §9)
     CACHE_THRESHOLD: float = Field(default=0.96, ge=0.0, le=1.0, description="Cosine similarity threshold for semantic cache")
     RERANKER_ENABLED: bool = Field(default=True, description="Enable cross-encoder re-ranker stage")
+    RELEVANCE_FLOOR: float = Field(default=0.0001, ge=0.0, le=1.0, description="Cross-encoder relevance floor for early refusal")
     GUARDS: str = Field(default="on", description="Prompt injection & PII guards: on or off")
     GRAPH_MAX_EXPANSION: int = Field(default=4, ge=1, le=10, description="Max neighbor facts in GraphRAG-lite")
     OCR_LANGS: str = Field(default="eng+hin", description="Tesseract OCR language list")

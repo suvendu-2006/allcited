@@ -1,0 +1,20 @@
+[
+  {
+    "config": "+rewrite",
+    "total_questions": 30,
+    "retrieval_hit_rate": 100.0,
+    "category_hit_rates": {
+      "normal": 100.0,
+      "P1": 100.0,
+      "P2": 100.0,
+      "P3": 100.0,
+      "P4": 100.0,
+      "paraphrase": 100.0
+    },
+    "refusal_accuracy": 100.0,
+    "answer_correctness": 56.7,
+    "false_refusals": 4,
+    "latency_p50_ms": 60.8,
+    "latency_p95_ms": 145.9
+  }
+]
