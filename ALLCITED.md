@@ -469,7 +469,7 @@ Agent parallelism rule: tracks 4a/4b/4c may run concurrently **only after** orde
   Do: Free/Pro products, `/v1/stripe/checkout`, webhook with signature verification + idempotent handling → `subscriptions`.
   Done when: test checkout completes; webhook updates plan; replayed webhook event does not double-apply.
 
-- [ ] **STEP 44 — Plan gates + pricing page**
+- [x] **STEP 44 — Plan gates + pricing page**
   Do: plan middleware (Precision mode, 100 MB, unlimited saves gated server-side); pricing page + upgrade flow; `/v1/stats` counters.
   Done when: free user hitting a Pro feature gets `plan_limit_reached`; upgrading flips the gate live.
 
