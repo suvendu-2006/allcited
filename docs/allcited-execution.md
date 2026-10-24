@@ -27,7 +27,7 @@
 
 ## PHASE 1 — CORE RETRIEVAL
 
-- [ ] **STEP 05 — Parsers: PDF + MD/TXT**
+- [x] **STEP 05 — Parsers: PDF + MD/TXT**
   Do: `pipeline/parsers/pdf.py` (PyMuPDF, `\f` page markers, font/heading heuristics → section tree) and `md_txt.py`; shared contract `{text, section_path[], page?, source}`. Drop a test handbook PDF into `eval/fixtures/`.
   Done when: parser output for the fixture looks correct on 10 sampled blocks (headings detected, no garbage chars).
 
