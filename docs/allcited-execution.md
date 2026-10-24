@@ -83,7 +83,7 @@
 
 ## PHASE 3 — EVAL v1
 
-- [ ] **STEP 18 — Question set**
+- [x] **STEP 18 — Question set**
   Do: `eval/questions.json` — the 30 base questions with types (normal/P1/P2/P3/P4/paraphrase/absent), expected answers + chunk ids.
   Done when: schema validates; each trap type has ≥4 questions; absent set = 4.
 
