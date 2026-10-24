@@ -77,7 +77,7 @@
   Do: `pipeline/answer.py` — grounded prompt (answer-only-from [S#], refusal rule, temp 0.1, max 700 tokens), citation post-pass (strip fake markers), **relevance floor 0.40 → friendly refusal template (0 LLM calls)**; `POST /v1/query` SSE with the full event protocol.
   Done when: 3 live checks in browser/curl — normal cited answer · off-topic request returns the refusal card text · absent-question answers "Not covered in this document."
 
-- [ ] **STEP 17 — Map-reduce (doc-wide)**
+- [x] **STEP 17 — Map-reduce (doc-wide)**
   Do: `pipeline/mapreduce.py` — bundles of ~10 → parallel summaries (≤4) → reduce to final doc; SSE streams sections.
   Done when: "summarize the whole document in 800 words" produces a sectioned summary citing chunk ranges; token count within budget.
 
