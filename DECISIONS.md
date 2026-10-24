@@ -29,4 +29,7 @@
 
 ## Verification Failures:
 
-*(None)*
+- **Check A9 (CI green badge):**
+  - *Observed:* GitHub Actions `Allcited CI` workflow failed on step `Build Next.js` with `Can't resolve '@/lib/sse'` and `Can't resolve '@/lib/utils'`. Root `.gitignore` contained unanchored `lib/` which ignored `web/src/lib/` (`sse.ts`, `utils.ts`), preventing them from being committed and pushed.
+  - *Expected:* `web/src/lib/` tracked in git, `next build` passes in CI, and GitHub Actions badge is green on main.
+  - *Fix:* Un-ignore `web/src/lib/` in `.gitignore` (anchor `/lib/` or add `!web/src/lib/`), commit `web/src/lib/` and push to trigger CI run.
