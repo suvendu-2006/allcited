@@ -61,7 +61,7 @@
   Do: `pipeline/router.py` — keyword rules pass 1 (summarize/compare/list-all/report → DOC_WIDE), tiny-LLM pass 2 only when ambiguous; logs the label.
   Done when: unit tests: 6 queries labeled correctly, including one tricky case ("compare clause 4.2 and 5.1" = LOOKUP, not DOC_WIDE).
 
-- [ ] **STEP 13 — Query rewriting (P4 fix)**
+- [x] **STEP 13 — Query rewriting (P4 fix)**
   Do: `pipeline/rewrite.py` — vague query → 2–3 concrete sub-queries; skipped when explicit identifiers present.
   Done when: "what about leaves after resignation?" expands to ≥2 targeted sub-queries; "rule 63.7.4" skips rewriting (logged).
 

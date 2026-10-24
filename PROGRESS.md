@@ -1,7 +1,7 @@
 # Allcited — Build Progress
 
 ## Current Status
-- **Current Step:** STEP 13 — Query rewriting (P4 fix)
+- **Current Step:** STEP 14 — Re-ranker
 - **Completed Steps:**
   - [x] STEP 01 — Repo + monorepo skeleton (clean git status, pushed to GitHub)
   - [x] STEP 02 — Python environment + API skeleton (uvicorn serves /v1/health = 200, ruff clean, pytest green)
@@ -15,9 +15,11 @@
   - [x] STEP 10 — Sessions + ingest endpoint (POST /v1/ingest multipart upload verified with curl, 8-session LRU cap, 5 eyeball questions green)
   - [x] STEP 11 — The one brain client (unified OpenAI-compatible async client with 3x retry on 429/5xx, identical code path verified across Groq, BYOK, and Ollama)
   - [x] STEP 12 — Router (two-pass routing: rule pass + LLM pass, tricky clause comparison routed to LOOKUP verified)
+  - [x] STEP 13 — Query rewriting (P4 fix) (expands vague queries into 2-3 targeted sub-queries, skips rewriting on explicit identifiers to guard keyword precision)
 - **Active Blockers:** None
 - **Session Notes:**
-  - Router classifies queries into LOOKUP vs DOC_WIDE, ensuring targeted comparisons don't trigger wasteful map-reduce.
+  - Query rewriting decomposes conversational queries while preserving exact codes (e.g. rule 63.7.4).
+
 
 
 
