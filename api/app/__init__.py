@@ -1,0 +1,1 @@
+"""Allcited API application package."""
