@@ -105,7 +105,7 @@
   Do: `Upload.tsx` — drag-drop, client mime/size guard, progress states from ingest events, chunk count toast.
   Done when: upload → "✅ 214 chunks ready" → immediate questioning, no page reload.
 
-- [ ] **STEP 23 — Citations + source panel**
+- [x] **STEP 23 — Citations + source panel**
   Do: `CitationChip.tsx` (hover preview) + `SourcePanel.tsx` (chunks, page/section, two-hop additions labeled "added because…").
   Done when: clicking [S1] jumps to the exact chunk with highlight; two-hop additions visibly distinguished.
 
