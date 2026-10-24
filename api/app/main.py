@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 
+import httpx
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -50,6 +51,45 @@ async def health():
         "version": "0.1.0",
         "mode": settings.MODE,
         "environment": settings.ENVIRONMENT,
+    }
+
+
+@app.get("/v1/models")
+async def list_models():
+    """
+    List available provider modes (Default cloud, BYOK, and Ollama).
+    Dynamically probes local Ollama to report local availability.
+    """
+    ollama_detected = False
+    try:
+        async with httpx.AsyncClient(timeout=0.6) as client:
+            resp = await client.get(f"{settings.OLLAMA_BASE_URL.rstrip('/')}/api/tags")
+            if resp.status_code == 200:
+                ollama_detected = True
+    except Exception:
+        ollama_detected = False
+
+    return {
+        "modes": [
+            {
+                "provider": "groq",
+                "name": "Groq Cloud (Default)",
+                "default_model": settings.DEFAULT_LLM_MODEL,
+                "configured": bool(settings.GROQ_API_KEY),
+            },
+            {
+                "provider": "byok",
+                "name": "Bring Your Own Key (Browser Only)",
+                "description": "User API keys supplied via client headers, never stored server-side",
+                "supported": True,
+            },
+            {
+                "provider": "ollama",
+                "name": "Local Ollama (Private Edition)",
+                "base_url": settings.OLLAMA_BASE_URL,
+                "detected": ollama_detected,
+            },
+        ]
     }
 
 
