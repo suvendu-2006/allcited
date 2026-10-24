@@ -351,6 +351,28 @@ def create_sample_deck(output_path: str):
         table.cell(r_idx, 1).text = rev
         table.cell(r_idx, 2).text = gr
 
+    # Slide 4: Leave Entitlements
+    slide4 = prs.slides.add_slide(bullet_slide_layout)
+    slide4.shapes.title.text = "Leave and Time-Off Entitlements"
+    tf4 = slide4.shapes.placeholders[1].text_frame
+    tf4.text = "Full-time employees accrue 24 days of paid annual leave per calendar year (2.0 days/month)."
+    p4_1 = tf4.add_paragraph()
+    p4_1.text = "Rule 2.1.4 Carry-Forward Restrictions: Maximum 8 unused annual leave days carried forward."
+    p4_2 = tf4.add_paragraph()
+    p4_2.text = "Staff members receive 12 days of paid sick leave annually. Absences over 2 days require Form HR-702."
+    slide4.notes_slide.notes_text_frame.text = "Accrual rate 2.0 working days per month of service."
+
+    # Slide 5: Separation, Resignation and Exit Terms
+    slide5 = prs.slides.add_slide(bullet_slide_layout)
+    slide5.shapes.title.text = "Separation, Resignation and Exit Terms"
+    tf5 = slide5.shapes.placeholders[1].text_frame
+    tf5.text = "Permanent employees must tender formal written notice at least 60 calendar days in advance."
+    p5_1 = tf5.add_paragraph()
+    p5_1.text = "Rule 63.7.4 Leave Encashment on Resignation: Accrued annual leave capped at 30 working days encashed."
+    p5_2 = tf5.add_paragraph()
+    p5_2.text = "All computing assets, access cards, and proprietary material surrendered on final day."
+    slide5.notes_slide.notes_text_frame.text = "Rule 63.7.4 computed as monthly basic pay divided by 22 working days."
+
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
     prs.save(output_path)
     print(f"Created {output_path}")

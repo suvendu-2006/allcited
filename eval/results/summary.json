@@ -20,7 +20,7 @@
     "answer_correctness": 60.9,
     "false_refusals": 3,
     "latency_p50_ms": 0.7,
-    "latency_p95_ms": 0.9
+    "latency_p95_ms": 0.8
   },
   {
     "config": "vector",
@@ -43,7 +43,7 @@
     "answer_correctness": 60.9,
     "false_refusals": 3,
     "latency_p50_ms": 8.7,
-    "latency_p95_ms": 13.6
+    "latency_p95_ms": 14.0
   },
   {
     "config": "hybrid",
@@ -66,7 +66,7 @@
     "answer_correctness": 60.9,
     "false_refusals": 3,
     "latency_p50_ms": 0.8,
-    "latency_p95_ms": 1.2
+    "latency_p95_ms": 0.9
   },
   {
     "config": "+rerank",
@@ -88,8 +88,8 @@
     "refusal_accuracy": 100.0,
     "answer_correctness": 63.0,
     "false_refusals": 4,
-    "latency_p50_ms": 37.0,
-    "latency_p95_ms": 109.6
+    "latency_p50_ms": 41.9,
+    "latency_p95_ms": 67.6
   },
   {
     "config": "+twohop",
@@ -111,8 +111,8 @@
     "refusal_accuracy": 100.0,
     "answer_correctness": 63.0,
     "false_refusals": 4,
-    "latency_p50_ms": 38.2,
-    "latency_p95_ms": 44.0
+    "latency_p50_ms": 40.5,
+    "latency_p95_ms": 50.2
   },
   {
     "config": "+rewrite",
@@ -134,8 +134,8 @@
     "refusal_accuracy": 100.0,
     "answer_correctness": 63.0,
     "false_refusals": 4,
-    "latency_p50_ms": 47.4,
-    "latency_p95_ms": 65.0
+    "latency_p50_ms": 47.7,
+    "latency_p95_ms": 56.2
   },
   {
     "config": "+hyde",
@@ -157,8 +157,8 @@
     "refusal_accuracy": 100.0,
     "answer_correctness": 63.0,
     "false_refusals": 4,
-    "latency_p50_ms": 51.2,
-    "latency_p95_ms": 69.9
+    "latency_p50_ms": 57.2,
+    "latency_p95_ms": 80.0
   },
   {
     "config": "+headers",
@@ -180,8 +180,8 @@
     "refusal_accuracy": 100.0,
     "answer_correctness": 63.0,
     "false_refusals": 4,
-    "latency_p50_ms": 39.1,
-    "latency_p95_ms": 44.7
+    "latency_p50_ms": 41.3,
+    "latency_p95_ms": 45.6
   },
   {
     "config": "+agentic",
@@ -203,8 +203,8 @@
     "refusal_accuracy": 100.0,
     "answer_correctness": 63.0,
     "false_refusals": 4,
-    "latency_p50_ms": 39.0,
-    "latency_p95_ms": 48.8
+    "latency_p50_ms": 40.8,
+    "latency_p95_ms": 45.2
   },
   {
     "config": "+graph",
@@ -226,8 +226,8 @@
     "refusal_accuracy": 100.0,
     "answer_correctness": 63.0,
     "false_refusals": 4,
-    "latency_p50_ms": 46.2,
-    "latency_p95_ms": 68.0
+    "latency_p50_ms": 39.9,
+    "latency_p95_ms": 47.4
   },
   {
     "config": "full_system",
@@ -249,7 +249,7 @@
     "refusal_accuracy": 100.0,
     "answer_correctness": 63.0,
     "false_refusals": 4,
-    "latency_p50_ms": 43.5,
-    "latency_p95_ms": 83.4
+    "latency_p50_ms": 40.0,
+    "latency_p95_ms": 43.1
   }
 ]

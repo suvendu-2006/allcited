@@ -29,6 +29,11 @@
 
 ## Verification Failures:
 
+- **Check E4 (Cross-format parity fixture coverage):**
+  - *Observed:* Cross-format parity achieved 62.5% (< 90%) when testing questions across PDF, DOCX, and PPTX because `eval/fixtures/presentation.pptx` only contained slides for Overview, Security, and Financials, omitting the Leave and Separation slides present in `handbook.pdf` and `handbook.docx`.
+  - *Expected:* Cross-format parity ≥ 90% answer equivalence across PDF, DOCX, and PPTX on shared handbook questions.
+  - *Fix:* Extend `create_sample_deck` in `eval/fixtures/generate_fixtures.py` to include Leave Entitlements and Separation & Notice slides, regenerate `presentation.pptx`.
+
 - **Check B5 (Two-hop definition tagging):**
   - *Observed:* Query "as per rule 63.7.4..." returned both chunks but `is_two_hop` was False. `refmap.py` required a preceding newline or period before `Rule 63.7.4`, but PDF parser joined heading blocks with spaces (`...Specialized Rules Rule 63.7.4 Leave Encashment...`), so `Rule 63.7.4` was categorized as mention instead of definition.
   - *Expected:* `Rule 63.7.4` identified as definition in `ref_map`, fetched via two-hop expansion, and labeled with `is_two_hop=True` and `added_reason="Defined in rule:63.7.4..."`.
