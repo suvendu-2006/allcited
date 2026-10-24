@@ -116,6 +116,37 @@ All error codes are machine-readable strings paired with human-voiced, context-a
 | `offline` | Client | Browser network connection unavailable | You're offline. Your last conversation is still here — ask away when you're back. |
 | `generic` | 500 | Unhandled internal server error; trace ID logged for investigation | Something broke on our side. It's noted — try again, and if it repeats, the trace ID below helps us find it. |
 
+## Private Offline Edition (Zero Cloud Egress)
+
+Allcited includes a fully offline, air-gapped private edition that processes documents without sending a single byte to external clouds or third-party APIs.
+
+### Run Fully Offline (One-Liner via Docker)
+
+To run the Allcited API offline using your local Ollama instance:
+
+```bash
+docker run -d \
+  --name allcited-api \
+  -p 8000:8000 \
+  -e MODE=private \
+  -e OLLAMA_BASE_URL=http://host.docker.internal:11434 \
+  -e DEFAULT_LLM_MODEL=qwen2.5:3b \
+  ghcr.io/suvendu-2006/allcited-api:latest
+```
+
+### Run the Full Offline Stack (API + Web UI + Ollama)
+
+A single `docker compose up` spins up Ollama (automatically pulling `qwen2.5:3b`), the FastAPI backend (with pre-cached embedding & cross-encoder models and local Tesseract OCR), and the Next.js web interface:
+
+```bash
+docker compose up
+```
+
+Once started:
+- **Web UI:** [http://localhost:3000](http://localhost:3000)
+- **API Docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Ollama:** [http://localhost:11434](http://localhost:11434)
+
 ## Development
 
 ```bash
