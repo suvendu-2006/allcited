@@ -30,6 +30,8 @@ export interface TraceData {
   total_sources: number;
   injection_flagged: boolean;
   hyde_enabled?: boolean;
+  agentic_iterations?: number;
+  best_available_sources?: boolean;
   refused: boolean;
   refusal_reason?: string | null;
   provider: string;
@@ -176,6 +178,13 @@ export function TraceViewer({
                 </p>
               </div>
 
+              {trace.best_available_sources && (
+                <div className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800 text-xs">
+                  <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
+                  <span>Answer generated using best available sources (maximum 3 retrieval iterations reached).</span>
+                </div>
+              )}
+
               {/* Pipeline Funnel */}
               <div className="space-y-2">
                 <h3 className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5 text-xs">
@@ -190,6 +199,7 @@ export function TraceViewer({
                     </span>
                     <span className="text-[10px] text-slate-400 block">
                       {trace.hyde_enabled ? "hybrid + HyDE" : "hybrid candidates"}
+                      {trace.agentic_iterations && trace.agentic_iterations > 1 ? ` · ${trace.agentic_iterations} iters` : ""}
                     </span>
                   </div>
 

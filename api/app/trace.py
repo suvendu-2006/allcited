@@ -30,6 +30,8 @@ class TraceRecord(BaseModel):
     refusal_reason: Optional[str] = None
     prompt_hash: Optional[str] = None
     hyde_enabled: bool = False
+    agentic_iterations: int = 1
+    best_available_sources: bool = False
     cached: bool = False
     provider: str = "stub"
     model: str = ""

@@ -277,6 +277,30 @@ async def stream_answer_pipeline(
     latencies["retrieve_ms"] = round((time.perf_counter() - t0) * 1000, 2)
     yield format_sse("retrieve", {"candidate_count": len(candidates), "hyde_enabled": settings.HYDE_ENABLED})
 
+    # 5b. Agentic iterative sufficiency loop (<=3 iterations)
+    agentic_iterations = 1
+    best_available_sources = False
+    if getattr(settings, "AGENTIC_ENABLED", True) and candidates:
+        t_agentic = time.perf_counter()
+        from app.pipeline.agentic import run_agentic_retrieval_loop
+
+        candidates, agentic_iterations, best_available_sources = await run_agentic_retrieval_loop(
+            session=session,
+            query=query,
+            initial_candidates=candidates,
+            provider=provider,
+            max_iterations=3,
+        )
+        latencies["agentic_ms"] = round((time.perf_counter() - t_agentic) * 1000, 2)
+        yield format_sse(
+            "agentic",
+            {
+                "iterations": agentic_iterations,
+                "best_available_sources": best_available_sources,
+                "candidate_count": len(candidates),
+            },
+        )
+
     # 6. Re-ranker
     t0 = time.perf_counter()
     reranker = get_reranker()
@@ -316,6 +340,8 @@ async def stream_answer_pipeline(
                 refused=True,
                 refusal_reason="low_relevance",
                 hyde_enabled=settings.HYDE_ENABLED,
+                agentic_iterations=agentic_iterations,
+                best_available_sources=best_available_sources,
                 provider=provider.provider_type,
                 model=provider.model,
                 total_tokens=0,
@@ -411,6 +437,8 @@ async def stream_answer_pipeline(
             refusal_reason="not_covered" if is_refusal else None,
             prompt_hash=prompt_hash,
             hyde_enabled=settings.HYDE_ENABLED,
+            agentic_iterations=agentic_iterations,
+            best_available_sources=best_available_sources,
             provider=provider.provider_type,
             model=provider.model,
             total_tokens=total_tokens,
@@ -418,6 +446,9 @@ async def stream_answer_pipeline(
             latencies_ms=latencies,
         )
     )
+
+    if best_available_sources and not is_refusal and "(Note: answered using best available sources)" not in cleaned_answer:
+        cleaned_answer += " (Note: answered using best available sources)"
 
     # Store in semantic cache
     cache.set(
@@ -439,5 +470,7 @@ async def stream_answer_pipeline(
             "refused": is_refusal,
             "total_tokens": total_tokens,
             "injection_flagged": injection_flagged,
+            "best_available_sources": best_available_sources,
+            "agentic_iterations": agentic_iterations,
         },
     )
