@@ -8,6 +8,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from app.config import get_settings
+from app.feedback import FeedbackRequest, get_feedback_store
 from app.pipeline.answer import stream_answer_pipeline
 from app.security.pii import setup_pii_logging
 from app.security.ssrf import SSRFBlockedError, safe_fetch_url
@@ -238,6 +239,21 @@ async def get_question_trace(question_id: str):
             detail={"error": {"code": "trace_not_found", "message": f"Trace for question '{question_id}' not found"}},
         )
     return trace
+
+
+@app.post("/v1/feedback")
+async def submit_feedback(req: FeedbackRequest):
+    """Submit user feedback (+1 or -1 with optional note) for an answer."""
+    store = get_feedback_store()
+    record = await store.record_feedback(req)
+    return {"status": "recorded", "feedback_id": record.id}
+
+
+@app.get("/v1/feedback/candidates")
+async def get_feedback_candidates():
+    """Retrieve downvoted questions formatted as candidate evaluation cases."""
+    store = get_feedback_store()
+    return {"candidates": store.get_eval_candidates()}
 
 
 class QueryRequest(BaseModel):

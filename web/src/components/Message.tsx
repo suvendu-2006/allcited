@@ -4,7 +4,16 @@ import React, { useState } from "react";
 import { Citation, PipelineStage } from "@/lib/sse";
 import { CitationChip } from "./CitationChip";
 import { TraceViewer } from "./TraceViewer";
-import { Bot, User, CheckCircle2, Loader2, ShieldAlert, Sparkles } from "lucide-react";
+import {
+  Bot,
+  User,
+  CheckCircle2,
+  Loader2,
+  ShieldAlert,
+  Sparkles,
+  ThumbsUp,
+  ThumbsDown,
+} from "lucide-react";
 
 export interface ChatMessage {
   id: string;
@@ -26,7 +35,35 @@ interface MessageProps {
 
 export function Message({ message, onCitationClick }: MessageProps) {
   const [showTrace, setShowTrace] = useState(false);
+  const [feedback, setFeedback] = useState<"up" | "down" | null>(null);
+  const [showNoteInput, setShowNoteInput] = useState(false);
+  const [feedbackNote, setFeedbackNote] = useState("");
   const isUser = message.role === "user";
+
+  const handleFeedback = async (score: 1 | -1, note?: string) => {
+    if (!message.questionId) return;
+    setFeedback(score === 1 ? "up" : "down");
+    if (score === -1 && note === undefined) {
+      setShowNoteInput(true);
+      return;
+    }
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    try {
+      await fetch(`${apiUrl}/v1/feedback`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question_id: message.questionId,
+          score,
+          note: note || undefined,
+          answer: message.content,
+        }),
+      });
+      setShowNoteInput(false);
+    } catch (e) {
+      console.error("Failed to submit feedback", e);
+    }
+  };
   const citationsMap = new Map((message.citations || []).map((c) => [c.label, c]));
 
   // Parse [S#] citations into interactive CitationChips
@@ -158,17 +195,76 @@ export function Message({ message, onCitationClick }: MessageProps) {
                 {message.totalTokens !== undefined && <span>{message.totalTokens} tokens</span>}
               </div>
 
-              {message.questionId && (
-                <button
-                  type="button"
-                  onClick={() => setShowTrace(true)}
-                  className="flex items-center gap-1 text-[11px] text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium transition-colors cursor-pointer"
-                  title="View decision path, retrieval stages, and latencies"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-                  Why this answer?
-                </button>
-              )}
+              <div className="flex items-center gap-3">
+                {message.questionId && (
+                  <button
+                    type="button"
+                    onClick={() => setShowTrace(true)}
+                    className="flex items-center gap-1 text-[11px] text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium transition-colors cursor-pointer"
+                    title="View decision path, retrieval stages, and latencies"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                    Why this answer?
+                  </button>
+                )}
+
+                {message.questionId && (
+                  <div className="flex items-center gap-1 border-l border-slate-200 dark:border-slate-800 pl-2">
+                    <button
+                      type="button"
+                      onClick={() => handleFeedback(1)}
+                      className={`p-1 rounded-md transition-colors ${
+                        feedback === "up"
+                          ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40"
+                          : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      }`}
+                      title="Good answer"
+                    >
+                      <ThumbsUp className="w-3.5 h-3.5" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleFeedback(-1)}
+                      className={`p-1 rounded-md transition-colors ${
+                        feedback === "down"
+                          ? "text-rose-600 bg-rose-50 dark:bg-rose-950/40"
+                          : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      }`}
+                      title="Report an issue with this answer"
+                    >
+                      <ThumbsDown className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Feedback note input */}
+          {showNoteInput && (
+            <div className="mt-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 flex items-center gap-2">
+              <input
+                type="text"
+                placeholder="What was inaccurate or missing? (optional)"
+                value={feedbackNote}
+                onChange={(e) => setFeedbackNote(e.target.value)}
+                className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-2.5 py-1 rounded-lg text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              <button
+                type="button"
+                onClick={() => handleFeedback(-1, feedbackNote)}
+                className="px-2.5 py-1 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-lg text-xs font-medium hover:bg-slate-800 dark:hover:bg-white transition-colors"
+              >
+                Submit
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowNoteInput(false)}
+                className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs"
+              >
+                Cancel
+              </button>
             </div>
           )}
 
