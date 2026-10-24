@@ -35,7 +35,7 @@
   Do: `pipeline/chunker.py` — ~400-token target, hard max 600, 15% overlap, sentence-boundary splits, `parent_section_id`, content hash per chunk.
   Done when: unit test proves a sentence straddling a boundary appears *complete* in both overlapping chunks (the P1 fixture from the plan).
 
-- [ ] **STEP 07 — Reference map (P3 prep)**
+- [x] **STEP 07 — Reference map (P3 prep)**
   Do: `pipeline/refmap.py` — regex families (rule/section/clause/§ + numbers, form IDs, "as defined in"); mention-chunk ↔ definition-chunk map.
   Done when: on the fixture, ≥4 real cross-references are mapped and the unit test rejects ≥3 false-positive strings.
 
