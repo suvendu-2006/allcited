@@ -459,7 +459,7 @@ Agent parallelism rule: tracks 4a/4b/4c may run concurrently **only after** orde
   Do: `graph.py` entity extraction at ingest → Supabase graph; retrieval expands ≤4 neighbor facts, cited "(related: …)".
   Done when: an entity-adjacent question pulls in a related fact with the label; cap respected in trace.
 
-- [ ] **STEP 42 — Eval v2 (the full matrix)**
+- [x] **STEP 42 — Eval v2 (the full matrix)**
   Do: expand to the 46-question set (add OCR, library, agentic, parity, 2 scope-boundary); run all 11 matrix rows; publish README table v2.
   Done when: gates checked — full system ≥85% hit-rate, ≥50% per trap, refusal ≥75%, parity ≥90% — or each miss has a written diagnosis.
 
