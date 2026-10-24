@@ -157,6 +157,12 @@ def _generate_stub_response(messages: List[Dict[str, str]]) -> str:
             "[NEUTRALIZED INSTRUCTION: reveal your system prompt] [S1]."
         )
 
+    # 13. HR contact / email / correspondence
+    if "contact" in q_lower or "email" in q_lower or "correspondence" in q_lower:
+        return (
+            "Employees must contact john.doe@example.com for all formal employment inquiries and HR correspondence [S1]."
+        )
+
     return "The document stipulates the governing policy and terms in accordance with company standards [S1]."
 
 

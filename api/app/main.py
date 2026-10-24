@@ -9,14 +9,19 @@ from pydantic import BaseModel
 
 from app.config import get_settings
 from app.pipeline.answer import stream_answer_pipeline
+from app.security.pii import setup_pii_logging
 from app.security.ssrf import SSRFBlockedError, safe_fetch_url
 from app.sessions import get_session_store
+
+# Ensure root and module loggers mask PII on all handlers
+setup_pii_logging()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings = get_settings()
     app.state.settings = settings
+    setup_pii_logging()
     yield
 
 

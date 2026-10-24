@@ -288,6 +288,7 @@ async def stream_answer_pipeline(
 
     # 8. Citation Post-Pass & Done event
     cleaned_answer, citations = post_pass_citations(raw_accumulated, final_sources)
+    logger.info("Answer generated for question %s: %s", qid, cleaned_answer)
     yield format_sse("citations", {"citations": [c.model_dump() for c in citations]})
 
     is_refusal = (
