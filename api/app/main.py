@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from app.auth import ClerkAuthMiddleware, get_current_user
+from app.auth import ClerkAuthMiddleware, get_current_user, get_optional_user
 from app.config import get_settings
 from app.feedback import FeedbackRequest, get_feedback_store
 from app.library import (
@@ -25,9 +25,11 @@ from app.payments import (
     handle_stripe_webhook,
 )
 from app.pipeline.answer import stream_answer_pipeline
+from app.plans import check_plan_limit
 from app.security.pii import setup_pii_logging
 from app.security.ssrf import SSRFBlockedError, safe_fetch_url
 from app.sessions import get_session_store
+from app.stats import get_platform_stats
 from app.trace import get_trace_manager
 
 # Ensure root and module loggers mask PII on all handlers
@@ -113,6 +115,9 @@ async def save_session_to_library(
         )
 
     store = get_library_store()
+    current_docs = store.list_documents(user_id=user_id)
+    check_plan_limit(user_id, "library_save", len(current_docs))
+
     doc_item = store.save_document(user_id=user_id, session=session)
     return {
         "status": "saved",
@@ -241,11 +246,12 @@ class UrlIngestRequest(BaseModel):
 async def ingest_document(
     file: Optional[UploadFile] = File(None),
     url: Optional[str] = Form(None),
+    user_id: Optional[str] = Depends(get_optional_user),
 ):
     """
     Upload and index a document (PDF, DOCX, PPTX, XLSX, HTML, MD, TXT, or URL) into an in-memory session.
     Parses document, chunks text, builds reference map, and indexes into FAISS + BM25.
-    Guarded against SSRF, size limits, and corrupt inputs.
+    Guarded against SSRF, size limits, plan tier gates, and corrupt inputs.
     """
     target_filename = ""
     content_bytes = b""
@@ -280,11 +286,16 @@ async def ingest_document(
             detail={"error": {"code": "doc_unreadable", "message": "Must provide either a file upload or a url parameter"}},
         )
 
+    # Enforce plan file size limit (20 MB for Free, 100 MB for Pro)
+    check_plan_limit(user_id=user_id, feature="file_upload", value=len(content_bytes))
+
     session_store = get_session_store()
     session = session_store.create_session_from_bytes(
         filename=target_filename,
         content=content_bytes,
     )
+
+    get_platform_stats().record_chunks(len(session.chunks))
 
     return IngestResponse(
         session_id=session.session_id,
@@ -394,6 +405,7 @@ async def get_cache_stats():
 class QueryRequest(BaseModel):
     session_id: str
     query: str
+    mode: Optional[str] = None
     byok_key: Optional[str] = None
     byok_base_url: Optional[str] = None
     byok_model: Optional[str] = None
@@ -403,6 +415,7 @@ class QueryRequest(BaseModel):
 @app.post("/v1/query")
 async def query_document(
     request: QueryRequest,
+    user_id: Optional[str] = Depends(get_optional_user),
     x_byok_key: Optional[str] = Header(None, alias="X-BYOK-Key"),
     x_byok_base_url: Optional[str] = Header(None, alias="X-BYOK-Base-URL"),
     x_byok_model: Optional[str] = Header(None, alias="X-BYOK-Model"),
@@ -412,6 +425,11 @@ async def query_document(
     Query an active document session with grounded citations via Server-Sent Events (SSE).
     Events emitted: route -> cache -> rewrite -> retrieve -> rerank -> expand -> token -> citations -> done
     """
+    if request.mode == "precision":
+        check_plan_limit(user_id=user_id, feature="precision_mode")
+
+    get_platform_stats().record_query()
+
     session_store = get_session_store()
     session = session_store.get_session(request.session_id)
     if not session:
@@ -495,3 +513,9 @@ async def summarize_document(
             "X-Accel-Buffering": "no",
         },
     )
+
+
+@app.get("/v1/stats")
+async def get_system_stats():
+    """Retrieve system-wide counters and metrics for queries, chunks, sessions, and pro tiers."""
+    return get_platform_stats().get_stats()

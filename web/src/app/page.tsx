@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Chat } from "@/components/Chat";
 import { SourcePanel } from "@/components/SourcePanel";
 import { ModelSettings, ProviderConfig } from "@/components/ModelSettings";
@@ -219,6 +220,14 @@ Upon voluntary resignation or formal separation, accrued annual leave days up to
               )}
               <Settings className="w-3 h-3 text-slate-400 ml-0.5" />
             </button>
+
+            {/* Pricing / Plan link */}
+            <Link
+              href="/pricing"
+              className="text-xs px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 font-medium rounded-lg border border-indigo-200 dark:border-indigo-800/80 transition-colors"
+            >
+              Pricing
+            </Link>
 
             {/* API Health Dot */}
             <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 pl-1">
