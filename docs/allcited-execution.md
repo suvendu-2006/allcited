@@ -47,7 +47,7 @@
   Do: `pipeline/retrieve.py` — BM25 top-25 + vector top-25 → RRF (k=60) merge → parent-expansion.
   Done when: unit test — keyword-only question ranks right via BM25 side, paraphrase question via vector side, merged result top-4 contains the right chunk for both.
 
-- [ ] **STEP 10 — Sessions + ingest endpoint**
+- [x] **STEP 10 — Sessions + ingest endpoint**
   Do: `sessions.py` (store, 20 MB/300-page cap, 8-session cap, 2h TTL eviction); `POST /v1/ingest` (multipart → pipeline → session index) emitting stage events.
   Done when: `curl` upload of the fixture returns chunk count; 5 eyeball questions through a debug REPL retrieve sensible top-4s.
 
