@@ -9,7 +9,7 @@
 
 ## PHASE 0 — SETUP
 
-- [ ] **STEP 01 — Repo + monorepo skeleton**
+- [x] **STEP 01 — Repo + monorepo skeleton**
   Do: `git init`; create `api/ web/ eval/fixtures eval/results docker docs/`; write `.gitignore` (Python + Node + .env), README stub, copy the decisions table from plan §0 into `DECISIONS.md`.
   Done when: clean `git status`, first commit pushed to GitHub.
 
