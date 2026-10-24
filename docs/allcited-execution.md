@@ -177,7 +177,7 @@
   Do: `hyde.py` probe → embed → RRF-merge with question search; probe discarded.
   Done when: trace shows probe results merged; +1 LLM call per uncached question; paraphrase evals re-run.
 
-- [ ] **STEP 39 — Semantic cache**
+- [x] **STEP 39 — Semantic cache**
   Do: `cache.py` LRU @0.96 threshold, per-doc invalidation, "instant · cached" badge, hit-rate counter.
   Done when: same question twice → second answer <100ms with badge; re-ingesting the doc invalidates it (test).
 
