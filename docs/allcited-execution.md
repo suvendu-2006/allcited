@@ -13,7 +13,7 @@
   Do: `git init`; create `api/ web/ eval/fixtures eval/results docker docs/`; write `.gitignore` (Python + Node + .env), README stub, copy the decisions table from plan §0 into `DECISIONS.md`.
   Done when: clean `git status`, first commit pushed to GitHub.
 
-- [ ] **STEP 02 — Python environment + API skeleton**
+- [x] **STEP 02 — Python environment + API skeleton**
   Do: in `api/` — venv (Python 3.12), install `fastapi uvicorn pydantic pydantic-settings httpx python-multipart ruff pytest`; create `app/main.py` with `/v1/health` returning `{status, version}`; ruff config in `pyproject.toml`.
   Done when: `uvicorn app.main:app --reload` serves `/v1/health` = 200; `ruff check .` clean.
 
