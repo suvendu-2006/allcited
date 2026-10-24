@@ -24,6 +24,7 @@ class TraceRecord(BaseModel):
     reranked_count: int = 0
     top_rerank_score: float = 0.0
     two_hop_count: int = 0
+    graph_expansion_count: int = 0
     total_sources: int = 0
     injection_flagged: bool = False
     refused: bool = False

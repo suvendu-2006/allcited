@@ -1,7 +1,7 @@
 import logging
 import time
 import uuid
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import pymupdf as fitz
 from fastapi import HTTPException
@@ -40,6 +40,7 @@ class DocumentSession:
         ref_map: ReferenceMap,
         doc_index: DocumentIndex,
         delta_stats: Optional[Dict[str, int]] = None,
+        knowledge_graph: Optional[Any] = None,
     ):
         self.session_id = session_id
         self.filename = filename
@@ -50,6 +51,7 @@ class DocumentSession:
         self.ref_map = ref_map
         self.doc_index = doc_index
         self.delta_stats = delta_stats or {"total": len(chunks), "reused": 0, "new": len(chunks)}
+        self.knowledge_graph = knowledge_graph
         self.created_at = time.time()
         self.last_accessed = self.created_at
 
@@ -215,6 +217,10 @@ class SessionStore:
             embed_stats.get("new", len(chunks)),
         )
 
+        # 6. Extract GraphRAG-lite knowledge graph
+        from app.pipeline.graph import extract_heuristic_entities
+        knowledge_graph = extract_heuristic_entities(chunks)
+
         session = DocumentSession(
             session_id=session_id,
             filename=filename,
@@ -225,6 +231,7 @@ class SessionStore:
             ref_map=ref_map,
             doc_index=doc_index,
             delta_stats=embed_stats,
+            knowledge_graph=knowledge_graph,
         )
 
         self._sessions[session_id] = session

@@ -102,36 +102,42 @@ def post_pass_citations(
 
     num_sources = len(sources)
 
+    pattern = r"\(related:\s*\[?S(\d+)\]?\)|\[S(\d+)\]"
+
     def replace_marker(m: re.Match) -> str:
-        idx = int(m.group(1))
+        idx_str = m.group(1) or m.group(2)
+        idx = int(idx_str)
         if 1 <= idx <= num_sources:
             return m.group(0)
         return ""  # Strip fake citation marker
 
     # Strip any markers outside valid range [1, num_sources]
-    cleaned = re.sub(r"\[S(\d+)\]", replace_marker, raw_answer)
+    cleaned = re.sub(pattern, replace_marker, raw_answer)
     cleaned = re.sub(r"[ \t]+", " ", cleaned).strip()
 
     seen_labels: Set[str] = set()
     citations: List[CitationItem] = []
 
-    for m in re.finditer(r"\[S(\d+)\]", cleaned):
-        idx = int(m.group(1))
-        label = f"S{idx}"
-        if label not in seen_labels and 1 <= idx <= num_sources:
-            seen_labels.add(label)
+    for m in re.finditer(pattern, cleaned):
+        idx_str = m.group(1) or m.group(2)
+        idx = int(idx_str)
+        if 1 <= idx <= num_sources:
             src = sources[idx - 1]
-            citations.append(
-                CitationItem(
-                    label=label,
-                    chunk_id=src.chunk.id,
-                    page=src.chunk.page,
-                    section_path=src.chunk.section_path,
-                    text_preview=src.chunk.text[:200],
-                    is_two_hop=src.is_two_hop,
-                    added_reason=src.added_reason,
+            is_graph_rel = bool(src.added_reason and "related:" in src.added_reason)
+            label = f"related: S{idx}" if is_graph_rel else f"S{idx}"
+            if label not in seen_labels:
+                seen_labels.add(label)
+                citations.append(
+                    CitationItem(
+                        label=label,
+                        chunk_id=src.chunk.id,
+                        page=src.chunk.page,
+                        section_path=src.chunk.section_path,
+                        text_preview=src.chunk.text[:200],
+                        is_two_hop=src.is_two_hop,
+                        added_reason=src.added_reason,
+                    )
                 )
-            )
 
     return cleaned, citations
 
@@ -335,6 +341,7 @@ async def stream_answer_pipeline(
                 reranked_count=len(reranked),
                 top_rerank_score=round(top_score, 4),
                 two_hop_count=0,
+                graph_expansion_count=0,
                 total_sources=0,
                 injection_flagged=False,
                 refused=True,
@@ -372,9 +379,28 @@ async def stream_answer_pipeline(
         chunks=session.chunks,
         max_expansions=2,
     )
-    latencies["expand_ms"] = round((time.perf_counter() - t0) * 1000, 2)
     two_hop_count = sum(1 for s in final_sources if s.is_two_hop)
-    yield format_sse("expand", {"two_hop_count": two_hop_count, "total_chunks": len(final_sources)})
+
+    # 7b. GraphRAG-lite neighbor fact expansion (<= 4 facts)
+    from app.pipeline.graph import expand_graph_knowledge
+
+    max_graph_exp = getattr(settings, "GRAPH_MAX_EXPANSION", 4)
+    knowledge_graph = getattr(session, "knowledge_graph", None)
+    final_sources, graph_expansion_count = expand_graph_knowledge(
+        query=query,
+        candidates=final_sources,
+        graph=knowledge_graph,
+        max_expansion=max_graph_exp,
+    )
+    latencies["expand_ms"] = round((time.perf_counter() - t0) * 1000, 2)
+    yield format_sse(
+        "expand",
+        {
+            "two_hop_count": two_hop_count,
+            "graph_expansion_count": graph_expansion_count,
+            "total_chunks": len(final_sources),
+        },
+    )
 
     # 8. Grounded LLM Stream
     prompt_messages, injection_flagged = build_grounded_prompt(
@@ -431,6 +457,7 @@ async def stream_answer_pipeline(
             reranked_count=len(reranked),
             top_rerank_score=round(top_score, 4),
             two_hop_count=two_hop_count,
+            graph_expansion_count=graph_expansion_count,
             total_sources=len(final_sources),
             injection_flagged=injection_flagged,
             refused=is_refusal,

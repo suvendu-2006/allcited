@@ -27,6 +27,7 @@ export interface TraceData {
   reranked_count: number;
   top_rerank_score: number;
   two_hop_count: number;
+  graph_expansion_count?: number;
   total_sources: number;
   injection_flagged: boolean;
   hyde_enabled?: boolean;
@@ -215,12 +216,14 @@ export function TraceViewer({
 
                   <div className="p-3 rounded-xl bg-purple-50/60 dark:bg-purple-950/20 border border-purple-100 dark:border-purple-900/40 text-center">
                     <span className="text-[10px] text-purple-600 dark:text-purple-400 block mb-0.5">
-                      Two-Hop
+                      Two-Hop & Graph
                     </span>
                     <span className="text-base font-bold text-purple-700 dark:text-purple-300">
-                      +{trace.two_hop_count}
+                      +{trace.two_hop_count + (trace.graph_expansion_count || 0)}
                     </span>
-                    <span className="text-[10px] text-purple-500/80 block">cross-references</span>
+                    <span className="text-[10px] text-purple-500/80 block">
+                      {trace.graph_expansion_count ? `refs + ${trace.graph_expansion_count} graph` : "cross-references"}
+                    </span>
                   </div>
 
                   <div className="p-3 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/40 text-center">
