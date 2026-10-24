@@ -147,23 +147,26 @@ def build_reference_map(chunks: List[Chunk]) -> ReferenceMap:
         # Check chunk text for references
         body_refs = extract_references(chunk.text)
         for bref in body_refs:
-            # Check definition: in heading path or appears as definition heading/title in text
-            is_def = (
-                bref.ref_id in [h.ref_id for h in heading_refs]
-                or bool(
-                    re.search(
-                        rf"(?:^|\n|\.\s+)\s*{re.escape(bref.raw_text)}\b(?:\s*[:\-\—]|\s+[A-Z])",
-                        chunk.text,
-                        re.IGNORECASE,
-                    )
-                )
-            )
             # Check explicit mention context
             is_mention = bool(
                 re.search(
                     rf"(?:as per|pursuant to|defined in|under|see|in accordance with)\s+{re.escape(bref.raw_text)}\b",
                     chunk.text,
                     re.IGNORECASE,
+                )
+            )
+            # Check definition: in heading path or appears as definition heading/title in text
+            is_def = (
+                bref.ref_id in [h.ref_id for h in heading_refs]
+                or (
+                    not is_mention
+                    and bool(
+                        re.search(
+                            rf"\b{re.escape(bref.raw_text)}\b(?:\s*[:\-\—]|\s+[A-Z][a-zA-Z]+)",
+                            chunk.text,
+                            re.IGNORECASE,
+                        )
+                    )
                 )
             )
 

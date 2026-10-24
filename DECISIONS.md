@@ -29,6 +29,11 @@
 
 ## Verification Failures:
 
+- **Check B5 (Two-hop definition tagging):**
+  - *Observed:* Query "as per rule 63.7.4..." returned both chunks but `is_two_hop` was False. `refmap.py` required a preceding newline or period before `Rule 63.7.4`, but PDF parser joined heading blocks with spaces (`...Specialized Rules Rule 63.7.4 Leave Encashment...`), so `Rule 63.7.4` was categorized as mention instead of definition.
+  - *Expected:* `Rule 63.7.4` identified as definition in `ref_map`, fetched via two-hop expansion, and labeled with `is_two_hop=True` and `added_reason="Defined in rule:63.7.4..."`.
+  - *Fix:* In `api/app/pipeline/refmap.py`, generalize definition regex to allow word boundary `\b` when followed by title text/delimiter and not preceded by explicit mention prepositions.
+
 - **Check A9 (CI green badge):**
   - *Observed:* GitHub Actions `Allcited CI` workflow failed on step `Build Next.js` with `Can't resolve '@/lib/sse'` and `Can't resolve '@/lib/utils'`. Root `.gitignore` contained unanchored `lib/` which ignored `web/src/lib/` (`sse.ts`, `utils.ts`), preventing them from being committed and pushed.
   - *Expected:* `web/src/lib/` tracked in git, `next build` passes in CI, and GitHub Actions badge is green on main.

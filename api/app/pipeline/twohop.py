@@ -161,6 +161,11 @@ def expand_two_hop(
                 existing_ids.add(def_id)
                 if len(expansions) >= max_expansions:
                     break
+            elif def_id in existing_ids:
+                for nc in normalized:
+                    if nc.chunk.id == def_id and not nc.is_two_hop:
+                        nc.is_two_hop = True
+                        nc.added_reason = f"Defined in {qref.ref_id} (referenced in query)"
 
     # 2. Expand references mentioned in the top candidate chunks
     for cand in normalized:
