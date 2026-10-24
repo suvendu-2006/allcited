@@ -119,7 +119,7 @@
   Do: create free project; SQL for `saved_documents`, `saved_chunks(vector 384, HNSW)`, `subscriptions`, `feedback`, `audit_log`, `graph_nodes/edges`; RLS keyed to Clerk `user_id`.
   Done when: migrations applied; a Supabase-side test insert as user A is invisible to user B.
 
-- [ ] **STEP 26 — Server-side auth**
+- [x] **STEP 26 — Server-side auth**
   Do: Clerk JWKS verification middleware in FastAPI; `/v1/me` (profile + plan + limits).
   Done when: expired/forged tokens → 401; valid token passes with `user_id` attached to the request.
 
