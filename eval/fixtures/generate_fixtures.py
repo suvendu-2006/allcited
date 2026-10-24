@@ -1,5 +1,6 @@
-import fitz  # PyMuPDF
 from pathlib import Path
+
+import pymupdf as fitz
 
 
 def create_handbook_pdf(output_path: str):
@@ -137,7 +138,7 @@ def create_handbook_pdf(output_path: str):
             rect = fitz.Rect(50, y_cursor, 545, y_cursor + 200)
 
             # Insert text box with wrapping
-            rc = page.insert_textbox(
+            page.insert_textbox(
                 rect,
                 text,
                 fontsize=font_size,
