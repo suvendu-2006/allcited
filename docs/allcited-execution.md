@@ -155,7 +155,7 @@
   Do: mask emails/phones/ID patterns in all log output.
   Done when: logged answer containing a real-looking email shows `j***@***.com`; stored answer unchanged.
 
-- [ ] **STEP 34 — Per-question trace**
+- [x] **STEP 34 — Per-question trace**
   Do: `trace.py` JSONL per query (stages, candidates, scores, latencies, tokens, provider); `/v1/trace/{id}`; UI "Why this answer?" viewer.
   Done when: any answered question's full decision path is viewable in the UI.
 
