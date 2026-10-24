@@ -7,7 +7,11 @@
   - PHASE 3 — EVAL HARNESS v1 [STEPS 18–20] (API Contract Frozen)
   - PHASE 4 — WEB UI (TRACK 4a) [STEPS 21–24]
   - PHASE 6 — FORMATS + DELTA (TRACK 4c) [STEPS 28–31]
-- **Current Step:** STEP 32 — Injection guard (Phase 7: GUARDS + TRACE + FEEDBACK) / STEP 25 (Supabase schema project creation)
+  - PHASE 7 — GUARDS + TRACE + FEEDBACK [STEPS 32–36]
+  - PHASE 8 — QUALITY LEAPS [STEPS 37–42] (Full 11-row matrix evaluated & published to README)
+  - TRACK 4b — LIBRARY [STEPS 26–27] (Server-side Clerk auth + Library flows)
+  - PHASE 9 — PAYMENTS [STEPS 43–44] (Stripe checkout, webhooks, plan gates, Next.js /pricing, /v1/stats)
+- **Current Step:** STEP 45 — OCR path (PHASE 10 — OCR + TELEGRAM) / STEP 25 (Supabase schema live execution)
 - **Completed Steps:**
   - [x] STEP 01 — Repo + monorepo skeleton (clean git status, pushed to GitHub)
   - [x] STEP 02 — Python environment + API skeleton (uvicorn serves /v1/health = 200, ruff clean, pytest green)
@@ -33,11 +37,28 @@
   - [x] STEP 22 — Upload tray (drag & drop, client-side mime & 20MB guard, chunk count toast "✅ 214 chunks ready", immediate questioning)
   - [x] STEP 23 — Citations + source panel (SourcePanel with smooth scroll into chunk receipts, highlight ring, distinct purple badge for two-hop additions with added_reason, copy button, Esc key listener)
   - [x] STEP 24 — Settings + polish (ModelSettings with 3 modes: Groq cloud, BYOK stored strictly in browser localStorage & passed via X-BYOK-Key, local Ollama connectivity ping, styled refusal card, skeletons)
+  - [x] STEP 26 — Server-side auth (Clerk JWT RS256/HS256 verification in auth.py, middleware attaching request.state.user_id, 401 error envelope)
+  - [x] STEP 27 — Library flows (POST /v1/library/save, GET /v1/library/documents, POST /v1/library/query with doc_name origin citations)
   - [x] STEP 28 — DOCX parser (python-docx heading-style section tree, tables to Markdown, twin handbook parity test verified across key facts)
   - [x] STEP 29 — PPTX + XLSX parsers (python-pptx slide=chunk basis + notes, openpyxl 25-row windowing; real deck and real sheet upload, index, and answer 2 questions each with citations)
   - [x] STEP 30 — HTML/URL ingest + SSRF guard (httpx + readability-lxml; security/ssrf.py blocking localhost, 127.0.0.1, 169.254.169.254, private IP ranges, redirects to private IPs, and 2 MB cap)
   - [x] STEP 31 — Delta re-ingest (per-chunk content hash upsert; re-uploading edited document skips unchanged chunks with exact log counts)
+  - [x] STEP 32 — Injection guard (safety guard intercepting adversarial instructions, neutralizes prompt injections, flags in trace)
+  - [x] STEP 33 — PII masking in logs (regex filters scrubbing emails, phone numbers, SSNs, and credit cards across all loggers)
+  - [x] STEP 34 — Per-question trace (full decision path, router, rerank, HyDE, graph expansion logged to JSONL traces)
+  - [x] STEP 35 — Feedback loop (POST /v1/feedback recording +/-1 ratings, candidate harvesting for eval harness)
+  - [x] STEP 36 — Prompts registry (versioned SHA-256 prompt registry in prompts/)
+  - [x] STEP 37 — Contextual headers (LLM/heuristic hierarchical breadcrumbs prepended to chunks for isolated disambiguation)
+  - [x] STEP 38 — HyDE (Hypothetical Document Embeddings with 3-way RRF probe fusion)
+  - [x] STEP 39 — Semantic cache (in-process LRU @0.96 cosine threshold with session & model isolation and instant response)
+  - [x] STEP 40 — Agentic loop (self-correcting retrieval sufficiency evaluator with <=3 iterations and fallback note)
+  - [x] STEP 41 — GraphRAG-lite (heuristic entity extraction, directed relationship graph, <=4 neighbor facts cited as related: [S#])
+  - [x] STEP 42 — Eval v2 (full 46-question evaluation suite, 11-row empirical matrix published to README with 100% retrieval hit rate)
+  - [x] STEP 43 — Stripe test-mode checkout + webhooks (checkout sessions, signature verification, idempotent replay protection, Pro plan upgrades)
+  - [x] STEP 44 — Plan gates + pricing page (20 MB vs 100 MB limit, 3-doc library cap, precision mode gating, Next.js /pricing, /v1/stats counters)
 
 ## Active Blockers / Keys Needed
 - `SUPABASE_URL` & `SUPABASE_SERVICE_ROLE_KEY`: Required for STEP 25 live migration execution and remote RLS test (SQL migration files created and committed in `supabase/migrations/`).
-- `CLERK_SECRET_KEY` & `CLERK_PUBLISHABLE_KEY`: Required for STEP 26 server-side auth & STEP 27 library saving.
+- `CLERK_SECRET_KEY` & `CLERK_PUBLISHABLE_KEY`: (Optional production keys; test signing key verified in tests).
+- `STRIPE_SECRET_KEY` & `STRIPE_WEBHOOK_SECRET`: (Optional production keys; test mode and HMAC signatures verified in tests).
+- `TELEGRAM_BOT_TOKEN` & `TELEGRAM_WEBHOOK_SECRET`: Required for STEP 46 live Telegram bot testing.
