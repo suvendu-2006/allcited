@@ -39,7 +39,7 @@
   Do: `pipeline/refmap.py` — regex families (rule/section/clause/§ + numbers, form IDs, "as defined in"); mention-chunk ↔ definition-chunk map.
   Done when: on the fixture, ≥4 real cross-references are mapped and the unit test rejects ≥3 false-positive strings.
 
-- [ ] **STEP 08 — Embeddings + indexes**
+- [x] **STEP 08 — Embeddings + indexes**
   Do: `pipeline/embed.py` (sentence-transformers MiniLM, batch 64, hash cache) and `pipeline/indexes.py` (FAISS IndexFlatIP normalized + rank_bm25 build/search).
   Done when: build index over fixture chunks; searching a known phrase returns its own chunk as top-1 in both engines.
 
