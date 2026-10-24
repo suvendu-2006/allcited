@@ -451,7 +451,7 @@ Agent parallelism rule: tracks 4a/4b/4c may run concurrently **only after** orde
   Do: `cache.py` LRU @0.96 threshold, per-doc invalidation, "instant · cached" badge, hit-rate counter.
   Done when: same question twice → second answer <100ms with badge; re-ingesting the doc invalidates it (test).
 
-- [ ] **STEP 40 — Agentic loop**
+- [x] **STEP 40 — Agentic loop**
   Do: `agentic.py` judge-sufficiency pass, refine query, re-retrieve; ≤3 iterations; "best available sources" note.
   Done when: a multi-source question improves; termination test proves ≤3 iterations always.
 
