@@ -393,7 +393,7 @@ Agent parallelism rule: tracks 4a/4b/4c may run concurrently **only after** orde
   Do: Clerk JWKS verification middleware in FastAPI; `/v1/me` (profile + plan + limits).
   Done when: expired/forged tokens → 401; valid token passes with `user_id` attached to the request.
 
-- [ ] **STEP 27 — Library flows**
+- [x] **STEP 27 — Library flows**
   Do: save-to-library (from session), list/delete, `/v1/library/ask` (pgvector path reusing the whole pipeline).
   Done when: isolation test passes (B can never read A) + "ask my library" answers a question over two saved docs with citations.
 
