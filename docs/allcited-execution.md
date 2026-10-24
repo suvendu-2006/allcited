@@ -97,7 +97,7 @@
 
 ## PHASE 4 — WEB UI
 
-- [ ] **STEP 21 — Chat + streaming**
+- [x] **STEP 21 — Chat + streaming**
   Do: `Chat/Message/Composer` components; `lib/sse.ts` reader with reconnect; token streaming; stage status line (searching → re-reading → composing).
   Done when: full conversation works in browser with visible streaming and stage line.
 
