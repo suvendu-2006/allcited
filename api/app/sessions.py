@@ -228,6 +228,11 @@ class SessionStore:
         )
 
         self._sessions[session_id] = session
+
+        # 6. Invalidate semantic cache entries for this document
+        from app.cache import get_semantic_cache
+        get_semantic_cache().invalidate_filename(filename)
+
         return session
 
     @property

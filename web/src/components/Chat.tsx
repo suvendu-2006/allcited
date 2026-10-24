@@ -123,6 +123,7 @@ export function Chat({
                     content: doneData.answer || msg.content,
                     stage: "done",
                     refused: doneData.refused,
+                    cached: doneData.cached,
                     model: doneData.model,
                     totalTokens: doneData.total_tokens,
                     questionId: doneData.question_id,

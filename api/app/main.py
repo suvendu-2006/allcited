@@ -256,6 +256,14 @@ async def get_feedback_candidates():
     return {"candidates": store.get_eval_candidates()}
 
 
+@app.get("/v1/cache/stats")
+async def get_cache_stats():
+    """Retrieve semantic cache hit rate, hits, misses, and entry counts."""
+    from app.cache import get_semantic_cache
+
+    return get_semantic_cache().get_stats()
+
+
 class QueryRequest(BaseModel):
     session_id: str
     query: str

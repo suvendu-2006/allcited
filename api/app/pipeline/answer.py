@@ -194,7 +194,57 @@ async def stream_answer_pipeline(
         preferred_provider=effective_preferred,
     )
 
-    # 3. Cache (Semantic cache stub - hit: false in step 16)
+    # 3. Semantic Cache lookup (@0.96 threshold)
+    from app.cache import get_semantic_cache
+
+    cache = get_semantic_cache()
+    t_cache = time.perf_counter()
+    cached_hit = cache.get(session.session_id, query, model=provider.model)
+    latencies["cache_ms"] = round((time.perf_counter() - t_cache) * 1000, 2)
+
+    if cached_hit is not None:
+        yield format_sse("cache", {"hit": True, "similarity": round(cached_hit.similarity, 4)})
+        latencies["total_ms"] = round((time.perf_counter() - t_start) * 1000, 2)
+        get_trace_manager().record_trace(
+            TraceRecord(
+                question_id=qid,
+                query=query,
+                route=route_res.route.value,
+                route_reason=route_res.reason,
+                sub_queries=[query],
+                retrieved_count=0,
+                reranked_count=0,
+                top_rerank_score=0.0,
+                two_hop_count=0,
+                total_sources=len(cached_hit.citations),
+                injection_flagged=False,
+                refused=cached_hit.refused,
+                refusal_reason="not_covered" if cached_hit.refused else None,
+                cached=True,
+                hyde_enabled=False,
+                provider=provider.provider_type,
+                model=cached_hit.model or provider.model,
+                total_tokens=0,
+                citations=cached_hit.citations,
+                latencies_ms=latencies,
+            )
+        )
+        yield format_sse("token", {"delta": cached_hit.answer})
+        yield format_sse("citations", {"citations": cached_hit.citations})
+        yield format_sse(
+            "done",
+            {
+                "answer": cached_hit.answer,
+                "question_id": qid,
+                "model": cached_hit.model or provider.model,
+                "refused": cached_hit.refused,
+                "cached": True,
+                "total_tokens": 0,
+                "injection_flagged": False,
+            },
+        )
+        return
+
     yield format_sse("cache", {"hit": False})
 
     # 4. Rewrite
@@ -367,6 +417,17 @@ async def stream_answer_pipeline(
             citations=[c.model_dump() for c in citations],
             latencies_ms=latencies,
         )
+    )
+
+    # Store in semantic cache
+    cache.set(
+        session_id=session.session_id,
+        query=query,
+        answer=cleaned_answer,
+        citations=[c.model_dump() for c in citations],
+        model=provider.model,
+        refused=is_refusal,
+        filename=getattr(session, "filename", None),
     )
 
     yield format_sse(

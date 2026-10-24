@@ -13,6 +13,7 @@ import {
   Sparkles,
   ThumbsUp,
   ThumbsDown,
+  Zap,
 } from "lucide-react";
 
 export interface ChatMessage {
@@ -23,6 +24,7 @@ export interface ChatMessage {
   stageMessage?: string;
   citations?: Citation[];
   refused?: boolean;
+  cached?: boolean;
   model?: string;
   totalTokens?: number;
   questionId?: string;
@@ -190,8 +192,14 @@ export function Message({ message, onCitationClick }: MessageProps) {
           {/* Metadata Footer */}
           {message.stage === "done" && (
             <div className="flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500 px-1 pt-0.5">
-              <div className="flex items-center gap-3">
-                {message.model && <span>Model: {message.model}</span>}
+              <div className="flex items-center gap-2">
+                {message.cached && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                    <Zap className="w-3 h-3 text-amber-500" />
+                    instant · cached
+                  </span>
+                )}
+                {message.model && !message.cached && <span>Model: {message.model}</span>}
                 {message.totalTokens !== undefined && <span>{message.totalTokens} tokens</span>}
               </div>
 
