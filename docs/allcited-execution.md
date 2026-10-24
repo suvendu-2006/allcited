@@ -87,7 +87,7 @@
   Do: `eval/questions.json` — the 30 base questions with types (normal/P1/P2/P3/P4/paraphrase/absent), expected answers + chunk ids.
   Done when: schema validates; each trap type has ≥4 questions; absent set = 4.
 
-- [ ] **STEP 19 — Runner + scorer**
+- [x] **STEP 19 — Runner + scorer**
   Do: `eval/run.py` (`--llm stub|groq`, `--matrix`) + scorer (retrieval hit-rate, answer correctness, refusal accuracy, p50/p95).
   Done when: stub mode runs end-to-end in CI time (<2 min), outputs per-question JSON + failures file.
 
