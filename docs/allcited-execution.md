@@ -233,7 +233,7 @@
   Do: API → HF Space (Docker SDK); web → Vercel; env vars wired (Supabase, Stripe test, Telegram, Clerk); keep-alive ping for cold starts; Telegram webhook pointed at the Space.
   Done when: live URL answers a cited question end-to-end; bot works in Telegram against production.
 
-- [ ] **STEP 51 — Publish the privacy image**
+- [x] **STEP 51 — Publish the privacy image**
   Do: CI builds + pushes the Docker edition to GHCR; README "run PaperTrail fully offline" one-liner.
   Done when: `docker run ghcr.io/...` documented and tested once on a clean machine.
 
