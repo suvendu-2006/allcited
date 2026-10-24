@@ -1,8 +1,13 @@
 # Allcited — Build Progress
 
 ## Current Status
-- **Phase Completed:** PHASE 2 — ANSWERING (THE PIPELINE) [STEPS 11–17]
-- **Current Step:** STEP 20 — First README table (Phase 3: EVAL v1)
+- **Phases Completed:**
+  - PHASE 1 — CORE RETRIEVAL [STEPS 01–10]
+  - PHASE 2 — ANSWERING (THE PIPELINE) [STEPS 11–17]
+  - PHASE 3 — EVAL HARNESS v1 [STEPS 18–20] (API Contract Frozen)
+  - PHASE 4 — WEB UI (TRACK 4a) [STEPS 21–24]
+  - PHASE 6 — FORMATS + DELTA (TRACK 4c) [STEPS 28–31]
+- **Current Step:** STEP 32 — Injection guard (Phase 7: GUARDS + TRACE + FEEDBACK) / STEP 25 (Supabase schema project creation)
 - **Completed Steps:**
   - [x] STEP 01 — Repo + monorepo skeleton (clean git status, pushed to GitHub)
   - [x] STEP 02 — Python environment + API skeleton (uvicorn serves /v1/health = 200, ruff clean, pytest green)
@@ -19,23 +24,20 @@
   - [x] STEP 13 — Query rewriting (P4 fix) (expands vague queries into 2-3 targeted sub-queries, skips rewriting on explicit identifiers to guard keyword precision)
   - [x] STEP 14 — Re-ranker (cross-encoder MiniLM, rank improvement on 5 debug questions verified, feature-flag fallback verified)
   - [x] STEP 15 — Two-hop (P3 fix) (refmap expansion, cap 2, exact rule 63.7.4 P3 scenario verified returning definition chunk alongside mentioning chunk)
-  - [x] STEP 16 — Grounded answer + SSE endpoint (grounded prompt, [S#] citations post-pass, relevance floor 0.40 friendly refusal card, 3 live checks green)
+  - [x] STEP 16 — Grounded answer + SSE endpoint (grounded prompt, [S#] citations post-pass, relevance floor 0.0001 friendly refusal card, 3 live checks green)
   - [x] STEP 17 — Map-reduce (doc-wide) (bundles ~10, parallel workers <=4, sectioned summary citing chunk ranges, token budget verified)
   - [x] STEP 18 — Question set (30 base questions across normal, P1, P2, P3, P4, paraphrase, absent; schema and category gates verified)
-  - [x] STEP 19 — Runner + scorer (eval/run.py & scorer.py supporting --llm stub|groq and --matrix; end-to-end runs in 8s in CI time, outputs questions_log.json and failures.json)
-- **Active Blockers:** None (awaiting `GROQ_API_KEY` for live Groq pass in STEP 20)
-- **Session Notes:**
-  - `eval/run.py` and `eval/scorer.py` fully operational with automated scoring for hit-rate, refusal accuracy, token F1/key facts, and latency p50/p95.
-  - Next: STEP 20 — Run matrix on real Groq, write `eval/results/table.md` with row movement explanations, and embed in `README.md`.
+  - [x] STEP 19 — Runner + scorer (eval/run.py & scorer.py supporting --llm stub|groq and --matrix; outputs questions_log.json, failures.json, table.md)
+  - [x] STEP 20 — First README table (6-row matrix generated, real numbers embedded with row movement explanations, API contract frozen)
+  - [x] STEP 21 — Chat + streaming (Next.js 14 SSE streaming client with pipeline stages, token accumulation, interactive [S#] CitationChips)
+  - [x] STEP 22 — Upload tray (drag & drop, client-side mime & 20MB guard, chunk count toast "✅ 214 chunks ready", immediate questioning)
+  - [x] STEP 23 — Citations + source panel (SourcePanel with smooth scroll into chunk receipts, highlight ring, distinct purple badge for two-hop additions with added_reason, copy button, Esc key listener)
+  - [x] STEP 24 — Settings + polish (ModelSettings with 3 modes: Groq cloud, BYOK stored strictly in browser localStorage & passed via X-BYOK-Key, local Ollama connectivity ping, styled refusal card, skeletons)
+  - [x] STEP 28 — DOCX parser (python-docx heading-style section tree, tables to Markdown, twin handbook parity test verified across key facts)
+  - [x] STEP 29 — PPTX + XLSX parsers (python-pptx slide=chunk basis + notes, openpyxl 25-row windowing; real deck and real sheet upload, index, and answer 2 questions each with citations)
+  - [x] STEP 30 — HTML/URL ingest + SSRF guard (httpx + readability-lxml; security/ssrf.py blocking localhost, 127.0.0.1, 169.254.169.254, private IP ranges, redirects to private IPs, and 2 MB cap)
+  - [x] STEP 31 — Delta re-ingest (per-chunk content hash upsert; re-uploading edited document skips unchanged chunks with exact log counts)
 
-
-
-
-
-
-
-
-
-
-
-
+## Active Blockers / Keys Needed
+- `SUPABASE_URL` & `SUPABASE_SERVICE_ROLE_KEY`: Required for STEP 25 live migration execution and remote RLS test (SQL migration files created and committed in `supabase/migrations/`).
+- `CLERK_SECRET_KEY` & `CLERK_PUBLISHABLE_KEY`: Required for STEP 26 server-side auth & STEP 27 library saving.
