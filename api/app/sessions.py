@@ -8,6 +8,7 @@ from fastapi import HTTPException
 from app.pipeline.chunker import Chunk, chunk_blocks
 from app.pipeline.indexes import DocumentIndex
 from app.pipeline.parsers.base import ParsedBlock
+from app.pipeline.parsers.docx import DOCXParserError, parse_docx
 from app.pipeline.parsers.md_txt import parse_md_txt
 from app.pipeline.parsers.pdf import PDFParserError, parse_pdf
 from app.pipeline.refmap import ReferenceMap, build_reference_map
@@ -127,6 +128,15 @@ class SessionStore:
         elif lower_name.endswith((".md", ".txt")):
             blocks = parse_md_txt(content, source_name=filename)
             page_count = 1
+        elif lower_name.endswith(".docx"):
+            try:
+                blocks = parse_docx(content, source_name=filename)
+                page_count = 1
+            except DOCXParserError as e:
+                raise HTTPException(
+                    status_code=400,
+                    detail={"error": {"code": "doc_unreadable", "message": str(e)}},
+                ) from e
         else:
             # Default text fallback
             blocks = parse_md_txt(content, source_name=filename)

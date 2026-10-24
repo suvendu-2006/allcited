@@ -27,6 +27,24 @@ def test_ingest_handbook_endpoint():
     assert data["status"] == "ready"
 
 
+def test_ingest_docx_handbook():
+    fixture_path = Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "handbook.docx"
+    assert fixture_path.exists()
+
+    with open(fixture_path, "rb") as f:
+        response = client.post(
+            "/v1/ingest",
+            files={"file": ("handbook.docx", f, "application/vnd.openxmlformats-officedocument.wordprocessingml.document")},
+        )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert "session_id" in data
+    assert data["filename"] == "handbook.docx"
+    assert data["chunk_count"] > 0
+    assert data["status"] == "ready"
+
+
 def test_session_caps_and_lru():
     store = SessionStore()
 
