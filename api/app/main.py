@@ -30,6 +30,7 @@ from app.security.pii import setup_pii_logging
 from app.security.ssrf import SSRFBlockedError, safe_fetch_url
 from app.sessions import get_session_store
 from app.stats import get_platform_stats
+from app.telegram import router as telegram_router
 from app.trace import get_trace_manager
 
 # Ensure root and module loggers mask PII on all handlers
@@ -197,6 +198,10 @@ async def get_my_subscription(user_id: str = Depends(get_current_user)):
     """
     store = get_subscription_store()
     return store.get_subscription(user_id)
+
+
+# Mount Telegram webhook router
+app.include_router(telegram_router, prefix="/v1/telegram", tags=["telegram"])
 
 
 @app.get("/v1/models")

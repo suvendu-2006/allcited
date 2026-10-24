@@ -1,0 +1,226 @@
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+from unittest.mock import patch
+
+from fastapi.testclient import TestClient
+
+from app.config import get_settings
+from app.main import app
+from app.telegram import (
+    TelegramClient,
+    chat_sessions,
+    chunk_telegram_text,
+    format_telegram_answer,
+    set_telegram_client,
+)
+
+
+class MockTelegramClient(TelegramClient):
+    """Mock Telegram client that records outgoing messages and serves local fixtures."""
+
+    def __init__(self, fixture_bytes: Optional[bytes] = None):
+        super().__init__(token="mock_token_123")
+        self.fixture_bytes = fixture_bytes or b"%PDF-1.4 mock pdf content"
+        self.sent_messages: List[Dict[str, Any]] = []
+        self.edited_messages: List[Dict[str, Any]] = []
+        self.next_msg_id = 100
+
+    async def send_message(
+        self,
+        chat_id: int,
+        text: str,
+        parse_mode: Optional[str] = "Markdown",
+    ) -> Dict[str, Any]:
+        self.next_msg_id += 1
+        msg = {
+            "message_id": self.next_msg_id,
+            "chat": {"id": chat_id},
+            "text": text,
+            "parse_mode": parse_mode,
+        }
+        self.sent_messages.append(msg)
+        return {"ok": True, "result": msg}
+
+    async def edit_message_text(
+        self,
+        chat_id: int,
+        message_id: int,
+        text: str,
+        parse_mode: Optional[str] = "Markdown",
+    ) -> Dict[str, Any]:
+        msg = {
+            "message_id": message_id,
+            "chat": {"id": chat_id},
+            "text": text,
+            "parse_mode": parse_mode,
+        }
+        self.edited_messages.append(msg)
+        return {"ok": True, "result": msg}
+
+    async def get_file_bytes(self, file_id: str) -> bytes:
+        return self.fixture_bytes
+
+
+def test_telegram_secret_token_verification():
+    """Verify webhook enforces X-Telegram-Bot-Api-Secret-Token when secret is configured."""
+    client = TestClient(app)
+    settings = get_settings()
+
+    with patch.object(settings, "TELEGRAM_WEBHOOK_SECRET", "super_secret_webhook_key"):
+        # Missing header -> 401
+        res1 = client.post("/v1/telegram/webhook", json={"message": {"chat": {"id": 123}, "text": "/start"}})
+        assert res1.status_code == 401
+
+        # Invalid header -> 401
+        res2 = client.post(
+            "/v1/telegram/webhook",
+            json={"message": {"chat": {"id": 123}, "text": "/start"}},
+            headers={"X-Telegram-Bot-Api-Secret-Token": "wrong_key"},
+        )
+        assert res2.status_code == 401
+
+        # Correct header -> 200
+        res3 = client.post(
+            "/v1/telegram/webhook",
+            json={"message": {"chat": {"id": 123}, "text": "/start"}},
+            headers={"X-Telegram-Bot-Api-Secret-Token": "super_secret_webhook_key"},
+        )
+        assert res3.status_code == 200
+
+
+def test_telegram_start_and_clear_commands():
+    """Verify /start and /clear commands."""
+    client = TestClient(app)
+    mock_tg = MockTelegramClient()
+    set_telegram_client(mock_tg)
+
+    chat_id = 778899
+
+    # /start
+    res = client.post(
+        "/v1/telegram/webhook",
+        json={"message": {"chat": {"id": chat_id}, "text": "/start"}},
+    )
+    assert res.status_code == 200
+    assert any("Welcome to Allcited" in m["text"] for m in mock_tg.sent_messages)
+
+    # Query without document -> warning
+    mock_tg.sent_messages.clear()
+    res_q = client.post(
+        "/v1/telegram/webhook",
+        json={"message": {"chat": {"id": chat_id}, "text": "What is our leave policy?"}},
+    )
+    assert res_q.status_code == 200
+    assert any("No document uploaded yet" in m["text"] for m in mock_tg.sent_messages)
+
+    # /clear
+    chat_sessions[chat_id] = "some_session"
+    res_clear = client.post(
+        "/v1/telegram/webhook",
+        json={"message": {"chat": {"id": chat_id}, "text": "/clear"}},
+    )
+    assert res_clear.status_code == 200
+    assert chat_id not in chat_sessions
+
+
+def test_telegram_document_ingest_and_qa_flow():
+    """
+    Test end-to-end Telegram bot flow:
+    1. Upload PDF document via Telegram webhook
+    2. Bot acknowledges and indexes document
+    3. User asks question
+    4. Bot streams and edits answer with inline [S#] citations and source receipts
+    """
+    client = TestClient(app)
+
+    fixture_path = Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "handbook.pdf"
+    assert fixture_path.exists()
+    pdf_bytes = fixture_path.read_bytes()
+
+    mock_tg = MockTelegramClient(fixture_bytes=pdf_bytes)
+    set_telegram_client(mock_tg)
+
+    chat_id = 445566
+
+    # 1. Send Document
+    upload_update = {
+        "update_id": 1001,
+        "message": {
+            "message_id": 50,
+            "chat": {"id": chat_id},
+            "document": {
+                "file_id": "file_handbook_pdf_123",
+                "file_name": "handbook.pdf",
+                "mime_type": "application/pdf",
+                "file_size": len(pdf_bytes),
+            },
+        },
+    }
+
+    res_upload = client.post("/v1/telegram/webhook", json=upload_update)
+    assert res_upload.status_code == 200
+
+    # Verify session registered
+    assert chat_id in chat_sessions
+    assert any("Document Indexed" in m["text"] for m in mock_tg.edited_messages)
+
+    # 2. Check /doc command
+    res_doc = client.post(
+        "/v1/telegram/webhook",
+        json={"message": {"chat": {"id": chat_id}, "text": "/doc"}},
+    )
+    assert res_doc.status_code == 200
+    assert any("Active Document" in m["text"] for m in mock_tg.sent_messages)
+
+    # 3. Ask question
+    query_update = {
+        "update_id": 1002,
+        "message": {
+            "message_id": 51,
+            "chat": {"id": chat_id},
+            "text": "What is the notice period for voluntary resignation?",
+        },
+    }
+
+    res_query = client.post("/v1/telegram/webhook", json=query_update)
+    assert res_query.status_code == 200
+
+    # Verify bot answered
+    all_edited_texts = [m["text"] for m in mock_tg.edited_messages]
+    final_message = all_edited_texts[-1]
+
+    # Verify answer accuracy & citations
+    assert "60" in final_message
+    assert "[S" in final_message
+    assert "Sources:" in final_message
+
+
+def test_telegram_chunking_and_formatting():
+    """Verify 4096-character chunking and citation receipt formatting."""
+    # Test chunking
+    long_text = "Line 1\n" * 700  # ~4900 chars
+    chunks = chunk_telegram_text(long_text, max_chars=4000)
+    assert len(chunks) == 2
+    for chk in chunks:
+        assert len(chk) <= 4000
+    assert "".join(chunks) == long_text
+
+    # Test receipt formatting
+    from app.pipeline.answer import CitationItem
+
+    dummy_cits = [
+        CitationItem(
+            label="S1",
+            chunk_id="chk_01",
+            page=2,
+            section_path=["Leave Policy", "Annual Leave"],
+            text_preview="Employees accrue 24 days annual leave per calendar year.",
+            is_two_hop=False,
+        )
+    ]
+    formatted = format_telegram_answer("Employees accrue 24 days [S1].", dummy_cits)
+    assert "Employees accrue 24 days [S1]." in formatted
+    assert "📚 *Sources:*" in formatted
+    assert "*[S1]*" in formatted
+    assert "Page 2" in formatted
+    assert "Leave Policy > Annual Leave" in formatted
