@@ -225,7 +225,7 @@
 
 ## PHASE 12 — PRIVACY EDITION + DEPLOY
 
-- [ ] **STEP 49 — Docker images**
+- [x] **STEP 49 — Docker images**
   Do: `api/Dockerfile` (models + tesseract, non-root, healthcheck) and `docker/docker-compose.yml` (api + static web + Ollama pulling `qwen2.5:3b`, `MODE=private`).
   Done when: `docker compose up` on a clean machine → full private edition works offline against Ollama.
 
