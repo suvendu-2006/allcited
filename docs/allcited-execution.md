@@ -209,7 +209,7 @@
   Do: Tesseract (eng+hin) wired into `pdf.py` for pages with <50 chars text; "(OCR)" citation flag.
   Done when: the scanned-PDF fixture answers 3 questions with OCR-flagged citations.
 
-- [ ] **STEP 46 — Telegram bot**
+- [x] **STEP 46 — Telegram bot**
   Do: `telegram.py` webhook (secret-verified): /start, PDF ingest, Q&A via message-edit streaming (4096-char chunking), flood-safe queue.
   Done when: a real Telegram chat with the bot uploads a PDF and gets a cited answer.
 
