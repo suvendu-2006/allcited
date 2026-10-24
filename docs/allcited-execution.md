@@ -195,7 +195,7 @@
 
 ## PHASE 9 — PAYMENTS
 
-- [ ] **STEP 43 — Stripe test-mode checkout + webhooks**
+- [x] **STEP 43 — Stripe test-mode checkout + webhooks**
   Do: Free/Pro products, `/v1/stripe/checkout`, webhook with signature verification + idempotent handling → `subscriptions`.
   Done when: test checkout completes; webhook updates plan; replayed webhook event does not double-apply.
 
