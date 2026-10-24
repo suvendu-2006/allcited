@@ -129,7 +129,7 @@
 
 ## PHASE 6 — FORMATS + DELTA
 
-- [ ] **STEP 28 — DOCX parser**
+- [x] **STEP 28 — DOCX parser**
   Do: `parsers/docx.py` — heading-style section tree, tables → markdown rows; citation = heading path.
   Done when: DOCX twin of the handbook yields equivalent chunk quality (parity test from plan §8).
 
