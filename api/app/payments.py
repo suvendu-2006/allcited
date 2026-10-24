@@ -215,6 +215,17 @@ async def handle_stripe_webhook(payload: bytes, sig_header: Optional[str]) -> Di
                 status="active",
             )
             logger.info(f"Upgraded user {user_id} to Pro via Stripe event {event_id}")
+            from app.audit import get_audit_store
+            get_audit_store().record_action(
+                user_id=user_id,
+                action="subscription_updated",
+                details={
+                    "event_id": event_id,
+                    "event_type": event_type,
+                    "plan": "pro",
+                    "customer_id": customer_id,
+                },
+            )
 
     elif event_type == "customer.subscription.deleted":
         raw_obj = event["data"]["object"]
@@ -227,6 +238,16 @@ async def handle_stripe_webhook(payload: bytes, sig_header: Optional[str]) -> Di
                 status="canceled",
             )
             logger.info(f"Downgraded user {user_id} to Free via Stripe event {event_id}")
+            from app.audit import get_audit_store
+            get_audit_store().record_action(
+                user_id=user_id,
+                action="subscription_updated",
+                details={
+                    "event_id": event_id,
+                    "event_type": event_type,
+                    "plan": "free",
+                },
+            )
 
     # Mark event as processed to prevent double-application on future retries
     store.mark_event_processed(event_id)

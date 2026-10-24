@@ -121,6 +121,16 @@ class InMemoryLibraryStore:
         with self._lock:
             return self._docs.get(user_id, {}).get(doc_id)
 
+    def delete_document(self, user_id: str, doc_id: str) -> bool:
+        with self._lock:
+            user_docs = self._docs.get(user_id, {})
+            if doc_id not in user_docs:
+                return False
+            del user_docs[doc_id]
+            if user_id in self._chunks:
+                self._chunks[user_id] = [c for c in self._chunks[user_id] if c.document_id != doc_id]
+            return True
+
     def search_chunks(
         self,
         user_id: str,

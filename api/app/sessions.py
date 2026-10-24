@@ -221,6 +221,23 @@ class SessionStore:
         from app.pipeline.graph import extract_heuristic_entities
         knowledge_graph = extract_heuristic_entities(chunks)
 
+        # 7. Record stats
+        from app.stats import get_platform_stats
+        p_stats = get_platform_stats()
+        p_stats.record_chunks(len(chunks))
+        if lower_name.endswith(".pdf"):
+            p_stats.record_format("pdf")
+        elif lower_name.endswith(".docx"):
+            p_stats.record_format("docx")
+        elif lower_name.endswith(".pptx"):
+            p_stats.record_format("pptx")
+        elif lower_name.endswith((".xlsx", ".xlsm")):
+            p_stats.record_format("xlsx")
+        elif lower_name.startswith(("http://", "https://")) or lower_name.endswith((".html", ".htm")):
+            p_stats.record_format("html")
+        else:
+            p_stats.record_format("md_txt")
+
         session = DocumentSession(
             session_id=session_id,
             filename=filename,

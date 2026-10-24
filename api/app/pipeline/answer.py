@@ -248,6 +248,11 @@ async def stream_answer_pipeline(
                 latencies_ms=latencies,
             )
         )
+        from app.stats import get_platform_stats
+        p_stats = get_platform_stats()
+        p_stats.record_query()
+        p_stats.record_cache_avoided()
+
         yield format_sse("token", {"delta": cached_hit.answer})
         yield format_sse("citations", {"citations": cached_hit.citations})
         yield format_sse(
@@ -500,6 +505,11 @@ async def stream_answer_pipeline(
         refused=is_refusal,
         filename=getattr(session, "filename", None),
     )
+
+    from app.stats import get_platform_stats
+    p_stats = get_platform_stats()
+    p_stats.record_query()
+    p_stats.record_tokens(total_tokens)
 
     yield format_sse(
         "done",

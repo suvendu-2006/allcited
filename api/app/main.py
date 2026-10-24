@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
+from app.audit import get_audit_store
 from app.auth import ClerkAuthMiddleware, get_current_user, get_optional_user
 from app.config import get_settings
 from app.feedback import FeedbackRequest, get_feedback_store
@@ -120,9 +121,45 @@ async def save_session_to_library(
     check_plan_limit(user_id, "library_save", len(current_docs))
 
     doc_item = store.save_document(user_id=user_id, session=session)
+
+    audit = get_audit_store()
+    audit.record_action(
+        user_id=user_id,
+        action="document_saved",
+        details={"doc_id": doc_item.id, "filename": doc_item.filename},
+    )
+
     return {
         "status": "saved",
         "document": doc_item,
+    }
+
+
+@app.delete("/v1/library/documents/{doc_id}")
+async def delete_library_document(
+    doc_id: str,
+    user_id: str = Depends(get_current_user),
+):
+    """
+    Delete a saved document from the authenticated user's library and record in audit log.
+    """
+    store = get_library_store()
+    deleted = store.delete_document(user_id=user_id, doc_id=doc_id)
+    if not deleted:
+        raise HTTPException(
+            status_code=404,
+            detail={"error": {"code": "doc_not_found", "message": f"Document '{doc_id}' not found"}},
+        )
+
+    audit = get_audit_store()
+    audit.record_action(
+        user_id=user_id,
+        action="document_deleted",
+        details={"doc_id": doc_id},
+    )
+    return {
+        "status": "deleted",
+        "doc_id": doc_id,
     }
 
 
@@ -172,12 +209,21 @@ async def stripe_checkout(
     Create a Stripe Checkout Session for upgrading to Pro tier.
     Requires authenticated Clerk user.
     """
-    return await create_checkout_session(
+    checkout_res = await create_checkout_session(
         user_id=user_id,
         price_id=request.price_id,
         success_url=request.success_url,
         cancel_url=request.cancel_url,
     )
+
+    audit = get_audit_store()
+    audit.record_action(
+        user_id=user_id,
+        action="checkout_initiated",
+        details={"session_id": checkout_res.session_id, "checkout_url": checkout_res.checkout_url},
+    )
+
+    return checkout_res
 
 
 @app.post("/v1/stripe/webhook")
@@ -202,6 +248,23 @@ async def get_my_subscription(user_id: str = Depends(get_current_user)):
 
 # Mount Telegram webhook router
 app.include_router(telegram_router, prefix="/v1/telegram", tags=["telegram"])
+
+
+@app.get("/v1/audit")
+async def list_audit_trail(
+    limit: int = 50,
+    user_id: str = Depends(get_current_user),
+):
+    """
+    List audit trail logs for the authenticated user (saves, deletes, checkouts, plan updates).
+    """
+    audit = get_audit_store()
+    logs = audit.list_logs(user_id=user_id, limit=limit)
+    return {
+        "status": "ok",
+        "count": len(logs),
+        "logs": logs,
+    }
 
 
 @app.get("/v1/models")
