@@ -46,6 +46,7 @@ class CitationItem(BaseModel):
     text_preview: str = Field(..., description="Short text preview of cited chunk")
     is_two_hop: bool = Field(default=False, description="True if added via two-hop expansion")
     added_reason: Optional[str] = Field(default=None, description="Reason if added via two-hop")
+    doc_name: Optional[str] = Field(default=None, description="Document filename for library citations")
 
 
 def build_grounded_prompt(
@@ -136,6 +137,7 @@ def post_pass_citations(
                         text_preview=src.chunk.text[:200],
                         is_two_hop=src.is_two_hop,
                         added_reason=src.added_reason,
+                        doc_name=getattr(src.chunk, "doc_name", None) or getattr(src.chunk, "source", None) or None,
                     )
                 )
 

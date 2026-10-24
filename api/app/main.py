@@ -10,6 +10,13 @@ from pydantic import BaseModel
 from app.auth import ClerkAuthMiddleware, get_current_user
 from app.config import get_settings
 from app.feedback import FeedbackRequest, get_feedback_store
+from app.library import (
+    LibraryQueryRequest,
+    LibraryQueryResponse,
+    SaveToLibraryRequest,
+    ask_my_library,
+    get_library_store,
+)
 from app.pipeline.answer import stream_answer_pipeline
 from app.security.pii import setup_pii_logging
 from app.security.ssrf import SSRFBlockedError, safe_fetch_url
@@ -79,6 +86,68 @@ async def get_my_auth_profile(user_id: str = Depends(get_current_user)):
         "status": "authenticated",
         "user_id": user_id,
     }
+
+
+@app.post("/v1/library/save")
+async def save_session_to_library(
+    request: SaveToLibraryRequest,
+    user_id: str = Depends(get_current_user),
+):
+    """
+    Save an uploaded document session and its vectors into the user's library.
+    RLS/user-isolation enforced: only the authenticated user_id can access.
+    """
+    session_store = get_session_store()
+    session = session_store.get_session(request.session_id)
+    if not session:
+        raise HTTPException(
+            status_code=404,
+            detail={"error": {"code": "session_not_found", "message": f"Session '{request.session_id}' not found"}},
+        )
+
+    store = get_library_store()
+    doc_item = store.save_document(user_id=user_id, session=session)
+    return {
+        "status": "saved",
+        "document": doc_item,
+    }
+
+
+@app.get("/v1/library/documents")
+async def list_library_documents(user_id: str = Depends(get_current_user)):
+    """
+    List all documents saved in the authenticated user's library.
+    """
+    store = get_library_store()
+    docs = store.list_documents(user_id=user_id)
+    return {
+        "status": "ok",
+        "count": len(docs),
+        "documents": docs,
+    }
+
+
+@app.post("/v1/library/query", response_model=LibraryQueryResponse)
+async def query_user_library(
+    request: LibraryQueryRequest,
+    user_id: str = Depends(get_current_user),
+):
+    """
+    Query across all saved documents in user's library.
+    Returns a grounded answer with citations identifying the doc of origin.
+    """
+    answer, citations = await ask_my_library(
+        user_id=user_id,
+        query=request.query,
+        doc_ids=request.doc_ids,
+        top_k=request.top_k,
+        preferred_provider=request.provider,
+    )
+    return LibraryQueryResponse(
+        answer=answer,
+        citations=citations,
+        sources_count=len(citations),
+    )
 
 
 @app.get("/v1/models")
