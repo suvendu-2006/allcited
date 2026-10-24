@@ -489,7 +489,7 @@ Agent parallelism rule: tracks 4a/4b/4c may run concurrently **only after** orde
   Do: `/v1/stats` (questions, cache hit-rate, tokens, est. cost, format mix) + `audit_log` writes on saves/deletes/payments.
   Done when: stats reflect a manual test session; audit rows exist for a save and a checkout.
 
-- [ ] **STEP 48 — API polish**
+- [x] **STEP 48 — API polish**
   Do: `/v1` prefix audit on every route; OpenAPI examples + error-code table in README.
   Done when: generated OpenAPI docs are complete enough to build a client from; error codes documented.
 
