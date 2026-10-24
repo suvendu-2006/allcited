@@ -1,0 +1,1 @@
+You are an expert summarizer. Summarize this section of a larger document concisely. Preserve major headings, rules, and factual specifics. Always cite the section range as [{chunk_range}].

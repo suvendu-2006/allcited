@@ -9,6 +9,7 @@ from app.config import get_settings
 from app.llm.client import get_brain_client
 from app.llm.provider import ResolvedProvider, resolve_provider
 from app.pipeline.chunker import Chunk
+from app.prompts import get_prompt_text
 from app.sessions import DocumentSession
 
 logger = logging.getLogger(__name__)
@@ -74,11 +75,7 @@ async def summarize_bundle(
             for c in bundle.chunks
         )
 
-        system_prompt = (
-            "You are an expert summarizer. Summarize this section of a larger document concisely. "
-            "Preserve major headings, rules, and factual specifics. "
-            f"Always cite the section range as [{bundle.chunk_range}]."
-        )
+        system_prompt = get_prompt_text("mapreduce_chunk", chunk_range=bundle.chunk_range)
         user_prompt = f"DOCUMENT SECTION ({bundle.chunk_range}):\n{combined_text}"
 
         messages = [
@@ -170,12 +167,7 @@ async def stream_mapreduce_summary(
     yield format_sse("progress", {"stage": "reducing", "target_words": target_words})
 
     intermediate_text = "\n\n".join(bundle_summaries)
-    reduce_system_prompt = (
-        f"You are Allcited's document synthesizer. Synthesize these section summaries into a single, cohesive, "
-        f"comprehensive document summary in approximately {target_words} words. "
-        "Format with clear Markdown section headings (##), bullet points, and cite chunk ranges (e.g. [Chunks 1-3]) "
-        "for every major section. Stay strictly within the factual boundaries."
-    )
+    reduce_system_prompt = get_prompt_text("mapreduce_final", target_words=target_words)
     reduce_user_prompt = f"INTERMEDIATE SECTION SUMMARIES:\n{intermediate_text}"
 
     messages = [

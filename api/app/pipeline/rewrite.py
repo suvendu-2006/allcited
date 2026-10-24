@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 from app.llm.client import get_brain_client
 from app.llm.provider import ResolvedProvider
 from app.pipeline.refmap import extract_references
+from app.prompts import get_prompt_text
 
 logger = logging.getLogger(__name__)
 
@@ -113,16 +114,7 @@ async def rewrite_query(
         )
 
     brain = get_brain_client()
-    system_prompt = (
-        "You are an expert search query reformulator for enterprise document retrieval. "
-        "The user will provide a potentially vague or conversational question. "
-        "Generate 2 to 3 targeted, specific search phrases that search for relevant policies, clauses, "
-        "rules, or terms inside an employee handbook or corporate policy document.\n\n"
-        "Rules:\n"
-        "- Output exactly 2 or 3 search queries, one per line.\n"
-        "- Do NOT number them, use bullet points, or add explanations.\n"
-        "- Include the most relevant domain terminology."
-    )
+    system_prompt = get_prompt_text("rewrite_system")
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": f"User query: {query}"},

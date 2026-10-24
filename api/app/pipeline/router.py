@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 from app.llm.client import get_brain_client
 from app.llm.provider import ResolvedProvider
 from app.pipeline.refmap import extract_references
+from app.prompts import get_prompt_text
 
 
 class QueryRoute(str, Enum):
@@ -95,13 +96,7 @@ async def route_query(
 
     # Pass 2: Tiny LLM disambiguation
     brain = get_brain_client()
-    system_prompt = (
-        "You are a query classifier for a document retrieval engine. "
-        "Classify the user's query into exactly one of two categories:\n"
-        "- LOOKUP: The user is asking about specific facts, sections, clauses, rules, or targeted topics.\n"
-        "- DOC_WIDE: The user is asking to summarize, synthesize, or outline the entire document as a whole.\n\n"
-        "Reply with ONLY 'LOOKUP' or 'DOC_WIDE'."
-    )
+    system_prompt = get_prompt_text("router_system")
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": f"Query: {query}"},

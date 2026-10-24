@@ -28,6 +28,7 @@ class TraceRecord(BaseModel):
     injection_flagged: bool = False
     refused: bool = False
     refusal_reason: Optional[str] = None
+    prompt_hash: Optional[str] = None
     provider: str = "stub"
     model: str = ""
     total_tokens: int = 0
