@@ -1,0 +1,9 @@
+[extend]
+# Extend default gitleaks config
+
+[allowlist]
+paths = [
+  '''(?i)web/\.next/''',
+  '''(?i)\.pytest_cache/''',
+  '''(?i)\.venv/''',
+]
