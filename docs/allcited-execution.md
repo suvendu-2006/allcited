@@ -31,7 +31,7 @@
   Do: `pipeline/parsers/pdf.py` (PyMuPDF, `\f` page markers, font/heading heuristics → section tree) and `md_txt.py`; shared contract `{text, section_path[], page?, source}`. Drop a test handbook PDF into `eval/fixtures/`.
   Done when: parser output for the fixture looks correct on 10 sampled blocks (headings detected, no garbage chars).
 
-- [ ] **STEP 06 — Chunker (P1 fix)**
+- [x] **STEP 06 — Chunker (P1 fix)**
   Do: `pipeline/chunker.py` — ~400-token target, hard max 600, 15% overlap, sentence-boundary splits, `parent_section_id`, content hash per chunk.
   Done when: unit test proves a sentence straddling a boundary appears *complete* in both overlapping chunks (the P1 fixture from the plan).
 
