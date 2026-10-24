@@ -8,6 +8,7 @@ You are the build agent for **Allcited** — a document Q&A system (upload a doc
 
 - `docs/allcited-plan.md` — WHAT to build and WHY (specs, decisions D-01…D-26, failure matrices, eval gates)
 - `docs/allcited-frontend-plan.md` — the frontend design system + motion spec (authoritative for everything in `web/`; its §9 build steps extend Phase 4a)
+- `docs/allcited-frontend-copy.md` — every UI string, verbatim (agents implement copy exactly as written; tone changes go through this file)
 - `docs/allcited-execution.md` — the 53-step runbook in dependency order (checkbox list)
 
 ## PRIME DIRECTIVES (never violate)

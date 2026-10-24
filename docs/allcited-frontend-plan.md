@@ -18,7 +18,8 @@
 | **steven.com** | White + ink `#121212`, Host Grotesk + Field Gothic, playful 4-accent chips (coral/green/blue/yellow) | Multi-color status chips (each pipeline stage gets a hue in traces & the status line) |
 | **bmwf3.com** | Near-black `#050505`, Google Sans Flex (variable, fluid axes) + **Permanent Marker** accents, red `#EB001A` used surgically | Variable-font fluidity; one personality touch — see §4.4 "human margin notes" |
 | **joseph-san.com** | **Petrol-tinted black `#07161A`** (not pure black), PP Neue Montreal + Modern Era Mono, red `#FF3333` | Tinted dark background; mono for all citations/trace data |
-| **wisprtype.com** (fonts) | **Bricolage Grotesque** display (opsz 12..96, tight `-1.85px`) + **Inter** body + **JetBrains Mono**, cream `#FFFFEB`, deep teal `#034F46`, maroon `#7F1C34`, 10px radii | The complete type system; the warm cream + teal + maroon family |
+| **wisprtype.com** (fonts + palette) | **Bricolage Grotesque** display (opsz 12..96, tight `-1.85px`) + **Inter** body + **JetBrains Mono**, cream `#FFFFEB`, **deep teal `#034F46` ×186 uses**, warm gray `#71716A`, maroon `#7F1C34`, icon set blue `#2D62FF` / coral `#FF5F57` / yellow `#FEBC2E` / green `#28C840`, 10px radii | The complete type system; **teal as the brand spine of BOTH themes**; maroon = danger; the 4-color icon set = the pipeline stage hues |
+| **aestudio.studio/goshuin** | Washi paper `#E7E5DF`, soft ink `#292824`, warm gray `#68665F`, **shrine-seal red `#A6362F`/`#943E37`**, Georgia serif display with **ultra-tight `-8px` tracking**, 0.65px dot-grid, muted ghost buttons | **Seal red = citation accent** (a goshuin stamp is a mark of provenance — exactly what `[S1]` is); **serif hero headline** (Georgia, tight tracking); softer dot-grid |
 
 ## 2. Design direction: "Engineered Editorial"
 
@@ -31,34 +32,42 @@ Allcited handles *documents* (editorial: paper, serif warmth, calm) and *retriev
 ## 3. Design tokens (exact values)
 
 ### 3.1 Color — Light "Paper" theme
+*2026-10-25 update: rebased closer to wisprtype — cream-warmed base, their exact teal, their icon palette as stage hues.*
+
 | Token | Hex | Use |
 |---|---|---|
-| `bg/base` | `#F7F6F1` | page (warm paper) |
+| `bg/base` | `#FAF8ED` | page (wisprtype cream `#FFFFEB`, softened for long reading) |
 | `bg/surface` | `#FFFFFF` | cards, composer, source panel |
-| `bg/sunken` | `#EFEDE4` | trace bars, code blocks, table headers |
-| `ink/primary` | `#16161A` | text (15.2:1 on base ✓) |
+| `bg/sunken` | `#F1EEE0` | trace bars, code blocks, table headers |
+| `ink/primary` | `#16161A` | text (14.6:1 on base ✓) |
 | `ink/ghost` | `rgba(22,22,26,.45)` | secondary text (large/mono labels only) |
-| `accent/primary` | `#035C53` | deep teal — primary buttons, links, focus (7.4:1 ✓) |
-| `accent/cite` | `#9A5B00` | citation chips + markers (amber-brown, 5.8:1 ✓) |
-| `accent/hot` | `#C2410C` | rare emphasis, active stream caret (4.9:1 ✓) |
-| `status/retrieve` `status/rerank` `status/twohop` `status/cache` | `#035C53` `#1D4ED8` `#7C3AED` `#0F766E` | pipeline stage chips (steven.com pattern) |
+| `accent/primary` | `#034F46` | **wisprtype's exact teal** — buttons, links, focus (7.6:1 ✓) |
+| `accent/cite` | `#A6362F` | citation chips + markers — **goshuin seal red** (a stamp of provenance; 5.1:1 ✓) |
+| `accent/hot` | `#C2410C` | rare emphasis, active stream caret (4.8:1 ✓) |
+| `status/retrieve` `status/rerank` `status/twohop` `status/cache` | `#2D62FF` `#FF5F57` `#FEBC2E` `#28C840` | wisprtype icon hues; **AA rule:** on light theme chips render as 14%-tint fill + 2px hue border + `ink/primary` label (vivid hues never as body text on cream) |
 | `danger` | `#7F1C34` | errors, destructive (maroon — wisprtype) |
 | `border` | `rgba(22,22,26,.12)` | hairlines |
+| `gray/warm` | `#71716A` | wisprtype's warm gray — meta text, timestamps (4.6:1 ✓ at 13px+) |
 
-### 3.2 Color — Dark "Petrol" theme
+### 3.2 Color — Dark "Teal-Ink Night" theme
+*2026-10-25 update: user-requested wisprtype adoption — the dark theme is now **wisprtype's teal `#034F46` deepened into night**, replacing the petrol base.*
+
 | Token | Hex | Use |
 |---|---|---|
-| `bg/base` | `#081518` | page (joseph-san petrol tint) |
-| `bg/surface` | `#0E1E22` | cards (charcoal-teal layering — ferrari/bmw layer logic) |
-| `bg/sunken` | `#122528` | trace/code/table chrome |
-| `ink/primary` | `#EFEAD9` | warm bone text (13.8:1 ✓) |
-| `ink/ghost` | `rgba(239,234,217,.48)` | hydradb ghost hierarchy |
-| `accent/primary` | `#3FC9AC` | mint — buttons/links/focus (8.1:1 ✓) |
-| `accent/cite` | `#E8A33D` | amber citations (7.9:1 ✓) |
-| `accent/hot` | `#FF6A3D` | stream caret, hover (hydradb orange adapted) |
-| stage chips | `#3FC9AC` `#6EA8FE` `#B79CFF` `#5FD3C7` | dark variants of the 4 stage hues |
-| `danger` | `#FF7A8A` | errors |
-| `border` | `rgba(239,234,217,.14)` | hairlines |
+| `bg/base` | `#06211D` | page — teal-ink night (`#034F46` crushed ~92%) |
+| `bg/surface` | `#0B2A24` | cards (teal-charcoal layering — ferrari layer logic, wisprtype hue) |
+| `bg/sunken` | `#10352E` | trace bars/code/table chrome |
+| `ink/primary` | `#F2EFE0` | warm bone text (13.1:1 ✓) |
+| `ink/ghost` | `rgba(242,239,224,.48)` | hydradb ghost hierarchy |
+| `accent/primary` | `#31C7A5` | luminous teal (`#034F46` lifted for dark) — buttons/links/focus (7.8:1 ✓) |
+| `accent/cite` | `#F08A75` | citations — seal red lifted for dark (6.2:1 ✓) |
+| `accent/hot` | `#FF7A4D` | stream caret, hover |
+| stage chips | `#6E97FF` `#FF8177` `#FCC64B` `#5AD46F` | wisprtype icon hues, lifted for dark (all ≥5.5:1 ✓); full-saturation fills allowed here |
+| `danger` | `#F0788C` | errors (maroon lifted) |
+| `border` | `rgba(242,239,224,.14)` | hairlines |
+| `gray/warm` | `#A8A69A` | meta text (warm gray lifted, 6.9:1 ✓) |
+
+The theme-wave tint band (§5) uses `#31C7A5` at 18% when sweeping into dark, `#034F46` at 18% when sweeping into light — the wave itself is teal in both directions.
 
 Every text/base pair above is ≥4.5:1 (WCAG AA body) except ghost tokens, which are **large/mono-label only** by rule.
 
@@ -69,13 +78,14 @@ Every text/base pair above is ≥4.5:1 (WCAG AA body) except ghost tokens, which
 | UI + body (answers, settings, prose) | **Inter** | 400/500/600; 15px body, 1.6 line-height |
 | Machine voice (citations `[S1]`, chunk ids, stages, latency, code) | **JetBrains Mono** | 400/500; 12.5–13.5px; NEVER used for prose |
 | Personality accent (§4.4) | **Caveat** (handwritten, free) | only for the "why this answer" margin note |
+| Editorial display (landing hero ONLY) | **Georgia / Hiragino Mincho** (system — goshuin's exact move) | serif, tracking `-0.04em`…`-0.08em` scaled by size; never inside the app |
 
 Scale (rem): 0.75 / 0.8125 / 0.9375 / 1.0625 / 1.25 / 1.5625 / 2.1 / 3.2 / 4.6 — fluid via `clamp()` on display sizes (bmwf3 fluidity).
 
 ### 3.4 Geometry & texture
 - Radius: **10px** interactive (wisprtype), **4px** inputs, **0px** technical chrome — trace bars, table headers, code blocks (moonsworth sharpness marks "machine output").
 - Spacing: 4px grid; container max 1200px; chat column max 760px (readability), source panel 380px.
-- Texture: screenpipe's dot-grid (`radial-gradient(rgba(ink,.07) 1px, transparent 1px)` 24px grid) on landing hero + empty states only, never behind text bodies.
+- Texture: dot-grid (`radial-gradient(rgba(ink,.063) 0.65px, transparent 0.8px)` 24px grid — goshuin's softer spec) on landing hero + empty states only, never behind text bodies.
 - Elevation: shadows only in light theme (`0 1px 2px rgba(22,22,26,.06), 0 8px 24px rgba(22,22,264,.08)`); dark theme elevates by surface lightness, not shadow.
 
 ## 4. Motion system

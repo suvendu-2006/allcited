@@ -169,7 +169,7 @@
 
 ## PHASE 8 — RETRIEVAL UPGRADES
 
-- [ ] **STEP 37 — Contextual headers**
+- [x] **STEP 37 — Contextual headers**
   Do: batched LLM context blurbs at ingestion, prepended before embedding; headerless fallback on failure.
   Done when: fixture re-indexes with headers; eval paraphrase category improves (or the negative result is recorded — both are findings).
 
