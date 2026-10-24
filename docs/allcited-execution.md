@@ -69,7 +69,7 @@
   Do: `pipeline/rerank.py` — `ms-marco-MiniLM-L-6-v2`, top-25 → top-4, feature-flagged auto-skip on failure/OOM.
   Done when: on the 5 debug questions, reranked top-4 changes ≥1 ranking for the better; flag-off path verified.
 
-- [ ] **STEP 15 — Two-hop (P3 fix)**
+- [x] **STEP 15 — Two-hop (P3 fix)**
   Do: `pipeline/twohop.py` — expand refs found in top chunks/question via refmap; cap 2; flagged additions.
   Done when: "as per rule 63.7.4 …" question returns the definition chunk alongside the mentioning chunk — the exact P3 scenario from the plan.
 
