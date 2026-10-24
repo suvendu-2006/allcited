@@ -1,104 +1,218 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-interface HealthData {
-  status: string;
-  version: string;
-  mode?: string;
-  environment?: string;
-}
+import { Chat } from "@/components/Chat";
+import { Citation } from "@/lib/sse";
+import { BookOpen, Sparkles, X, FileText, CheckCircle2 } from "lucide-react";
 
 export default function Home() {
-  const [health, setHealth] = useState<HealthData | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [documentName, setDocumentName] = useState<string | null>(null);
+  const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
+  const [apiConnected, setApiConnected] = useState<boolean>(false);
 
-  const fetchHealth = async () => {
-    setLoading(true);
-    setError(null);
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+  // Check health and initialize a demo session if none exists
+  useEffect(() => {
+    async function checkHealthAndInit() {
+      try {
+        const res = await fetch(`${apiUrl}/v1/health`);
+        if (res.ok) {
+          setApiConnected(true);
+        }
+      } catch {
+        setApiConnected(false);
+      }
+    }
+    checkHealthAndInit();
+  }, [apiUrl]);
+
+  // Quick action to load fixture session for immediate testing
+  const loadHandbookFixture = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const res = await fetch(`${apiUrl}/v1/health`, {
-        headers: {
-          Accept: "application/json",
-        },
+      // Ingest the sample handbook fixture text
+      const sampleText = `# Allcited Corporate Employee Handbook
+1. General Employment Framework
+Welcome to Allcited. This employee handbook sets out the official terms, rules, and conditions governing all personnel. Compliance with company directives is mandatory.
+1.2 Code of Business Conduct
+Every team member must act with absolute integrity. Conflicts of interest must be formally declared to the ethics committee under procedure EC-101.
+
+2. Leave and Time-Off Entitlements
+2.1 Annual Paid Leave
+Full-time employees accrue 24 days of paid annual leave per calendar year (2.0 working days per month). A maximum of 8 unused annual leave days may be carried forward into the subsequent calendar year. Any surplus beyond 8 days will automatically lapse on March 31.
+2.2 Sick and Medical Leave
+Staff members are eligible for 12 days of paid sick leave annually. Absences exceeding two consecutive working days require a medical practitioner certificate submitted via Form HR-702.
+
+3. Separation, Resignation and Exit Terms
+3.1 Voluntary Resignation and Notice Period
+Permanent employees who wish to terminate their employment agreement must tender formal written notice at least 60 calendar days in advance to their designated reporting officer.
+3.2 Leave Settlement on Departure
+All accrued but unutilized annual leave will be settled in the final paycheck as per rule 63.7.4. Employees under active notice may not take paid leave without the written authorization of the Vice President of HR.
+
+4. Information Technology and Security
+Clause 4.2 Security Credential Protocols
+Multi-factor authentication (MFA) is strictly mandatory on all internal systems. Passwords must be at least 16 characters in length and refreshed every 90 days as mandated by standard ISO-27001.
+Clause 5.1 Remote Work Policy
+Employees authorized for remote work must maintain a private secure workspace; public unsecured Wi-Fi connections without VPN encapsulation are strictly prohibited.
+
+5. Statutory Schedules and Specialized Rules
+Rule 63.7.4 Leave Encashment on Resignation
+Upon voluntary resignation or formal separation, accrued annual leave days up to a cap of 30 working days shall be encashed at the employee base daily rate, computed as monthly basic pay divided by 22 working days. Sick leave, compassionate leave, and floating holidays are strictly non-encashable and non-transferable.`;
+
+      const blob = new Blob([sampleText], { type: "text/markdown" });
+      const formData = new FormData();
+      formData.append("file", blob, "handbook.md");
+
+      const res = await fetch(`${apiUrl}/v1/ingest`, {
+        method: "POST",
+        body: formData,
       });
+
       if (!res.ok) {
-        throw new Error(`HTTP error ${res.status}`);
+        throw new Error(`Ingest failed: ${res.statusText}`);
       }
+
       const data = await res.json();
-      setHealth(data);
+      setSessionId(data.session_id);
+      setDocumentName(data.filename || "handbook.md");
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Failed to connect to API");
-      }
-    } finally {
-      setLoading(false);
+      const message = err instanceof Error ? err.message : String(err);
+      alert(`Failed to load handbook session: ${message}`);
     }
   };
 
-  useEffect(() => {
-    fetchHealth();
-  }, []);
-
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-slate-950 text-slate-100 font-sans">
-      <div className="w-full max-w-xl p-8 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl space-y-6">
-        <div className="border-b border-slate-800 pb-4">
-          <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-2">
-            <span>Allcited</span>
-            <span className="text-xs font-mono uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-              Phase 0
-            </span>
-          </h1>
-          <p className="text-slate-400 text-sm mt-1">
-            Document Q&A with receipts · Next.js 14 frontend connectivity
-          </p>
-        </div>
-
-        <div className="space-y-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
-            Backend API Health Status
-          </h2>
-
-          {loading && (
-            <div className="flex items-center gap-3 text-slate-400 text-sm py-4">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
-              <span>Connecting to /v1/health...</span>
+    <div className="flex h-screen w-screen overflow-hidden bg-slate-50 dark:bg-slate-950 font-sans">
+      {/* Main Content Area */}
+      <div className="flex flex-col flex-1 h-full min-w-0">
+        {/* Top Navbar */}
+        <header className="h-14 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur px-6 flex items-center justify-between flex-shrink-0 z-10">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+              AC
             </div>
-          )}
-
-          {error && (
-            <div className="p-4 bg-red-950/50 border border-red-800/60 rounded-xl text-red-200 text-sm space-y-1">
-              <p className="font-semibold">Connection Error:</p>
-              <p className="font-mono text-xs text-red-300">{error}</p>
-            </div>
-          )}
-
-          {health && (
-            <div className="p-4 bg-slate-950 border border-slate-800 rounded-xl font-mono text-sm space-y-2">
-              <div className="flex justify-between items-center text-xs text-slate-500 pb-2 border-b border-slate-800">
-                <span>GET /v1/health</span>
-                <span className="text-emerald-400 font-semibold">200 OK</span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-sm text-slate-900 dark:text-slate-100">
+                  Allcited
+                </span>
+                <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900">
+                  v1.0
+                </span>
               </div>
-              <pre className="text-emerald-400 text-xs overflow-x-auto">
-                {JSON.stringify(health, null, 2)}
-              </pre>
             </div>
-          )}
+          </div>
 
-          <button
-            onClick={fetchHealth}
-            disabled={loading}
-            className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-sm rounded-xl transition-colors disabled:opacity-50"
-          >
-            {loading ? "Checking..." : "Re-check Health"}
-          </button>
+          <div className="flex items-center gap-3">
+            {sessionId ? (
+              <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                <FileText className="w-3.5 h-3.5 text-blue-500" />
+                <span className="max-w-[140px] truncate">{documentName}</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={loadHandbookFixture}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-colors cursor-pointer"
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                Load Demo Handbook
+              </button>
+            )}
+
+            <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  apiConnected ? "bg-emerald-500 animate-pulse" : "bg-rose-500"
+                }`}
+              />
+              <span className="hidden sm:inline">{apiConnected ? "API Connected" : "Connecting..."}</span>
+            </div>
+          </div>
+        </header>
+
+        {/* Chat Area */}
+        <div className="flex-1 min-h-0 relative">
+          <Chat
+            sessionId={sessionId}
+            documentName={documentName}
+            onCitationClick={(cit) => setSelectedCitation(cit)}
+          />
         </div>
       </div>
-    </main>
+
+      {/* Side Source Detail Panel (when citation is clicked) */}
+      {selectedCitation && (
+        <aside className="w-80 md:w-96 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 h-full flex flex-col shadow-xl z-20 animate-in slide-in-from-right duration-200">
+          <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                {selectedCitation.is_two_hop ? (
+                  <Sparkles className="w-4 h-4 text-purple-500" />
+                ) : (
+                  <CheckCircle2 className="w-4 h-4 text-blue-500" />
+                )}
+                Citation Receipt [{selectedCitation.label}]
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSelectedCitation(null)}
+              className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
+            <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-1.5">
+              <div className="flex justify-between text-slate-500 dark:text-slate-400">
+                <span>Source Chunk ID:</span>
+                <span className="font-mono text-slate-700 dark:text-slate-300">{selectedCitation.chunk_id}</span>
+              </div>
+              {selectedCitation.page && (
+                <div className="flex justify-between text-slate-500 dark:text-slate-400">
+                  <span>Page:</span>
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">
+                    {selectedCitation.page}
+                  </span>
+                </div>
+              )}
+              {selectedCitation.section_path?.length ? (
+                <div>
+                  <span className="text-slate-500 dark:text-slate-400 block mb-0.5">Section Path:</span>
+                  <span className="font-medium text-slate-800 dark:text-slate-200">
+                    {selectedCitation.section_path.join(" > ")}
+                  </span>
+                </div>
+              ) : null}
+            </div>
+
+            {selectedCitation.is_two_hop && (
+              <div className="p-3 rounded-lg bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60 text-purple-900 dark:text-purple-300 space-y-1">
+                <div className="font-semibold flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Two-Hop Expansion Reference
+                </div>
+                <p className="text-[11px] leading-relaxed">
+                  {selectedCitation.added_reason || "Added via document cross-reference definition lookup."}
+                </p>
+              </div>
+            )}
+
+            <div>
+              <span className="text-[11px] uppercase tracking-wider font-semibold text-slate-400 dark:text-slate-500 block mb-2">
+                Original Passage Excerpt
+              </span>
+              <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 text-slate-700 dark:text-slate-200 leading-relaxed font-sans whitespace-pre-wrap">
+                {selectedCitation.text_preview}
+              </div>
+            </div>
+          </div>
+        </aside>
+      )}
+    </div>
   );
 }
