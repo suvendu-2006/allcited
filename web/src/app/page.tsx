@@ -82,6 +82,16 @@ Upon voluntary resignation or formal separation, accrued annual leave days up to
     }
   };
 
+  const handleUploadSuccess = (data: {
+    sessionId: string;
+    filename: string;
+    chunkCount: number;
+    pageCount: number;
+  }) => {
+    setSessionId(data.sessionId);
+    setDocumentName(data.filename);
+  };
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-slate-50 dark:bg-slate-950 font-sans">
       {/* Main Content Area */}
@@ -106,10 +116,22 @@ Upon voluntary resignation or formal separation, accrued annual leave days up to
 
           <div className="flex items-center gap-3">
             {sessionId ? (
-              <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                <FileText className="w-3.5 h-3.5 text-blue-500" />
-                <span className="max-w-[140px] truncate">{documentName}</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                  <FileText className="w-3.5 h-3.5 text-blue-500" />
+                  <span className="max-w-[140px] truncate">{documentName}</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSessionId(null);
+                    setDocumentName(null);
+                  }}
+                  className="px-2 py-1 text-xs rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                >
+                  Change
+                </button>
               </div>
             ) : (
               <button
@@ -139,6 +161,7 @@ Upon voluntary resignation or formal separation, accrued annual leave days up to
             sessionId={sessionId}
             documentName={documentName}
             onCitationClick={(cit) => setSelectedCitation(cit)}
+            onUploadSuccess={handleUploadSuccess}
           />
         </div>
       </div>

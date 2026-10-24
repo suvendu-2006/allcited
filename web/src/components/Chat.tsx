@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Citation, PipelineStage, streamQuery } from "@/lib/sse";
 import { ChatMessage, Message } from "./Message";
 import { Composer } from "./Composer";
+import { Upload } from "./Upload";
 import { BookOpen, Sparkles, ShieldCheck } from "lucide-react";
 
 interface ChatProps {
@@ -14,6 +15,12 @@ interface ChatProps {
   byokModel?: string | null;
   preferredProvider?: string | null;
   onCitationClick?: (citation: Citation) => void;
+  onUploadSuccess?: (data: {
+    sessionId: string;
+    filename: string;
+    chunkCount: number;
+    pageCount: number;
+  }) => void;
 }
 
 export function Chat({
@@ -24,6 +31,7 @@ export function Chat({
   byokModel,
   preferredProvider,
   onCitationClick,
+  onUploadSuccess,
 }: ChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -164,11 +172,17 @@ export function Chat({
               <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-1">
                 {documentName ? `Ask about "${documentName}"` : "Welcome to Allcited"}
               </h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-8">
+              <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-6">
                 {documentName
                   ? "Every answer is strictly grounded in your uploaded document with verifiable source citations."
                   : "Upload a document to ask questions with receipt citations, cross-reference expansion, and zero hallucination."}
               </p>
+
+              {!sessionId && onUploadSuccess && (
+                <div className="max-w-md mx-auto mb-8">
+                  <Upload onUploadSuccess={onUploadSuccess} />
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-left max-w-2xl mx-auto">
                 <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
