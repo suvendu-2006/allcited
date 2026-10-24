@@ -11,6 +11,8 @@ from app.pipeline.parsers.base import ParsedBlock
 from app.pipeline.parsers.docx import DOCXParserError, parse_docx
 from app.pipeline.parsers.md_txt import parse_md_txt
 from app.pipeline.parsers.pdf import PDFParserError, parse_pdf
+from app.pipeline.parsers.pptx import PPTXParserError, parse_pptx
+from app.pipeline.parsers.xlsx import XLSXParserError, parse_xlsx
 from app.pipeline.refmap import ReferenceMap, build_reference_map
 
 MAX_SESSIONS = 8
@@ -137,6 +139,24 @@ class SessionStore:
                     status_code=400,
                     detail={"error": {"code": "doc_unreadable", "message": str(e)}},
                 ) from e
+        elif lower_name.endswith(".pptx"):
+            try:
+                blocks = parse_pptx(content, source_name=filename)
+                page_count = max((b.page for b in blocks if b.page), default=1)
+            except PPTXParserError as e:
+                raise HTTPException(
+                    status_code=400,
+                    detail={"error": {"code": "doc_unreadable", "message": str(e)}},
+                ) from e
+        elif lower_name.endswith((".xlsx", ".xlsm")):
+            try:
+                blocks = parse_xlsx(content, source_name=filename)
+                page_count = max((b.page for b in blocks if b.page), default=1)
+            except XLSXParserError as e:
+                raise HTTPException(
+                    status_code=400,
+                    detail={"error": {"code": "doc_unreadable", "message": str(e)}},
+                ) from e
         else:
             # Default text fallback
             blocks = parse_md_txt(content, source_name=filename)
@@ -148,7 +168,18 @@ class SessionStore:
             )
 
         # 3. Chunk document
-        chunks = chunk_blocks(blocks, doc_id=session_id)
+        # Plan §3.0: PPTX slide = chunk basis
+        if lower_name.endswith(".pptx"):
+            chunks = []
+            chunk_idx = 0
+            for b in blocks:
+                slide_chunks = chunk_blocks([b], doc_id=session_id)
+                for sc in slide_chunks:
+                    chunk_idx += 1
+                    sc.id = f"{session_id}_chunk_{chunk_idx:04d}"
+                    chunks.append(sc)
+        else:
+            chunks = chunk_blocks(blocks, doc_id=session_id)
 
         # 4. Build Reference Map
         ref_map = build_reference_map(chunks)

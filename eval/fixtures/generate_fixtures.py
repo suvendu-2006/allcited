@@ -299,6 +299,98 @@ def create_handbook_docx(output_path: str):
     print(f"Created {output_path}")
 
 
+def create_sample_deck(output_path: str):
+    from pptx import Presentation
+    from pptx.util import Inches, Pt
+
+    prs = Presentation()
+
+    # Slide 1: Title & Overview
+    title_slide_layout = prs.slide_layouts[0]
+    slide1 = prs.slides.add_slide(title_slide_layout)
+    title1 = slide1.shapes.title
+    subtitle1 = slide1.placeholders[1]
+    title1.text = "Allcited Corporate Overview"
+    subtitle1.text = "Grounded Document Intelligence & Verification Engine"
+    slide1.notes_slide.notes_text_frame.text = "Presenter reminder: Emphasize verifiable inline citations [S#]."
+
+    # Slide 2: Security & Protocols
+    bullet_slide_layout = prs.slide_layouts[1]
+    slide2 = prs.slides.add_slide(bullet_slide_layout)
+    title2 = slide2.shapes.title
+    title2.text = "Security and ISO-27001 Compliance"
+    tf2 = slide2.shapes.placeholders[1].text_frame
+    tf2.text = "Multi-factor authentication (MFA) is strictly mandatory across all internal workstations."
+    p2 = tf2.add_paragraph()
+    p2.text = "Corporate passwords must contain a minimum of 16 characters and refresh every 90 days."
+    slide2.notes_slide.notes_text_frame.text = "Mandated under standard ISO-27001 security protocols."
+
+    # Slide 3: Financial Performance (with Table)
+    blank_layout = prs.slide_layouts[6]
+    slide3 = prs.slides.add_slide(blank_layout)
+    tx_box = slide3.shapes.add_textbox(Inches(1), Inches(0.5), Inches(8), Inches(1))
+    tx_box.text_frame.text = "Quarterly Revenue and Growth"
+
+    rows, cols = 5, 3
+    left, top, width, height = Inches(1), Inches(1.5), Inches(8), Inches(3)
+    table_shape = slide3.shapes.add_table(rows, cols, left, top, width, height)
+    table = table_shape.table
+
+    table.cell(0, 0).text = "Quarter"
+    table.cell(0, 1).text = "Revenue ($M)"
+    table.cell(0, 2).text = "Growth Rate"
+
+    data = [
+        ("Q1 2026", "42.5", "18%"),
+        ("Q2 2026", "51.0", "20%"),
+        ("Q3 2026", "64.2", "26%"),
+        ("Q4 2026", "78.5", "22%"),
+    ]
+    for r_idx, (q, rev, gr) in enumerate(data, start=1):
+        table.cell(r_idx, 0).text = q
+        table.cell(r_idx, 1).text = rev
+        table.cell(r_idx, 2).text = gr
+
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+    prs.save(output_path)
+    print(f"Created {output_path}")
+
+
+def create_sample_spreadsheet(output_path: str):
+    import openpyxl
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Department Budgets"
+
+    headers = ["Department", "Headcount", "Annual Budget ($)", "Allocated Spend ($)", "Approval Status"]
+    ws.append(headers)
+
+    departments = [
+        ("Engineering", 45, 4500000, 4200000, "Approved"),
+        ("Legal", 12, 1800000, 1650000, "Approved"),
+        ("Security Operations", 8, 1200000, 1150000, "Approved"),
+        ("Product Design", 15, 2100000, 1950000, "Approved"),
+        ("Customer Success", 25, 2500000, 2300000, "Approved"),
+        ("Marketing", 20, 3200000, 3100000, "Approved"),
+        ("Finance & Accounting", 10, 1500000, 1400000, "Approved"),
+        ("Human Resources", 14, 1600000, 1500000, "Approved"),
+        ("Information Technology", 18, 2800000, 2600000, "Approved"),
+        ("Research & Development", 30, 5000000, 4800000, "Approved"),
+    ]
+
+    # Generate 30 rows total to trigger the 25-row windowing boundary
+    for i in range(30):
+        dept_name, hc, bud, spend, status = departments[i % len(departments)]
+        ws.append([f"{dept_name} Div-{i+1}", hc + i, bud + (i * 10000), spend + (i * 8000), status])
+
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+    wb.save(output_path)
+    print(f"Created {output_path}")
+
+
 if __name__ == "__main__":
     create_handbook_pdf("eval/fixtures/handbook.pdf")
     create_handbook_docx("eval/fixtures/handbook.docx")
+    create_sample_deck("eval/fixtures/presentation.pptx")
+    create_sample_spreadsheet("eval/fixtures/financials.xlsx")
