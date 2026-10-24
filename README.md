@@ -47,6 +47,75 @@ The evaluation harness evaluates 46 questions across trap categories: normal, P1
 - **Safety & Guards:** Prompt injection detection, PII masking, no code execution
 - **Evaluation:** Automated 46-question evaluation suite measuring hit rates, trap defense, and citation validity
 
+## API Contract & Error Codes
+
+All Allcited endpoints strictly follow the `/v1` prefix. All error responses conform to a standardized error envelope:
+
+```json
+{
+  "error": {
+    "code": "plan_limit_reached",
+    "message": "That's a Pro move. Upgrade to keep going.",
+    "request_id": "req_8f1a2c3b"
+  }
+}
+```
+
+Every response carries an `X-Request-ID` header matching `error.request_id` for end-to-end tracing and diagnostics.
+
+### Endpoints Overview
+
+| Method | Endpoint | Tags | Description |
+|---|---|---|---|
+| `GET` | `/v1/health` | System | Health check, operating mode (`cloud`, `byok`, `private`), and environment |
+| `GET` | `/v1/auth/me` | System | Validate Clerk JWT session and retrieve authenticated user profile |
+| `GET` | `/v1/models` | System | Enumerate available provider modes (Groq Cloud, BYOK, Local Ollama) |
+| `POST` | `/v1/ingest` | Ingestion | Upload & parse document (PDF, DOCX, PPTX, XLSX, HTML, MD, TXT, URL) into active session |
+| `POST` | `/v1/ingest/url` | Ingestion | Fetch & index web page URL with SSRF validation |
+| `GET` | `/v1/session/{session_id}` | Ingestion | Retrieve active session chunk count and document metadata |
+| `POST` | `/v1/query` | Q&A | Server-Sent Events (SSE) streaming query answering with grounded citations |
+| `POST` | `/v1/summarize` | Q&A | Server-Sent Events (SSE) hierarchical map-reduce document summarization |
+| `POST` | `/v1/library/save` | Library | Persist uploaded document session into user library |
+| `GET` | `/v1/library/documents` | Library | List saved documents for authenticated user |
+| `DELETE` | `/v1/library/documents/{doc_id}` | Library | Delete saved document from library |
+| `POST` | `/v1/library/query` | Library | Query and synthesize answers across multiple library documents |
+| `POST` | `/v1/stripe/checkout` | Payments | Create Stripe Checkout session for Pro plan upgrade |
+| `POST` | `/v1/stripe/webhook` | Payments | Process incoming Stripe webhook events with idempotent replay protection |
+| `GET` | `/v1/stripe/subscription` | Payments | Retrieve active subscription tier for authenticated user |
+| `POST` | `/v1/telegram/webhook` | Telegram | Telegram Bot webhook handler for document upload and cited Q&A |
+| `GET` | `/v1/audit` | Audit & Stats | Retrieve user audit trail for document and payment actions |
+| `GET` | `/v1/stats` | Audit & Stats | Platform-wide operational metrics (queries, tokens, costs, format mix) |
+| `GET` | `/v1/cache/stats` | Audit & Stats | Semantic cache hit rates and entry metrics |
+| `POST` | `/v1/feedback` | Feedback & Trace | Submit thumbs up/down user feedback for an answer |
+| `GET` | `/v1/feedback/candidates` | Feedback & Trace | Retrieve candidate eval cases generated from negative feedback |
+| `GET` | `/v1/trace/{question_id}` | Feedback & Trace | Retrieve step-by-step pipeline execution trace for a question |
+
+### Error Code Reference
+
+All error codes are machine-readable strings paired with human-voiced, context-aware messages:
+
+| Code | HTTP Status | Meaning | Human Copy |
+|---|---|---|---|
+| `doc_unreadable` | 400 | File is corrupt, password-protected, or has unreadable text | Couldn't read that file — corrupt or password-protected. Nothing was saved. |
+| `url_blocked` | 400 | SSRF guard blocked private, loopback, link-local, or cloud metadata IP | That link points somewhere private — we don't fetch those. Safety thing. |
+| `validation_error` | 422 | Request body or parameters failed schema validation | Request validation failed |
+| `unauthorized` | 401 | Missing or invalid Bearer authentication header on protected route | Authorization header missing or invalid format (expected Bearer <token>) |
+| `token_expired` | 401 | Clerk authentication JWT has expired | Authentication token has expired |
+| `invalid_token` | 401 | Clerk JWT signature verification failed or missing subject claim | Invalid authentication token |
+| `invalid_secret_token` | 401 | Telegram webhook secret token mismatch | Invalid secret token |
+| `invalid_signature` | 400 | Stripe webhook cryptographic signature verification failed | Invalid webhook signature |
+| `plan_limit_reached` | 402 | Free tier cap reached (upload > 20 MB, precision mode, library saves > 3) | That's a Pro move. Upgrade to keep going. |
+| `doc_too_large` | 402 | File size exceeds plan limit (Free: 20 MB, Pro: 100 MB) | That's past the size limit for your plan. (Free: 20 MB · Pro: 100 MB.) |
+| `session_not_found` | 404 | Active in-memory session expired or invalid session ID | Session not found or expired. Re-upload the document and we're back. |
+| `session_expired` | 404 | Conversation session went cold | This conversation's gone cold. Re-upload the document and we're back. |
+| `doc_not_found` | 404 | Document ID not found in authenticated user's library | Document not found |
+| `trace_not_found` | 404 | Question ID trace not found in trace manager | Trace for question not found |
+| `free_tier_busy` | 429 / 503 | Rate limits or LLM provider concurrency limit reached on free tier | Our free brain is swamped right now. Try again in a minute — or plug in your own key in Settings and skip the line. |
+| `ollama_unreachable` | 502 / 503 | Local Ollama daemon is not responding on configured base URL | Can't reach your local Ollama. Is it running? (`ollama serve`) |
+| `injection_flagged` | 200 / Warning | Document content attempted prompt injection; treated strictly as passive data | Heads up: this document contains text trying to give me instructions. I've treated it as data. The answer stands. |
+| `offline` | Client | Browser network connection unavailable | You're offline. Your last conversation is still here — ask away when you're back. |
+| `generic` | 500 | Unhandled internal server error; trace ID logged for investigation | Something broke on our side. It's noted — try again, and if it repeats, the trace ID below helps us find it. |
+
 ## Development
 
 ```bash

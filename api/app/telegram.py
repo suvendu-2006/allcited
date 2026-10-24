@@ -8,6 +8,7 @@ from fastapi import APIRouter, Header, HTTPException, Request
 
 from app.config import get_settings
 from app.pipeline.answer import CitationItem, stream_answer_pipeline
+from app.schemas import TelegramWebhookResponse
 from app.sessions import DocumentSession, get_session_store
 
 logger = logging.getLogger(__name__)
@@ -291,7 +292,12 @@ async def handle_question_query(
             await tg.send_message(chat_id=chat_id, text=error_text)
 
 
-@router.post("/webhook")
+@router.post(
+    "/webhook",
+    response_model=TelegramWebhookResponse,
+    summary="Handle Telegram bot webhook events",
+    operation_id="telegramWebhook",
+)
 async def telegram_webhook(
     request: Request,
     x_telegram_bot_api_secret_token: Optional[str] = Header(None),
@@ -304,7 +310,10 @@ async def telegram_webhook(
     settings = get_settings()
     if settings.TELEGRAM_WEBHOOK_SECRET:
         if x_telegram_bot_api_secret_token != settings.TELEGRAM_WEBHOOK_SECRET:
-            raise HTTPException(status_code=401, detail="Invalid secret token")
+            raise HTTPException(
+                status_code=401,
+                detail={"error": {"code": "invalid_secret_token", "message": "Invalid secret token"}},
+            )
 
     body = await request.json()
     message = body.get("message") or body.get("edited_message")

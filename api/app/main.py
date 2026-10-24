@@ -1,11 +1,13 @@
+import logging
+import uuid
 from contextlib import asynccontextmanager
 from typing import Optional
 
 import httpx
 from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Request, UploadFile
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from fastapi.responses import JSONResponse, StreamingResponse
 
 from app.audit import get_audit_store
 from app.auth import ClerkAuthMiddleware, get_current_user, get_optional_user
@@ -21,18 +23,40 @@ from app.library import (
 from app.payments import (
     CheckoutRequest,
     CheckoutResponse,
+    SubscriptionInfo,
     create_checkout_session,
     get_subscription_store,
     handle_stripe_webhook,
 )
 from app.pipeline.answer import stream_answer_pipeline
 from app.plans import check_plan_limit
+from app.schemas import (
+    AuditLogsResponse,
+    AuthProfileResponse,
+    CacheStatsResponse,
+    DeleteDocumentResponse,
+    ErrorResponse,
+    FeedbackCandidatesResponse,
+    FeedbackResponse,
+    HealthResponse,
+    IngestResponse,
+    ListDocumentsResponse,
+    ModelsResponse,
+    PlatformStatsResponse,
+    QueryRequest,
+    SaveToLibraryResponse,
+    SessionInfoResponse,
+    SummarizeRequest,
+    UrlIngestRequest,
+)
 from app.security.pii import setup_pii_logging
 from app.security.ssrf import SSRFBlockedError, safe_fetch_url
 from app.sessions import get_session_store
 from app.stats import get_platform_stats
 from app.telegram import router as telegram_router
-from app.trace import get_trace_manager
+from app.trace import TraceRecord, get_trace_manager
+
+logger = logging.getLogger(__name__)
 
 # Ensure root and module loggers mask PII on all handlers
 setup_pii_logging()
@@ -50,9 +74,29 @@ settings = get_settings()
 
 app = FastAPI(
     title="Allcited API",
-    version="0.1.0",
+    description="Grounded, verifiable document question-answering system with inline citations and transparent decision trails.",
+    version="1.0.0",
     docs_url="/docs",
+    redoc_url="/redoc",
     openapi_url="/openapi.json",
+    openapi_tags=[
+        {"name": "System", "description": "Health checks, provider availability, and authentication status"},
+        {"name": "Ingestion", "description": "Document parsing, chunking, reference resolution, and session indexing"},
+        {"name": "Q&A", "description": "Server-Sent Events streaming question answering and document summarization"},
+        {"name": "Library", "description": "User document persistence, retrieval, and multi-document synthesis"},
+        {"name": "Payments", "description": "Stripe test-mode checkout sessions, subscriptions, and webhooks"},
+        {"name": "Telegram", "description": "Telegram bot webhook integration for messaging Q&A"},
+        {"name": "Audit & Stats", "description": "User audit trail and system-wide platform usage counters"},
+        {"name": "Feedback & Trace", "description": "Per-question pipeline execution traces and user feedback collection"},
+    ],
+    responses={
+        400: {"model": ErrorResponse, "description": "Bad Request / Unreadable Document / SSRF Blocked"},
+        401: {"model": ErrorResponse, "description": "Unauthorized / Invalid Token"},
+        402: {"model": ErrorResponse, "description": "Plan Limit Reached"},
+        404: {"model": ErrorResponse, "description": "Resource Not Found"},
+        422: {"model": ErrorResponse, "description": "Validation Error"},
+        500: {"model": ErrorResponse, "description": "Internal Server Error"},
+    },
     lifespan=lifespan,
 )
 
@@ -66,18 +110,103 @@ app.add_middleware(
 app.add_middleware(ClerkAuthMiddleware)
 
 
-class IngestResponse(BaseModel):
-    session_id: str
-    filename: str
-    chunk_count: int
-    page_count: int
-    file_size_bytes: int
-    status: str = "ready"
-    reused_chunks: int = 0
-    new_chunks: int = 0
+@app.middleware("http")
+async def request_id_middleware(request: Request, call_next):
+    req_id = request.headers.get("X-Request-ID") or f"req_{uuid.uuid4().hex[:12]}"
+    request.state.request_id = req_id
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = req_id
+    return response
 
 
-@app.get("/v1/health")
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    request_id = getattr(request.state, "request_id", None) or f"req_{uuid.uuid4().hex[:12]}"
+    if isinstance(exc.detail, dict) and "error" in exc.detail:
+        error_dict = dict(exc.detail["error"])
+        if "request_id" not in error_dict or not error_dict["request_id"]:
+            error_dict["request_id"] = request_id
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={
+                "error": error_dict,
+                "detail": {"error": error_dict},
+            },
+            headers={"X-Request-ID": request_id},
+        )
+
+    code = "generic"
+    if exc.status_code == 400:
+        code = "doc_unreadable" if "read" in str(exc.detail).lower() else "bad_request"
+    elif exc.status_code == 401:
+        code = "unauthorized"
+    elif exc.status_code == 402:
+        code = "plan_limit_reached"
+    elif exc.status_code == 404:
+        code = "not_found"
+    elif exc.status_code == 429:
+        code = "free_tier_busy"
+
+    error_dict = {
+        "code": code,
+        "message": str(exc.detail),
+        "request_id": request_id,
+    }
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": error_dict,
+            "detail": {"error": error_dict},
+        },
+        headers={"X-Request-ID": request_id},
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    request_id = getattr(request.state, "request_id", None) or f"req_{uuid.uuid4().hex[:12]}"
+    error_dict = {
+        "code": "validation_error",
+        "message": "Request validation failed",
+        "request_id": request_id,
+        "errors": exc.errors(),
+    }
+    return JSONResponse(
+        status_code=422,
+        content={
+            "error": error_dict,
+            "detail": {"error": error_dict},
+        },
+        headers={"X-Request-ID": request_id},
+    )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    request_id = getattr(request.state, "request_id", None) or f"req_{uuid.uuid4().hex[:12]}"
+    logger.exception("Unhandled error on %s %s: %s", request.method, request.url.path, str(exc))
+    error_dict = {
+        "code": "generic",
+        "message": "Something broke on our side. It's noted — try again, and if it repeats, the trace ID below helps us find it.",
+        "request_id": request_id,
+    }
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": error_dict,
+            "detail": {"error": error_dict},
+        },
+        headers={"X-Request-ID": request_id},
+    )
+
+
+@app.get(
+    "/v1/health",
+    response_model=HealthResponse,
+    summary="Health check and runtime mode",
+    operation_id="getHealth",
+    tags=["System"],
+)
 async def health():
     return {
         "status": "ok",
@@ -87,7 +216,13 @@ async def health():
     }
 
 
-@app.get("/v1/auth/me")
+@app.get(
+    "/v1/auth/me",
+    response_model=AuthProfileResponse,
+    summary="Verify authenticated user profile",
+    operation_id="getAuthProfile",
+    tags=["System"],
+)
 async def get_my_auth_profile(user_id: str = Depends(get_current_user)):
     """
     Protected endpoint to verify Clerk JWT authentication.
@@ -99,7 +234,13 @@ async def get_my_auth_profile(user_id: str = Depends(get_current_user)):
     }
 
 
-@app.post("/v1/library/save")
+@app.post(
+    "/v1/library/save",
+    response_model=SaveToLibraryResponse,
+    summary="Save document session to library",
+    operation_id="saveLibraryDocument",
+    tags=["Library"],
+)
 async def save_session_to_library(
     request: SaveToLibraryRequest,
     user_id: str = Depends(get_current_user),
@@ -135,7 +276,13 @@ async def save_session_to_library(
     }
 
 
-@app.delete("/v1/library/documents/{doc_id}")
+@app.delete(
+    "/v1/library/documents/{doc_id}",
+    response_model=DeleteDocumentResponse,
+    summary="Delete document from library",
+    operation_id="deleteLibraryDocument",
+    tags=["Library"],
+)
 async def delete_library_document(
     doc_id: str,
     user_id: str = Depends(get_current_user),
@@ -163,7 +310,13 @@ async def delete_library_document(
     }
 
 
-@app.get("/v1/library/documents")
+@app.get(
+    "/v1/library/documents",
+    response_model=ListDocumentsResponse,
+    summary="List saved documents in library",
+    operation_id="listLibraryDocuments",
+    tags=["Library"],
+)
 async def list_library_documents(user_id: str = Depends(get_current_user)):
     """
     List all documents saved in the authenticated user's library.
@@ -177,7 +330,13 @@ async def list_library_documents(user_id: str = Depends(get_current_user)):
     }
 
 
-@app.post("/v1/library/query", response_model=LibraryQueryResponse)
+@app.post(
+    "/v1/library/query",
+    response_model=LibraryQueryResponse,
+    summary="Query across saved library documents",
+    operation_id="queryLibrary",
+    tags=["Library"],
+)
 async def query_user_library(
     request: LibraryQueryRequest,
     user_id: str = Depends(get_current_user),
@@ -200,7 +359,13 @@ async def query_user_library(
     )
 
 
-@app.post("/v1/stripe/checkout", response_model=CheckoutResponse)
+@app.post(
+    "/v1/stripe/checkout",
+    response_model=CheckoutResponse,
+    summary="Create Stripe checkout session for Pro tier",
+    operation_id="createStripeCheckout",
+    tags=["Payments"],
+)
 async def stripe_checkout(
     request: CheckoutRequest,
     user_id: str = Depends(get_current_user),
@@ -226,7 +391,12 @@ async def stripe_checkout(
     return checkout_res
 
 
-@app.post("/v1/stripe/webhook")
+@app.post(
+    "/v1/stripe/webhook",
+    summary="Process incoming Stripe webhook events",
+    operation_id="handleStripeWebhook",
+    tags=["Payments"],
+)
 async def stripe_webhook(request: Request):
     """
     Handle incoming Stripe webhook events with cryptographic signature verification
@@ -237,7 +407,13 @@ async def stripe_webhook(request: Request):
     return await handle_stripe_webhook(payload=payload, sig_header=sig_header)
 
 
-@app.get("/v1/stripe/subscription")
+@app.get(
+    "/v1/stripe/subscription",
+    response_model=SubscriptionInfo,
+    summary="Get current user subscription plan",
+    operation_id="getSubscription",
+    tags=["Payments"],
+)
 async def get_my_subscription(user_id: str = Depends(get_current_user)):
     """
     Get current subscription plan tier for the authenticated user.
@@ -247,10 +423,16 @@ async def get_my_subscription(user_id: str = Depends(get_current_user)):
 
 
 # Mount Telegram webhook router
-app.include_router(telegram_router, prefix="/v1/telegram", tags=["telegram"])
+app.include_router(telegram_router, prefix="/v1/telegram", tags=["Telegram"])
 
 
-@app.get("/v1/audit")
+@app.get(
+    "/v1/audit",
+    response_model=AuditLogsResponse,
+    summary="List audit trail logs for user",
+    operation_id="listAuditLogs",
+    tags=["Audit & Stats"],
+)
 async def list_audit_trail(
     limit: int = 50,
     user_id: str = Depends(get_current_user),
@@ -267,7 +449,13 @@ async def list_audit_trail(
     }
 
 
-@app.get("/v1/models")
+@app.get(
+    "/v1/models",
+    response_model=ModelsResponse,
+    summary="List supported provider modes (Cloud, BYOK, Ollama)",
+    operation_id="listModels",
+    tags=["System"],
+)
 async def list_models():
     """
     List available provider modes (Default cloud, BYOK, and Ollama).
@@ -306,11 +494,13 @@ async def list_models():
     }
 
 
-class UrlIngestRequest(BaseModel):
-    url: str
-
-
-@app.post("/v1/ingest", response_model=IngestResponse)
+@app.post(
+    "/v1/ingest",
+    response_model=IngestResponse,
+    summary="Upload and parse document into an active session",
+    operation_id="ingestDocument",
+    tags=["Ingestion"],
+)
 async def ingest_document(
     file: Optional[UploadFile] = File(None),
     url: Optional[str] = Form(None),
@@ -377,7 +567,13 @@ async def ingest_document(
     )
 
 
-@app.post("/v1/ingest/url", response_model=IngestResponse)
+@app.post(
+    "/v1/ingest/url",
+    response_model=IngestResponse,
+    summary="Fetch and index public URL into an active session",
+    operation_id="ingestUrl",
+    tags=["Ingestion"],
+)
 async def ingest_url_endpoint(request: UrlIngestRequest):
     """
     Dedicated endpoint to ingest a web URL with SSRF protection.
@@ -414,7 +610,13 @@ async def ingest_url_endpoint(request: UrlIngestRequest):
     )
 
 
-@app.get("/v1/session/{session_id}")
+@app.get(
+    "/v1/session/{session_id}",
+    response_model=SessionInfoResponse,
+    summary="Retrieve active session metadata",
+    operation_id="getSessionInfo",
+    tags=["Ingestion"],
+)
 async def get_session_info(session_id: str):
     """Retrieve session metadata and chunk count."""
     session_store = get_session_store()
@@ -425,16 +627,22 @@ async def get_session_info(session_id: str):
             detail={"error": {"code": "session_not_found", "message": f"Session '{session_id}' not found or expired"}},
         )
 
-    return {
-        "session_id": session.session_id,
-        "filename": session.filename,
-        "chunk_count": len(session.chunks),
-        "page_count": session.page_count,
-        "file_size_bytes": session.file_size_bytes,
-    }
+    return SessionInfoResponse(
+        session_id=session.session_id,
+        filename=session.filename,
+        chunk_count=len(session.chunks),
+        page_count=session.page_count,
+        file_size_bytes=session.file_size_bytes,
+    )
 
 
-@app.get("/v1/trace/{question_id}")
+@app.get(
+    "/v1/trace/{question_id}",
+    response_model=TraceRecord,
+    summary="Retrieve pipeline execution trace for a question",
+    operation_id="getQuestionTrace",
+    tags=["Feedback & Trace"],
+)
 async def get_question_trace(question_id: str):
     """Retrieve full decision path and pipeline trace for a question."""
     trace_mgr = get_trace_manager()
@@ -447,40 +655,65 @@ async def get_question_trace(question_id: str):
     return trace
 
 
-@app.post("/v1/feedback")
+@app.post(
+    "/v1/feedback",
+    response_model=FeedbackResponse,
+    summary="Submit user feedback (+1 or -1) for an answer",
+    operation_id="submitFeedback",
+    tags=["Feedback & Trace"],
+)
 async def submit_feedback(req: FeedbackRequest):
     """Submit user feedback (+1 or -1 with optional note) for an answer."""
     store = get_feedback_store()
     record = await store.record_feedback(req)
-    return {"status": "recorded", "feedback_id": record.id}
+    return FeedbackResponse(status="recorded", feedback_id=record.id)
 
 
-@app.get("/v1/feedback/candidates")
+@app.get(
+    "/v1/feedback/candidates",
+    response_model=FeedbackCandidatesResponse,
+    summary="Retrieve candidate evaluation cases from downvoted answers",
+    operation_id="getFeedbackCandidates",
+    tags=["Feedback & Trace"],
+)
 async def get_feedback_candidates():
     """Retrieve downvoted questions formatted as candidate evaluation cases."""
     store = get_feedback_store()
-    return {"candidates": store.get_eval_candidates()}
+    return FeedbackCandidatesResponse(candidates=store.get_eval_candidates())
 
 
-@app.get("/v1/cache/stats")
+@app.get(
+    "/v1/cache/stats",
+    response_model=CacheStatsResponse,
+    summary="Retrieve semantic cache metrics and hit rate",
+    operation_id="getCacheStats",
+    tags=["Audit & Stats"],
+)
 async def get_cache_stats():
     """Retrieve semantic cache hit rate, hits, misses, and entry counts."""
     from app.cache import get_semantic_cache
 
-    return get_semantic_cache().get_stats()
+    stats = get_semantic_cache().get_stats()
+    return CacheStatsResponse(
+        hits=stats["hits"],
+        misses=stats["misses"],
+        hit_rate=stats["hit_rate"],
+        total_entries=stats["total_entries"],
+    )
 
 
-class QueryRequest(BaseModel):
-    session_id: str
-    query: str
-    mode: Optional[str] = None
-    byok_key: Optional[str] = None
-    byok_base_url: Optional[str] = None
-    byok_model: Optional[str] = None
-    provider: Optional[str] = None
-
-
-@app.post("/v1/query")
+@app.post(
+    "/v1/query",
+    summary="Query active document session with grounded citations (SSE stream)",
+    operation_id="queryDocument",
+    tags=["Q&A"],
+    responses={
+        200: {
+            "content": {"text/event-stream": {}},
+            "description": "Server-Sent Events streaming pipeline stages, tokens, citations, and trace",
+        }
+    },
+)
 async def query_document(
     request: QueryRequest,
     user_id: Optional[str] = Depends(get_optional_user),
@@ -529,16 +762,18 @@ async def query_document(
     )
 
 
-class SummarizeRequest(BaseModel):
-    session_id: str
-    target_words: Optional[int] = 800
-    byok_key: Optional[str] = None
-    byok_base_url: Optional[str] = None
-    byok_model: Optional[str] = None
-    provider: Optional[str] = None
-
-
-@app.post("/v1/summarize")
+@app.post(
+    "/v1/summarize",
+    summary="Summarize active document session using hierarchical map-reduce (SSE stream)",
+    operation_id="summarizeDocument",
+    tags=["Q&A"],
+    responses={
+        200: {
+            "content": {"text/event-stream": {}},
+            "description": "Server-Sent Events streaming summary chunks and progress (progress, section, token, done)",
+        }
+    },
+)
 async def summarize_document(
     request: SummarizeRequest,
     x_byok_key: Optional[str] = Header(None, alias="X-BYOK-Key"),
@@ -583,7 +818,13 @@ async def summarize_document(
     )
 
 
-@app.get("/v1/stats")
+@app.get(
+    "/v1/stats",
+    response_model=PlatformStatsResponse,
+    summary="Retrieve platform-wide operational statistics",
+    operation_id="getPlatformStats",
+    tags=["Audit & Stats"],
+)
 async def get_system_stats():
     """Retrieve system-wide counters and metrics for queries, chunks, sessions, and pro tiers."""
     return get_platform_stats().get_stats()
