@@ -9,6 +9,7 @@ from app.pipeline.chunker import Chunk, chunk_blocks
 from app.pipeline.indexes import DocumentIndex
 from app.pipeline.parsers.base import ParsedBlock
 from app.pipeline.parsers.docx import DOCXParserError, parse_docx
+from app.pipeline.parsers.html import HTMLParserError, parse_html
 from app.pipeline.parsers.md_txt import parse_md_txt
 from app.pipeline.parsers.pdf import PDFParserError, parse_pdf
 from app.pipeline.parsers.pptx import PPTXParserError, parse_pptx
@@ -153,6 +154,15 @@ class SessionStore:
                 blocks = parse_xlsx(content, source_name=filename)
                 page_count = max((b.page for b in blocks if b.page), default=1)
             except XLSXParserError as e:
+                raise HTTPException(
+                    status_code=400,
+                    detail={"error": {"code": "doc_unreadable", "message": str(e)}},
+                ) from e
+        elif lower_name.startswith(("http://", "https://")) or lower_name.endswith((".html", ".htm")):
+            try:
+                blocks = parse_html(content, source_name=filename)
+                page_count = 1
+            except HTMLParserError as e:
                 raise HTTPException(
                     status_code=400,
                     detail={"error": {"code": "doc_unreadable", "message": str(e)}},

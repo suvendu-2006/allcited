@@ -2,13 +2,14 @@ from contextlib import asynccontextmanager
 from typing import Optional
 
 import httpx
-from fastapi import FastAPI, File, Header, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, Header, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from app.config import get_settings
 from app.pipeline.answer import stream_answer_pipeline
+from app.security.ssrf import SSRFBlockedError, safe_fetch_url
 from app.sessions import get_session_store
 
 
@@ -96,30 +97,92 @@ async def list_models():
     }
 
 
+class UrlIngestRequest(BaseModel):
+    url: str
+
+
 @app.post("/v1/ingest", response_model=IngestResponse)
-async def ingest_document(file: UploadFile = File(...)):
+async def ingest_document(
+    file: Optional[UploadFile] = File(None),
+    url: Optional[str] = Form(None),
+):
     """
-    Upload and index a document into an in-memory session.
+    Upload and index a document (PDF, DOCX, PPTX, XLSX, HTML, MD, TXT, or URL) into an in-memory session.
     Parses document, chunks text, builds reference map, and indexes into FAISS + BM25.
+    Guarded against SSRF, size limits, and corrupt inputs.
     """
-    if not file.filename:
+    target_filename = ""
+    content_bytes = b""
+
+    if url and url.strip():
+        target_filename = url.strip()
+        try:
+            content_bytes = await safe_fetch_url(target_filename)
+        except SSRFBlockedError as e:
+            raise HTTPException(
+                status_code=400,
+                detail={"error": {"code": "url_blocked", "message": str(e)}},
+            ) from e
+        except Exception as e:
+            raise HTTPException(
+                status_code=400,
+                detail={"error": {"code": "doc_unreadable", "message": f"Could not fetch URL: {str(e)}"}},
+            ) from e
+
+    elif file and file.filename:
+        target_filename = file.filename
+        try:
+            content_bytes = await file.read()
+        except Exception as e:
+            raise HTTPException(
+                status_code=400,
+                detail={"error": {"code": "doc_unreadable", "message": f"Could not read upload: {str(e)}"}},
+            ) from e
+    else:
         raise HTTPException(
             status_code=400,
-            detail={"error": {"code": "doc_unreadable", "message": "Uploaded file must have a filename"}},
+            detail={"error": {"code": "doc_unreadable", "message": "Must provide either a file upload or a url parameter"}},
         )
 
+    session_store = get_session_store()
+    session = session_store.create_session_from_bytes(
+        filename=target_filename,
+        content=content_bytes,
+    )
+
+    return IngestResponse(
+        session_id=session.session_id,
+        filename=session.filename,
+        chunk_count=len(session.chunks),
+        page_count=session.page_count,
+        file_size_bytes=session.file_size_bytes,
+        status="ready",
+    )
+
+
+@app.post("/v1/ingest/url", response_model=IngestResponse)
+async def ingest_url_endpoint(request: UrlIngestRequest):
+    """
+    Dedicated endpoint to ingest a web URL with SSRF protection.
+    """
+    target_url = request.url.strip()
     try:
-        content = await file.read()
+        content_bytes = await safe_fetch_url(target_url)
+    except SSRFBlockedError as e:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": {"code": "url_blocked", "message": str(e)}},
+        ) from e
     except Exception as e:
         raise HTTPException(
             status_code=400,
-            detail={"error": {"code": "doc_unreadable", "message": f"Could not read upload: {str(e)}"}},
+            detail={"error": {"code": "doc_unreadable", "message": f"Could not fetch URL: {str(e)}"}},
         ) from e
 
     session_store = get_session_store()
     session = session_store.create_session_from_bytes(
-        filename=file.filename,
-        content=content,
+        filename=target_url,
+        content=content_bytes,
     )
 
     return IngestResponse(
