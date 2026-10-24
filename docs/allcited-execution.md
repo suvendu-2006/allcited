@@ -17,7 +17,7 @@
   Do: in `api/` — venv (Python 3.12), install `fastapi uvicorn pydantic pydantic-settings httpx python-multipart ruff pytest`; create `app/main.py` with `/v1/health` returning `{status, version}`; ruff config in `pyproject.toml`.
   Done when: `uvicorn app.main:app --reload` serves `/v1/health` = 200; `ruff check .` clean.
 
-- [ ] **STEP 03 — Config + secrets hygiene**
+- [x] **STEP 03 — Config + secrets hygiene**
   Do: `app/config.py` (pydantic-settings) with every env var from plan §9; write `.env.example` (all vars, no values); pre-commit hook with gitleaks.
   Done when: app boots with `.env` and *fails fast with a readable message* listing any missing required var.
 
