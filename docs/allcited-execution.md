@@ -73,7 +73,7 @@
   Do: `pipeline/twohop.py` — expand refs found in top chunks/question via refmap; cap 2; flagged additions.
   Done when: "as per rule 63.7.4 …" question returns the definition chunk alongside the mentioning chunk — the exact P3 scenario from the plan.
 
-- [ ] **STEP 16 — Grounded answer + SSE endpoint**
+- [x] **STEP 16 — Grounded answer + SSE endpoint**
   Do: `pipeline/answer.py` — grounded prompt (answer-only-from [S#], refusal rule, temp 0.1, max 700 tokens), citation post-pass (strip fake markers), **relevance floor 0.40 → friendly refusal template (0 LLM calls)**; `POST /v1/query` SSE with the full event protocol.
   Done when: 3 live checks in browser/curl — normal cited answer · off-topic request returns the refusal card text · absent-question answers "Not covered in this document."
 
