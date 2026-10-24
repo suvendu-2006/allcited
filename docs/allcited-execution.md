@@ -133,7 +133,7 @@
   Do: `parsers/docx.py` — heading-style section tree, tables → markdown rows; citation = heading path.
   Done when: DOCX twin of the handbook yields equivalent chunk quality (parity test from plan §8).
 
-- [ ] **STEP 29 — PPTX + XLSX**
+- [x] **STEP 29 — PPTX + XLSX**
   Do: `parsers/pptx.py` (slides, titles=parents, notes) and `xlsx.py` (sheet → header + 25-row windows).
   Done when: a real deck and a real sheet upload, index, and answer 2 questions each correctly.
 
