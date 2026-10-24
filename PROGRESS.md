@@ -2,7 +2,7 @@
 
 ## Current Status
 - **Phase Completed:** PHASE 2 — ANSWERING (THE PIPELINE) [STEPS 11–17]
-- **Current Step:** STEP 18 — Question set (Phase 3: EVAL v1)
+- **Current Step:** STEP 20 — First README table (Phase 3: EVAL v1)
 - **Completed Steps:**
   - [x] STEP 01 — Repo + monorepo skeleton (clean git status, pushed to GitHub)
   - [x] STEP 02 — Python environment + API skeleton (uvicorn serves /v1/health = 200, ruff clean, pytest green)
@@ -21,10 +21,12 @@
   - [x] STEP 15 — Two-hop (P3 fix) (refmap expansion, cap 2, exact rule 63.7.4 P3 scenario verified returning definition chunk alongside mentioning chunk)
   - [x] STEP 16 — Grounded answer + SSE endpoint (grounded prompt, [S#] citations post-pass, relevance floor 0.40 friendly refusal card, 3 live checks green)
   - [x] STEP 17 — Map-reduce (doc-wide) (bundles ~10, parallel workers <=4, sectioned summary citing chunk ranges, token budget verified)
-- **Active Blockers:** None
+  - [x] STEP 18 — Question set (30 base questions across normal, P1, P2, P3, P4, paraphrase, absent; schema and category gates verified)
+  - [x] STEP 19 — Runner + scorer (eval/run.py & scorer.py supporting --llm stub|groq and --matrix; end-to-end runs in 8s in CI time, outputs questions_log.json and failures.json)
+- **Active Blockers:** None (awaiting `GROQ_API_KEY` for live Groq pass in STEP 20)
 - **Session Notes:**
-  - Full end-to-end question answering and doc-wide summarization pipelines are live over Server-Sent Events (`POST /v1/query` and `POST /v1/summarize`).
-  - Next: Phase 3 (Eval v1) with `eval/questions.json` (30 base questions across trap types P1–P4, paraphrase, absent).
+  - `eval/run.py` and `eval/scorer.py` fully operational with automated scoring for hit-rate, refusal accuracy, token F1/key facts, and latency p50/p95.
+  - Next: STEP 20 — Run matrix on real Groq, write `eval/results/table.md` with row movement explanations, and embed in `README.md`.
 
 
 
