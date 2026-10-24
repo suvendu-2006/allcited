@@ -19,7 +19,7 @@ export interface ChatMessage {
 
 interface MessageProps {
   message: ChatMessage;
-  onCitationClick?: (citation: Citation) => void;
+  onCitationClick?: (citation: Citation, allCitations?: Citation[]) => void;
 }
 
 export function Message({ message, onCitationClick }: MessageProps) {
@@ -41,7 +41,7 @@ export function Message({ message, onCitationClick }: MessageProps) {
             <CitationChip
               key={idx}
               citation={citation}
-              onClick={onCitationClick}
+              onClick={(c) => onCitationClick?.(c, message.citations)}
             />
           );
         }
@@ -108,7 +108,11 @@ export function Message({ message, onCitationClick }: MessageProps) {
                     Cited Sources:
                   </span>
                   {message.citations.map((c, i) => (
-                    <CitationChip key={i} citation={c} onClick={onCitationClick} />
+                    <CitationChip
+                      key={i}
+                      citation={c}
+                      onClick={(cit) => onCitationClick?.(cit, message.citations)}
+                    />
                   ))}
                 </div>
               )}

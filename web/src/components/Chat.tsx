@@ -14,7 +14,7 @@ interface ChatProps {
   byokBaseUrl?: string | null;
   byokModel?: string | null;
   preferredProvider?: string | null;
-  onCitationClick?: (citation: Citation) => void;
+  onCitationClick?: (citation: Citation, allCitations?: Citation[]) => void;
   onUploadSuccess?: (data: {
     sessionId: string;
     filename: string;

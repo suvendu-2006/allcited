@@ -2,13 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { Chat } from "@/components/Chat";
+import { SourcePanel } from "@/components/SourcePanel";
 import { Citation } from "@/lib/sse";
-import { BookOpen, Sparkles, X, FileText, CheckCircle2 } from "lucide-react";
+import { BookOpen, FileText } from "lucide-react";
 
 export default function Home() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [documentName, setDocumentName] = useState<string | null>(null);
-  const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
+  const [activeCitations, setActiveCitations] = useState<Citation[]>([]);
+  const [selectedCitationLabel, setSelectedCitationLabel] = useState<string | null>(null);
   const [apiConnected, setApiConnected] = useState<boolean>(false);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -160,81 +162,26 @@ Upon voluntary resignation or formal separation, accrued annual leave days up to
           <Chat
             sessionId={sessionId}
             documentName={documentName}
-            onCitationClick={(cit) => setSelectedCitation(cit)}
+            onCitationClick={(cit, allCits) => {
+              setActiveCitations(allCits && allCits.length > 0 ? allCits : [cit]);
+              setSelectedCitationLabel(cit.label);
+            }}
             onUploadSuccess={handleUploadSuccess}
           />
         </div>
       </div>
 
-      {/* Side Source Detail Panel (when citation is clicked) */}
-      {selectedCitation && (
-        <aside className="w-80 md:w-96 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 h-full flex flex-col shadow-xl z-20 animate-in slide-in-from-right duration-200">
-          <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                {selectedCitation.is_two_hop ? (
-                  <Sparkles className="w-4 h-4 text-purple-500" />
-                ) : (
-                  <CheckCircle2 className="w-4 h-4 text-blue-500" />
-                )}
-                Citation Receipt [{selectedCitation.label}]
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setSelectedCitation(null)}
-              className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
-            <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-1.5">
-              <div className="flex justify-between text-slate-500 dark:text-slate-400">
-                <span>Source Chunk ID:</span>
-                <span className="font-mono text-slate-700 dark:text-slate-300">{selectedCitation.chunk_id}</span>
-              </div>
-              {selectedCitation.page && (
-                <div className="flex justify-between text-slate-500 dark:text-slate-400">
-                  <span>Page:</span>
-                  <span className="font-semibold text-slate-700 dark:text-slate-300">
-                    {selectedCitation.page}
-                  </span>
-                </div>
-              )}
-              {selectedCitation.section_path?.length ? (
-                <div>
-                  <span className="text-slate-500 dark:text-slate-400 block mb-0.5">Section Path:</span>
-                  <span className="font-medium text-slate-800 dark:text-slate-200">
-                    {selectedCitation.section_path.join(" > ")}
-                  </span>
-                </div>
-              ) : null}
-            </div>
-
-            {selectedCitation.is_two_hop && (
-              <div className="p-3 rounded-lg bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60 text-purple-900 dark:text-purple-300 space-y-1">
-                <div className="font-semibold flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  Two-Hop Expansion Reference
-                </div>
-                <p className="text-[11px] leading-relaxed">
-                  {selectedCitation.added_reason || "Added via document cross-reference definition lookup."}
-                </p>
-              </div>
-            )}
-
-            <div>
-              <span className="text-[11px] uppercase tracking-wider font-semibold text-slate-400 dark:text-slate-500 block mb-2">
-                Original Passage Excerpt
-              </span>
-              <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 text-slate-700 dark:text-slate-200 leading-relaxed font-sans whitespace-pre-wrap">
-                {selectedCitation.text_preview}
-              </div>
-            </div>
-          </div>
-        </aside>
+      {/* Side Source Detail Panel */}
+      {activeCitations.length > 0 && (
+        <SourcePanel
+          citations={activeCitations}
+          activeLabel={selectedCitationLabel}
+          onClose={() => {
+            setActiveCitations([]);
+            setSelectedCitationLabel(null);
+          }}
+          onSelectCitation={(label) => setSelectedCitationLabel(label)}
+        />
       )}
     </div>
   );
