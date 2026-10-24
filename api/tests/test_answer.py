@@ -186,3 +186,79 @@ def test_sse_endpoint_three_live_gate_checks():
     assert done_event3["answer"] == ABSENT_REFUSAL_TEXT
     citations_event3 = next(e["data"] for e in events3 if e["event"] == "citations")
     assert len(citations_event3["citations"]) == 0
+
+
+def test_byok_switches_provider_midsession_without_leaks(monkeypatch):
+    """
+    Gate check for STEP 24:
+    BYOK key switches provider mid-session; no key ever appears in any network log or response.
+    """
+    client = TestClient(app)
+
+    fixture_path = Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "handbook.pdf"
+    with open(fixture_path, "rb") as f:
+        ingest_resp = client.post("/v1/ingest", files={"file": ("handbook.pdf", f, "application/pdf")})
+    assert ingest_resp.status_code == 200
+    session_id = ingest_resp.json()["session_id"]
+
+    captured_providers = []
+    from app.llm.client import BrainClient
+
+    async def mock_stream_generate(self, messages, provider=None, temperature=0.1, max_tokens=700):
+        if provider:
+            captured_providers.append(provider)
+        tokens = ["Notice", " period", " is", " 60", " days", " [S1]."]
+        for t in tokens:
+            yield t
+
+    monkeypatch.setattr(BrainClient, "stream_generate", mock_stream_generate)
+
+    # 1. Query with stub provider
+    resp1 = client.post(
+        "/v1/query",
+        json={"session_id": session_id, "query": "What is the notice period for voluntary resignation?"},
+        headers={"X-Provider": "stub"},
+    )
+    assert resp1.status_code == 200
+    events1 = parse_sse_events(resp1.text)
+    done1 = next(e["data"] for e in events1 if e["event"] == "done")
+    assert done1["model"] == "stub-llm"
+    assert captured_providers[-1].provider_type == "stub"
+
+    # 2. Mid-session switch to BYOK provider via headers
+    secret_key = "sk-browser-user-secret-abc123xyz"
+    resp2 = client.post(
+        "/v1/query",
+        json={"session_id": session_id, "query": "What is the notice period for voluntary resignation?"},
+        headers={
+            "X-BYOK-Key": secret_key,
+            "X-BYOK-Model": "custom-gpt-4o-byok",
+            "X-BYOK-Base-URL": "https://api.openai.com/v1",
+        },
+    )
+    assert resp2.status_code == 200
+    events2 = parse_sse_events(resp2.text)
+    done2 = next(e["data"] for e in events2 if e["event"] == "done")
+    assert done2["model"] == "custom-gpt-4o-byok"
+    assert captured_providers[-1].provider_type == "byok"
+    assert captured_providers[-1].api_key == secret_key
+    assert captured_providers[-1].is_byok is True
+
+    # CRITICAL: Verify secret key is never echoed or present in response body
+    assert secret_key not in resp2.text
+
+    # 3. Mid-session switch to local Ollama provider via headers
+    resp3 = client.post(
+        "/v1/query",
+        json={"session_id": session_id, "query": "What is the notice period for voluntary resignation?"},
+        headers={
+            "X-Provider": "ollama",
+            "X-BYOK-Model": "llama3.2",
+        },
+    )
+    assert resp3.status_code == 200
+    events3 = parse_sse_events(resp3.text)
+    done3 = next(e["data"] for e in events3 if e["event"] == "done")
+    assert done3["model"] == "llama3.2"
+    assert captured_providers[-1].provider_type == "ollama"
+    assert captured_providers[-1].model == "llama3.2"

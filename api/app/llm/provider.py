@@ -43,12 +43,13 @@ def resolve_provider(
 
     # 2. Local Ollama Path
     if settings.MODE == "private" or preferred_provider == "ollama":
-        base_url = f"{settings.OLLAMA_BASE_URL.rstrip('/')}/v1"
+        base_url = (byok_base_url.strip() if byok_base_url else f"{settings.OLLAMA_BASE_URL.rstrip('/')}/v1").rstrip("/")
+        model = byok_model.strip() if byok_model else "llama3.2"
         return ResolvedProvider(
             provider_type="ollama",
             base_url=base_url,
             api_key="ollama",
-            model="qwen2.5:3b",
+            model=model,
             is_byok=False,
         )
 
