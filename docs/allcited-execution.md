@@ -109,7 +109,7 @@
   Do: `CitationChip.tsx` (hover preview) + `SourcePanel.tsx` (chunks, page/section, two-hop additions labeled "added because…").
   Done when: clicking [S1] jumps to the exact chunk with highlight; two-hop additions visibly distinguished.
 
-- [ ] **STEP 24 — Settings + polish**
+- [x] **STEP 24 — Settings + polish**
   Do: `ModelSettings.tsx` (3 modes; BYOK → localStorage only, header-injected; Ollama ping; "your key stays in your browser" copy); refusal card style; Framer Motion entrances, skeletons, dark mode.
   Done when: BYOK key switches provider mid-session; no key ever appears in any network log except to its own provider.
 
