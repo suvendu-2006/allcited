@@ -40,6 +40,8 @@ class Settings(BaseSettings):
     # Auth & Storage (Clerk & Supabase)
     CLERK_SECRET_KEY: Optional[str] = Field(default=None, description="Clerk backend secret key")
     CLERK_PUBLISHABLE_KEY: Optional[str] = Field(default=None, description="Clerk publishable key")
+    CLERK_PEM_PUBLIC_KEY: Optional[str] = Field(default=None, description="Clerk PEM public key for local JWT verification")
+    CLERK_JWKS_URL: Optional[str] = Field(default=None, description="Clerk JWKS endpoint URL")
     SUPABASE_URL: Optional[str] = Field(default=None, description="Supabase project URL")
     SUPABASE_SERVICE_ROLE_KEY: Optional[str] = Field(default=None, description="Supabase service role key")
 

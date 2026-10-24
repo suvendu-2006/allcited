@@ -2,11 +2,12 @@ from contextlib import asynccontextmanager
 from typing import Optional
 
 import httpx
-from fastapi import FastAPI, File, Form, Header, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
+from app.auth import ClerkAuthMiddleware, get_current_user
 from app.config import get_settings
 from app.feedback import FeedbackRequest, get_feedback_store
 from app.pipeline.answer import stream_answer_pipeline
@@ -44,6 +45,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(ClerkAuthMiddleware)
 
 
 class IngestResponse(BaseModel):
@@ -64,6 +66,18 @@ async def health():
         "version": "0.1.0",
         "mode": settings.MODE,
         "environment": settings.ENVIRONMENT,
+    }
+
+
+@app.get("/v1/auth/me")
+async def get_my_auth_profile(user_id: str = Depends(get_current_user)):
+    """
+    Protected endpoint to verify Clerk JWT authentication.
+    Returns the authenticated Clerk user_id.
+    """
+    return {
+        "status": "authenticated",
+        "user_id": user_id,
     }
 
 
