@@ -185,7 +185,7 @@
   Do: `agentic.py` judge-sufficiency pass, refine query, re-retrieve; ≤3 iterations; "best available sources" note.
   Done when: a multi-source question improves; termination test proves ≤3 iterations always.
 
-- [ ] **STEP 41 — GraphRAG-lite**
+- [x] **STEP 41 — GraphRAG-lite**
   Do: `graph.py` entity extraction at ingest → Supabase graph; retrieval expands ≤4 neighbor facts, cited "(related: …)".
   Done when: an entity-adjacent question pulls in a related fact with the label; cap respected in trace.
 
