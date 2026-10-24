@@ -57,7 +57,7 @@
   Do: `llm/client.py` — single OpenAI-compatible async client; `llm/provider.py` resolves default(Groq) / BYOK(headers) / Ollama; retries (3×, backoff, 429/5xx only), 60s timeout, idle-read 30s.
   Done when: same question answered 3 ways — server key, a test BYOK header, and local Ollama (`localhost:11434`) — identical code path.
 
-- [ ] **STEP 12 — Router**
+- [x] **STEP 12 — Router**
   Do: `pipeline/router.py` — keyword rules pass 1 (summarize/compare/list-all/report → DOC_WIDE), tiny-LLM pass 2 only when ambiguous; logs the label.
   Done when: unit tests: 6 queries labeled correctly, including one tricky case ("compare clause 4.2 and 5.1" = LOOKUP, not DOC_WIDE).
 
