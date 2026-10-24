@@ -20,6 +20,14 @@ class Chunk(BaseModel):
     page: Optional[int] = Field(default=None, description="1-based page number")
     source: str = Field(default="", description="Source filename or origin")
     metadata: dict = Field(default_factory=dict, description="Custom metadata tags and filters")
+    contextual_header: Optional[str] = Field(default=None, description="LLM-generated context header")
+
+    @property
+    def embed_text(self) -> str:
+        """Text used for vector embedding and BM25 index (includes contextual header if present)."""
+        if self.contextual_header:
+            return f"{self.contextual_header}\n\n{self.text}"
+        return self.text
 
 
 class _SentenceItem(NamedTuple):

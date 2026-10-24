@@ -7,6 +7,7 @@ import pymupdf as fitz
 from fastapi import HTTPException
 
 from app.pipeline.chunker import Chunk, chunk_blocks
+from app.pipeline.headers import generate_structural_headers
 from app.pipeline.indexes import DocumentIndex
 from app.pipeline.parsers.base import ParsedBlock
 from app.pipeline.parsers.docx import DOCXParserError, parse_docx
@@ -195,6 +196,9 @@ class SessionStore:
                     chunks.append(sc)
         else:
             chunks = chunk_blocks(blocks, doc_id=session_id)
+
+        # 3b. Generate contextual headers (situating chunks in document hierarchy)
+        chunks = generate_structural_headers(chunks, doc_title=filename)
 
         # 4. Build Reference Map
         ref_map = build_reference_map(chunks)

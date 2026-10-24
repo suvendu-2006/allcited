@@ -92,12 +92,13 @@ class EmbeddingManager:
         missing_texts: List[str] = []
 
         for idx, chunk in enumerate(chunks):
-            h = chunk.content_hash or self._hash_text(chunk.text)
+            text_to_embed = chunk.embed_text
+            h = self._hash_text(text_to_embed)
             if h in self._cache:
                 results[idx] = self._cache[h]
             else:
                 missing_indices.append(idx)
-                missing_texts.append(chunk.text)
+                missing_texts.append(text_to_embed)
 
         reused_count = len(chunks) - len(missing_texts)
         new_count = len(missing_texts)

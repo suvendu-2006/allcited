@@ -62,7 +62,7 @@ class BM25Index:
 
     def build(self, chunks: List[Chunk]):
         self.chunks = list(chunks)
-        self.corpus_tokens = [tokenize_for_bm25(c.text) for c in self.chunks]
+        self.corpus_tokens = [tokenize_for_bm25(c.embed_text) for c in self.chunks]
         if self.corpus_tokens and any(self.corpus_tokens):
             self.bm25 = BM25Okapi(self.corpus_tokens)
         else:
