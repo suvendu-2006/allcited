@@ -141,7 +141,7 @@
   Do: `parsers/html.py` (httpx + readability) + `security/ssrf.py` (block private IPs, re-validate redirects, 2 MB cap).
   Done when: a public article URL answers questions; `http://localhost` and `http://169.254.169.254` attempts → `url_blocked`.
 
-- [ ] **STEP 31 — Delta re-ingest**
+- [x] **STEP 31 — Delta re-ingest**
   Do: per-chunk hash upsert on re-upload of the same document.
   Done when: re-uploading an edited doc re-embeds only changed chunks (log shows skip counts).
 
