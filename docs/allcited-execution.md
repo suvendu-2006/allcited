@@ -205,7 +205,7 @@
 
 ## PHASE 10 — OCR + TELEGRAM
 
-- [ ] **STEP 45 — OCR path**
+- [x] **STEP 45 — OCR path**
   Do: Tesseract (eng+hin) wired into `pdf.py` for pages with <50 chars text; "(OCR)" citation flag.
   Done when: the scanned-PDF fixture answers 3 questions with OCR-flagged citations.
 
