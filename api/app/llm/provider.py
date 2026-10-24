@@ -52,7 +52,17 @@ def resolve_provider(
             is_byok=False,
         )
 
-    # 3. Default Groq Cloud Path
+    # 3. Stub Provider (when explicitly requested or in stub mode)
+    if preferred_provider == "stub" or settings.MODE == "stub":
+        return ResolvedProvider(
+            provider_type="stub",
+            base_url="http://stub",
+            api_key="stub",
+            model="stub-llm",
+            is_byok=False,
+        )
+
+    # 4. Default Groq Cloud Path
     groq_key = settings.GROQ_API_KEY or "stub_groq_key"
     return ResolvedProvider(
         provider_type="groq",

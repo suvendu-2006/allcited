@@ -1,11 +1,14 @@
 from contextlib import asynccontextmanager
+from typing import Optional
 
 import httpx
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, Header, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from app.config import get_settings
+from app.pipeline.answer import stream_answer_pipeline
 from app.sessions import get_session_store
 
 
@@ -147,3 +150,55 @@ async def get_session_info(session_id: str):
         "page_count": session.page_count,
         "file_size_bytes": session.file_size_bytes,
     }
+
+
+class QueryRequest(BaseModel):
+    session_id: str
+    query: str
+    byok_key: Optional[str] = None
+    byok_base_url: Optional[str] = None
+    byok_model: Optional[str] = None
+    provider: Optional[str] = None
+
+
+@app.post("/v1/query")
+async def query_document(
+    request: QueryRequest,
+    x_byok_key: Optional[str] = Header(None, alias="X-BYOK-Key"),
+    x_byok_base_url: Optional[str] = Header(None, alias="X-BYOK-Base-URL"),
+    x_byok_model: Optional[str] = Header(None, alias="X-BYOK-Model"),
+    x_provider: Optional[str] = Header(None, alias="X-Provider"),
+):
+    """
+    Query an active document session with grounded citations via Server-Sent Events (SSE).
+    Events emitted: route -> cache -> rewrite -> retrieve -> rerank -> expand -> token -> citations -> done
+    """
+    session_store = get_session_store()
+    session = session_store.get_session(request.session_id)
+    if not session:
+        raise HTTPException(
+            status_code=404,
+            detail={"error": {"code": "session_not_found", "message": f"Session '{request.session_id}' not found or expired"}},
+        )
+
+    byok_key = request.byok_key or x_byok_key
+    byok_base_url = request.byok_base_url or x_byok_base_url
+    byok_model = request.byok_model or x_byok_model
+    preferred_provider = request.provider or x_provider
+
+    return StreamingResponse(
+        stream_answer_pipeline(
+            session=session,
+            query=request.query,
+            byok_key=byok_key,
+            byok_base_url=byok_base_url,
+            byok_model=byok_model,
+            preferred_provider=preferred_provider,
+        ),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
