@@ -99,21 +99,22 @@ class DocumentIndex:
         self.bm25_index = BM25Index()
         self.chunks: List[Chunk] = []
 
-    def build(self, chunks: List[Chunk], embedding_manager=None):
+    def build(self, chunks: List[Chunk], embedding_manager=None) -> dict:
         if embedding_manager is None:
             embedding_manager = get_embedding_manager()
 
         self.chunks = list(chunks)
         if not self.chunks:
-            return
+            return {"total": 0, "reused": 0, "new": 0}
 
         # 1. Build BM25
         self.bm25_index.build(self.chunks)
 
-        # 2. Embed and build FAISS vector index
-        texts = [c.text for c in self.chunks]
-        embeddings = embedding_manager.embed_texts(texts)
+        # 2. Embed and build FAISS vector index with delta skip tracking
+        embeddings, stats = embedding_manager.embed_chunks(self.chunks)
+        self.vector_index = VectorIndex()
         self.vector_index.build(self.chunks, embeddings)
+        return stats
 
     def search_vector(self, query: str, top_k: int = 10, embedding_manager=None) -> List[Tuple[Chunk, float]]:
         if embedding_manager is None:

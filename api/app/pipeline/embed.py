@@ -1,8 +1,10 @@
 import hashlib
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import numpy as np
 from sentence_transformers import SentenceTransformer
+
+from app.pipeline.chunker import Chunk
 
 DEFAULT_EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 EMBEDDING_DIM = 384
@@ -71,6 +73,56 @@ class EmbeddingManager:
                 results[idx] = emb
 
         return np.array(results, dtype=np.float32)
+
+    def embed_chunks(
+        self,
+        chunks: List[Chunk],
+        batch_size: int = BATCH_SIZE,
+    ) -> Tuple[np.ndarray, Dict[str, int]]:
+        """
+        Embed a list of Chunks, checking chunk.content_hash against the in-memory cache.
+        Returns a tuple of (embeddings_array, stats_dict) where stats_dict contains:
+        {"total": int, "reused": int, "new": int}.
+        """
+        if not chunks:
+            return np.empty((0, EMBEDDING_DIM), dtype=np.float32), {"total": 0, "reused": 0, "new": 0}
+
+        results: List[np.ndarray | None] = [None] * len(chunks)
+        missing_indices: List[int] = []
+        missing_texts: List[str] = []
+
+        for idx, chunk in enumerate(chunks):
+            h = chunk.content_hash or self._hash_text(chunk.text)
+            if h in self._cache:
+                results[idx] = self._cache[h]
+            else:
+                missing_indices.append(idx)
+                missing_texts.append(chunk.text)
+
+        reused_count = len(chunks) - len(missing_texts)
+        new_count = len(missing_texts)
+
+        if missing_texts:
+            embeddings = self.model.encode(
+                missing_texts,
+                batch_size=batch_size,
+                show_progress_bar=False,
+                convert_to_numpy=True,
+                normalize_embeddings=True,
+            ).astype(np.float32)
+
+            for idx, text, emb in zip(missing_indices, missing_texts, embeddings):
+                h = self._hash_text(text)
+                self._cache[h] = emb
+                results[idx] = emb
+
+        arr = np.array(results, dtype=np.float32)
+        stats = {
+            "total": len(chunks),
+            "reused": reused_count,
+            "new": new_count,
+        }
+        return arr, stats
 
     def embed_query(self, query: str) -> np.ndarray:
         """Embed a single search query returning shape (1, EMBEDDING_DIM)."""

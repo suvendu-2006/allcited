@@ -1,3 +1,4 @@
+import logging
 import time
 import uuid
 from typing import Dict, List, Optional
@@ -15,6 +16,8 @@ from app.pipeline.parsers.pdf import PDFParserError, parse_pdf
 from app.pipeline.parsers.pptx import PPTXParserError, parse_pptx
 from app.pipeline.parsers.xlsx import XLSXParserError, parse_xlsx
 from app.pipeline.refmap import ReferenceMap, build_reference_map
+
+logger = logging.getLogger(__name__)
 
 MAX_SESSIONS = 8
 MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024  # 20 MB
@@ -35,6 +38,7 @@ class DocumentSession:
         chunks: List[Chunk],
         ref_map: ReferenceMap,
         doc_index: DocumentIndex,
+        delta_stats: Optional[Dict[str, int]] = None,
     ):
         self.session_id = session_id
         self.filename = filename
@@ -44,6 +48,7 @@ class DocumentSession:
         self.chunks = chunks
         self.ref_map = ref_map
         self.doc_index = doc_index
+        self.delta_stats = delta_stats or {"total": len(chunks), "reused": 0, "new": len(chunks)}
         self.created_at = time.time()
         self.last_accessed = self.created_at
 
@@ -196,7 +201,15 @@ class SessionStore:
 
         # 5. Build In-Memory FAISS + BM25 Document Index
         doc_index = DocumentIndex()
-        doc_index.build(chunks)
+        embed_stats = doc_index.build(chunks)
+
+        logger.info(
+            "Delta re-ingest for '%s': %d total chunks, %d reused/skipped, %d newly embedded",
+            filename,
+            embed_stats.get("total", len(chunks)),
+            embed_stats.get("reused", 0),
+            embed_stats.get("new", len(chunks)),
+        )
 
         session = DocumentSession(
             session_id=session_id,
@@ -207,6 +220,7 @@ class SessionStore:
             chunks=chunks,
             ref_map=ref_map,
             doc_index=doc_index,
+            delta_stats=embed_stats,
         )
 
         self._sessions[session_id] = session

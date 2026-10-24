@@ -46,6 +46,8 @@ class IngestResponse(BaseModel):
     page_count: int
     file_size_bytes: int
     status: str = "ready"
+    reused_chunks: int = 0
+    new_chunks: int = 0
 
 
 @app.get("/v1/health")
@@ -157,6 +159,8 @@ async def ingest_document(
         page_count=session.page_count,
         file_size_bytes=session.file_size_bytes,
         status="ready",
+        reused_chunks=session.delta_stats.get("reused", 0),
+        new_chunks=session.delta_stats.get("new", len(session.chunks)),
     )
 
 
@@ -192,6 +196,8 @@ async def ingest_url_endpoint(request: UrlIngestRequest):
         page_count=session.page_count,
         file_size_bytes=session.file_size_bytes,
         status="ready",
+        reused_chunks=session.delta_stats.get("reused", 0),
+        new_chunks=session.delta_stats.get("new", len(session.chunks)),
     )
 
 
