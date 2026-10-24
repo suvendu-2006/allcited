@@ -137,7 +137,7 @@
   Do: `parsers/pptx.py` (slides, titles=parents, notes) and `xlsx.py` (sheet → header + 25-row windows).
   Done when: a real deck and a real sheet upload, index, and answer 2 questions each correctly.
 
-- [ ] **STEP 30 — HTML/URL ingest + SSRF guard**
+- [x] **STEP 30 — HTML/URL ingest + SSRF guard**
   Do: `parsers/html.py` (httpx + readability) + `security/ssrf.py` (block private IPs, re-validate redirects, 2 MB cap).
   Done when: a public article URL answers questions; `http://localhost` and `http://169.254.169.254` attempts → `url_blocked`.
 
