@@ -1,7 +1,7 @@
 # Allcited — Build Progress
 
 ## Current Status
-- **Current Step:** STEP 09 — Hybrid retrieval + RRF (P2/P4 groundwork)
+- **Current Step:** STEP 10 — Sessions + ingest endpoint
 - **Completed Steps:**
   - [x] STEP 01 — Repo + monorepo skeleton (clean git status, pushed to GitHub)
   - [x] STEP 02 — Python environment + API skeleton (uvicorn serves /v1/health = 200, ruff clean, pytest green)
@@ -11,9 +11,11 @@
   - [x] STEP 06 — Chunker (P1 fix) (~400 tokens, 15% overlap, sentence-boundary integrity tested on P1 fixture)
   - [x] STEP 07 — Reference map (P3 prep) (regex families for rules, clauses, forms; 8 cross-references mapped on fixture, false positives rejected)
   - [x] STEP 08 — Embeddings + indexes (sentence-transformers MiniLM, batch 64, hash cache, FAISS IndexFlatIP + BM25Okapi top-1 verified)
+  - [x] STEP 09 — Hybrid retrieval + RRF (P2/P4 groundwork) (BM25 top-25 + vector top-25 merged via RRF k=60 + parent expansion)
 - **Active Blockers:** None
 - **Session Notes:**
-  - FAISS normalized inner product cosine search and BM25Okapi keyword search both return top-1 on known phrases.
+  - Hybrid retrieval verified for both keyword-only queries (BM25 advantage) and semantic paraphrase queries (vector advantage).
+
 
 
 

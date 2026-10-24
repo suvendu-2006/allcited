@@ -43,7 +43,7 @@
   Do: `pipeline/embed.py` (sentence-transformers MiniLM, batch 64, hash cache) and `pipeline/indexes.py` (FAISS IndexFlatIP normalized + rank_bm25 build/search).
   Done when: build index over fixture chunks; searching a known phrase returns its own chunk as top-1 in both engines.
 
-- [ ] **STEP 09 — Hybrid retrieval + RRF (P2/P4 groundwork)**
+- [x] **STEP 09 — Hybrid retrieval + RRF (P2/P4 groundwork)**
   Do: `pipeline/retrieve.py` — BM25 top-25 + vector top-25 → RRF (k=60) merge → parent-expansion.
   Done when: unit test — keyword-only question ranks right via BM25 side, paraphrase question via vector side, merged result top-4 contains the right chunk for both.
 
