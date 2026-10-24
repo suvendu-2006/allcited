@@ -215,7 +215,7 @@
 
 ## PHASE 11 — HYGIENE
 
-- [ ] **STEP 47 — Stats + audit wiring**
+- [x] **STEP 47 — Stats + audit wiring**
   Do: `/v1/stats` (questions, cache hit-rate, tokens, est. cost, format mix) + `audit_log` writes on saves/deletes/payments.
   Done when: stats reflect a manual test session; audit rows exist for a save and a checkout.
 
