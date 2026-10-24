@@ -1,0 +1,21 @@
+name: Keep-Alive Ping
+
+on:
+  schedule:
+    # Run every 30 minutes to prevent cold starts / idle sleep on free tiers
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Allcited Production API
+        env:
+          API_URL: ${{ secrets.PROD_API_URL || 'https://allcited-api.hf.space' }}
+        run: |
+          echo "Pinging $API_URL/v1/health..."
+          curl -f -s -S --max-time 15 "$API_URL/v1/health" || {
+            echo "Keep-alive ping failed or timed out"
+            exit 1
+          }
