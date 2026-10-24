@@ -499,7 +499,7 @@ Agent parallelism rule: tracks 4a/4b/4c may run concurrently **only after** orde
   Do: `api/Dockerfile` (models + tesseract, non-root, healthcheck) and `docker/docker-compose.yml` (api + static web + Ollama pulling `qwen2.5:3b`, `MODE=private`).
   Done when: `docker compose up` on a clean machine → full private edition works offline against Ollama.
 
-- [ ] **STEP 50 — Deploy the public stack**
+- [x] **STEP 50 — Deploy the public stack**
   Do: API → HF Space (Docker SDK); web → Vercel; env vars wired (Supabase, Stripe test, Telegram, Clerk); keep-alive ping for cold starts; Telegram webhook pointed at the Space.
   Done when: live URL answers a cited question end-to-end; bot works in Telegram against production.
 
