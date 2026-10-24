@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Citation, PipelineStage } from "@/lib/sse";
 import { CitationChip } from "./CitationChip";
-import { Bot, User, CheckCircle2, Loader2, ShieldAlert } from "lucide-react";
+import { TraceViewer } from "./TraceViewer";
+import { Bot, User, CheckCircle2, Loader2, ShieldAlert, Sparkles } from "lucide-react";
 
 export interface ChatMessage {
   id: string;
@@ -15,6 +16,7 @@ export interface ChatMessage {
   refused?: boolean;
   model?: string;
   totalTokens?: number;
+  questionId?: string;
 }
 
 interface MessageProps {
@@ -23,6 +25,7 @@ interface MessageProps {
 }
 
 export function Message({ message, onCitationClick }: MessageProps) {
+  const [showTrace, setShowTrace] = useState(false);
   const isUser = message.role === "user";
   const citationsMap = new Map((message.citations || []).map((c) => [c.label, c]));
 
@@ -149,10 +152,32 @@ export function Message({ message, onCitationClick }: MessageProps) {
 
           {/* Metadata Footer */}
           {message.stage === "done" && (
-            <div className="flex items-center gap-3 text-[11px] text-slate-400 dark:text-slate-500 px-1">
-              {message.model && <span>Model: {message.model}</span>}
-              {message.totalTokens !== undefined && <span>{message.totalTokens} tokens</span>}
+            <div className="flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500 px-1 pt-0.5">
+              <div className="flex items-center gap-3">
+                {message.model && <span>Model: {message.model}</span>}
+                {message.totalTokens !== undefined && <span>{message.totalTokens} tokens</span>}
+              </div>
+
+              {message.questionId && (
+                <button
+                  type="button"
+                  onClick={() => setShowTrace(true)}
+                  className="flex items-center gap-1 text-[11px] text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium transition-colors cursor-pointer"
+                  title="View decision path, retrieval stages, and latencies"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                  Why this answer?
+                </button>
+              )}
             </div>
+          )}
+
+          {message.questionId && (
+            <TraceViewer
+              questionId={message.questionId}
+              isOpen={showTrace}
+              onClose={() => setShowTrace(false)}
+            />
           )}
         </div>
       </div>

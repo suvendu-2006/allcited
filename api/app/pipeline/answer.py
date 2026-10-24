@@ -1,6 +1,8 @@
 import json
 import logging
 import re
+import time
+import uuid
 from typing import AsyncIterator, Dict, List, Optional, Sequence, Set, Tuple, Union
 
 from pydantic import BaseModel, Field
@@ -15,6 +17,7 @@ from app.pipeline.router import route_query
 from app.pipeline.twohop import TwoHopChunk, expand_two_hop
 from app.security.guards import format_source_as_data_block
 from app.sessions import DocumentSession
+from app.trace import TraceRecord, get_trace_manager
 
 logger = logging.getLogger(__name__)
 
@@ -157,11 +160,15 @@ async def stream_answer_pipeline(
     Event protocol:
     route -> cache -> rewrite -> retrieve -> rerank -> (relevance floor check) -> expand -> tokens -> citations -> done
     """
-    qid = question_id or f"q_{id(query)}"
+    qid = question_id or f"q_{uuid.uuid4().hex[:12]}"
     settings = get_settings()
+    t_start = time.perf_counter()
+    latencies: Dict[str, float] = {}
 
     # 1. Route
+    t0 = time.perf_counter()
     route_res = await route_query(query)
+    latencies["route_ms"] = round((time.perf_counter() - t0) * 1000, 2)
     yield format_sse("route", {"route": route_res.route.value, "reason": route_res.reason})
 
     # If document-wide summarization/overview requested, delegate to map-reduce pipeline
@@ -183,11 +190,14 @@ async def stream_answer_pipeline(
     yield format_sse("cache", {"hit": False})
 
     # 3. Rewrite
+    t0 = time.perf_counter()
     rewrite_res = await rewrite_query(query)
+    latencies["rewrite_ms"] = round((time.perf_counter() - t0) * 1000, 2)
     sub_queries = rewrite_res.sub_queries or [query]
     yield format_sse("rewrite", {"sub_queries": sub_queries, "reason": rewrite_res.reason})
 
     # 4. Retrieve (Hybrid BM25 + Vector)
+    t0 = time.perf_counter()
     retrieved_map = {}
     from app.pipeline.retrieve import hybrid_retrieve
 
@@ -199,9 +209,11 @@ async def stream_answer_pipeline(
                 retrieved_map[cid] = sc
 
     candidates = sorted(retrieved_map.values(), key=lambda c: c.rrf_score, reverse=True)
+    latencies["retrieve_ms"] = round((time.perf_counter() - t0) * 1000, 2)
     yield format_sse("retrieve", {"candidate_count": len(candidates)})
 
     # 5. Re-ranker
+    t0 = time.perf_counter()
     reranker = get_reranker()
     reranked = reranker.rerank(
         query=query,
@@ -209,6 +221,7 @@ async def stream_answer_pipeline(
         top_k=4,
         enabled=settings.RERANKER_ENABLED,
     )
+    latencies["rerank_ms"] = round((time.perf_counter() - t0) * 1000, 2)
 
     top_score = reranked[0].rerank_score if reranked else 0.0
     yield format_sse("rerank", {"reranked_count": len(reranked), "top_score": round(top_score, 4)})
@@ -220,6 +233,26 @@ async def stream_answer_pipeline(
             "Relevance floor triggered: top_score=%.6f < floor=%.6f. Refusing without LLM call.",
             top_score,
             floor,
+        )
+        latencies["total_ms"] = round((time.perf_counter() - t_start) * 1000, 2)
+        get_trace_manager().record_trace(
+            TraceRecord(
+                question_id=qid,
+                query=query,
+                route=route_res.route.value,
+                route_reason=route_res.reason,
+                sub_queries=sub_queries,
+                retrieved_count=len(candidates),
+                reranked_count=len(reranked),
+                top_rerank_score=round(top_score, 4),
+                two_hop_count=0,
+                total_sources=0,
+                injection_flagged=False,
+                refused=True,
+                refusal_reason="low_relevance",
+                total_tokens=0,
+                latencies_ms=latencies,
+            )
         )
         yield format_sse("token", {"delta": FRIENDLY_REFUSAL_TEXT})
         yield format_sse("citations", {"citations": []})
@@ -236,6 +269,7 @@ async def stream_answer_pipeline(
         return
 
     # 6. Two-hop cross-reference expansion
+    t0 = time.perf_counter()
     ref_map: ReferenceMap = getattr(session, "ref_map", ReferenceMap())
     final_sources = expand_two_hop(
         query=query,
@@ -244,6 +278,7 @@ async def stream_answer_pipeline(
         chunks=session.chunks,
         max_expansions=2,
     )
+    latencies["expand_ms"] = round((time.perf_counter() - t0) * 1000, 2)
     two_hop_count = sum(1 for s in final_sources if s.is_two_hop)
     yield format_sse("expand", {"two_hop_count": two_hop_count, "total_chunks": len(final_sources)})
 
@@ -271,6 +306,7 @@ async def stream_answer_pipeline(
     raw_accumulated = ""
     total_tokens = 0
 
+    t0 = time.perf_counter()
     try:
         async for token_piece in brain_client.stream_generate(
             messages=prompt_messages,
@@ -285,6 +321,7 @@ async def stream_answer_pipeline(
         logger.error("Error during LLM token streaming: %s", str(e), exc_info=True)
         yield format_sse("error", {"error": "LLM generation failed", "detail": str(e)})
         return
+    latencies["llm_ms"] = round((time.perf_counter() - t0) * 1000, 2)
 
     # 8. Citation Post-Pass & Done event
     cleaned_answer, citations = post_pass_citations(raw_accumulated, final_sources)
@@ -294,6 +331,33 @@ async def stream_answer_pipeline(
     is_refusal = (
         ABSENT_REFUSAL_TEXT in cleaned_answer or FRIENDLY_REFUSAL_TEXT in cleaned_answer
     )
+
+    latencies["total_ms"] = round((time.perf_counter() - t_start) * 1000, 2)
+
+    # Record persistent trace
+    get_trace_manager().record_trace(
+        TraceRecord(
+            question_id=qid,
+            query=query,
+            route=route_res.route.value,
+            route_reason=route_res.reason,
+            sub_queries=sub_queries,
+            retrieved_count=len(candidates),
+            reranked_count=len(reranked),
+            top_rerank_score=round(top_score, 4),
+            two_hop_count=two_hop_count,
+            total_sources=len(final_sources),
+            injection_flagged=injection_flagged,
+            refused=is_refusal,
+            refusal_reason="not_covered" if is_refusal else None,
+            provider=provider.provider_type,
+            model=provider.model,
+            total_tokens=total_tokens,
+            citations=[c.model_dump() for c in citations],
+            latencies_ms=latencies,
+        )
+    )
+
     yield format_sse(
         "done",
         {

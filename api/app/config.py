@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     GUARDS: str = Field(default="on", description="Prompt injection & PII guards: on or off")
     GRAPH_MAX_EXPANSION: int = Field(default=4, ge=1, le=10, description="Max neighbor facts in GraphRAG-lite")
     OCR_LANGS: str = Field(default="eng+hin", description="Tesseract OCR language list")
+    TRACES_DIR: str = Field(default="data/traces", description="Directory path for per-question JSONL traces")
 
     # Auth & Storage (Clerk & Supabase)
     CLERK_SECRET_KEY: Optional[str] = Field(default=None, description="Clerk backend secret key")

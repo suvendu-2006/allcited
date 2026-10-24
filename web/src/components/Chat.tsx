@@ -125,6 +125,7 @@ export function Chat({
                     refused: doneData.refused,
                     model: doneData.model,
                     totalTokens: doneData.total_tokens,
+                    questionId: doneData.question_id,
                   }
                 : msg
             )

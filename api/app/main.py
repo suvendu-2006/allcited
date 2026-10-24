@@ -12,6 +12,7 @@ from app.pipeline.answer import stream_answer_pipeline
 from app.security.pii import setup_pii_logging
 from app.security.ssrf import SSRFBlockedError, safe_fetch_url
 from app.sessions import get_session_store
+from app.trace import get_trace_manager
 
 # Ensure root and module loggers mask PII on all handlers
 setup_pii_logging()
@@ -224,6 +225,19 @@ async def get_session_info(session_id: str):
         "page_count": session.page_count,
         "file_size_bytes": session.file_size_bytes,
     }
+
+
+@app.get("/v1/trace/{question_id}")
+async def get_question_trace(question_id: str):
+    """Retrieve full decision path and pipeline trace for a question."""
+    trace_mgr = get_trace_manager()
+    trace = trace_mgr.get_trace(question_id)
+    if not trace:
+        raise HTTPException(
+            status_code=404,
+            detail={"error": {"code": "trace_not_found", "message": f"Trace for question '{question_id}' not found"}},
+        )
+    return trace
 
 
 class QueryRequest(BaseModel):
