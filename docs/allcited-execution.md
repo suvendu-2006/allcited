@@ -91,7 +91,7 @@
   Do: `eval/run.py` (`--llm stub|groq`, `--matrix`) + scorer (retrieval hit-rate, answer correctness, refusal accuracy, p50/p95).
   Done when: stub mode runs end-to-end in CI time (<2 min), outputs per-question JSON + failures file.
 
-- [ ] **STEP 20 — First README table**
+- [x] **STEP 20 — First README table**
   Do: run matrix rows BM25 · vector · hybrid · +rerank · +twohop · +rewrite on real Groq; generate `eval/results/table.md`; paste into README.
   Done when: table has **real numbers**; you can explain every row's movement in one sentence (this is the interview story).
 
