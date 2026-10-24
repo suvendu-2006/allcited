@@ -239,7 +239,7 @@
 
 ## PHASE 13 — SHIP
 
-- [ ] **STEP 52 — README final**
+- [x] **STEP 52 — README final**
   Do: demo GIF (30s) at top, final eval table, architecture diagram, P1–P4 story, honest limits section (OCR confidence, DOCX footnotes, org-scale exclusions), live + Telegram + Docker links.
   Done when: a stranger can understand, run, and trust the project from the README alone.
 
