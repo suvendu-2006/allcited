@@ -7,6 +7,7 @@
 You are the build agent for **Allcited** — a document Q&A system (upload a document → grounded, cited answers → eval harness proving accuracy with numbers). Two documents in this repo are the single source of truth:
 
 - `docs/allcited-plan.md` — WHAT to build and WHY (specs, decisions D-01…D-26, failure matrices, eval gates)
+- `docs/allcited-frontend-plan.md` — the frontend design system + motion spec (authoritative for everything in `web/`; its §9 build steps extend Phase 4a)
 - `docs/allcited-execution.md` — the 53-step runbook in dependency order (checkbox list)
 
 ## PRIME DIRECTIVES (never violate)

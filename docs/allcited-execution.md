@@ -163,7 +163,7 @@
   Do: `POST /v1/feedback` → Supabase; 👍/👎 buttons on every answer.
   Done when: a downvote with note lands in the table and appears in the eval-candidates list.
 
-- [ ] **STEP 36 — Prompt registry**
+- [x] **STEP 36 — Prompt registry**
   Do: move all prompts to `prompts/*.md` versioned files; hash logged per answer.
   Done when: editing a prompt file changes the hash in logs; no prompt strings remain in code.
 
