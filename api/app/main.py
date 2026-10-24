@@ -202,3 +202,57 @@ async def query_document(
             "X-Accel-Buffering": "no",
         },
     )
+
+
+class SummarizeRequest(BaseModel):
+    session_id: str
+    target_words: Optional[int] = 800
+    byok_key: Optional[str] = None
+    byok_base_url: Optional[str] = None
+    byok_model: Optional[str] = None
+    provider: Optional[str] = None
+
+
+@app.post("/v1/summarize")
+async def summarize_document(
+    request: SummarizeRequest,
+    x_byok_key: Optional[str] = Header(None, alias="X-BYOK-Key"),
+    x_byok_base_url: Optional[str] = Header(None, alias="X-BYOK-Base-URL"),
+    x_byok_model: Optional[str] = Header(None, alias="X-BYOK-Model"),
+    x_provider: Optional[str] = Header(None, alias="X-Provider"),
+):
+    """
+    Summarize an entire document session using parallel map-reduce over chunk bundles via SSE.
+    Events emitted: progress -> section -> token -> done
+    """
+    session_store = get_session_store()
+    session = session_store.get_session(request.session_id)
+    if not session:
+        raise HTTPException(
+            status_code=404,
+            detail={"error": {"code": "session_not_found", "message": f"Session '{request.session_id}' not found or expired"}},
+        )
+
+    byok_key = request.byok_key or x_byok_key
+    byok_base_url = request.byok_base_url or x_byok_base_url
+    byok_model = request.byok_model or x_byok_model
+    preferred_provider = request.provider or x_provider
+
+    from app.pipeline.mapreduce import stream_mapreduce_summary
+
+    return StreamingResponse(
+        stream_mapreduce_summary(
+            session=session,
+            target_words=request.target_words or 800,
+            byok_key=byok_key,
+            byok_base_url=byok_base_url,
+            byok_model=byok_model,
+            preferred_provider=preferred_provider,
+        ),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )

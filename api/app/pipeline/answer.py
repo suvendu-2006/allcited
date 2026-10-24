@@ -146,6 +146,21 @@ async def stream_answer_pipeline(
     route_res = await route_query(query)
     yield format_sse("route", {"route": route_res.route.value, "reason": route_res.reason})
 
+    # If document-wide summarization/overview requested, delegate to map-reduce pipeline
+    from app.pipeline.router import QueryRoute
+    if route_res.route == QueryRoute.DOC_WIDE:
+        from app.pipeline.mapreduce import stream_mapreduce_summary
+        async for sse_piece in stream_mapreduce_summary(
+            session=session,
+            target_words=800,
+            byok_key=byok_key,
+            byok_base_url=byok_base_url,
+            byok_model=byok_model,
+            preferred_provider=preferred_provider,
+        ):
+            yield sse_piece
+        return
+
     # 2. Cache (Semantic cache stub - hit: false in step 16)
     yield format_sse("cache", {"hit": False})
 
