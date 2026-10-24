@@ -21,7 +21,7 @@
   Do: `app/config.py` (pydantic-settings) with every env var from plan §9; write `.env.example` (all vars, no values); pre-commit hook with gitleaks.
   Done when: app boots with `.env` and *fails fast with a readable message* listing any missing required var.
 
-- [ ] **STEP 04 — Web scaffold + connectivity**
+- [x] **STEP 04 — Web scaffold + connectivity**
   Do: `create-next-app` (TS, App Router, Tailwind) in `web/`; `npx shadcn@latest init`; install Clerk SDK (keys in env); placeholder page that calls `/v1/health` and shows the response.
   Done when: browser shows the API's health JSON through the Next.js dev server (CORS verified).
 
