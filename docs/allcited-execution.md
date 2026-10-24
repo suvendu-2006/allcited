@@ -65,7 +65,7 @@
   Do: `pipeline/rewrite.py` — vague query → 2–3 concrete sub-queries; skipped when explicit identifiers present.
   Done when: "what about leaves after resignation?" expands to ≥2 targeted sub-queries; "rule 63.7.4" skips rewriting (logged).
 
-- [ ] **STEP 14 — Re-ranker**
+- [x] **STEP 14 — Re-ranker**
   Do: `pipeline/rerank.py` — `ms-marco-MiniLM-L-6-v2`, top-25 → top-4, feature-flagged auto-skip on failure/OOM.
   Done when: on the 5 debug questions, reranked top-4 changes ≥1 ranking for the better; flag-off path verified.
 
