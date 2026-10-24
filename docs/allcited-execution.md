@@ -173,7 +173,7 @@
   Do: batched LLM context blurbs at ingestion, prepended before embedding; headerless fallback on failure.
   Done when: fixture re-indexes with headers; eval paraphrase category improves (or the negative result is recorded — both are findings).
 
-- [ ] **STEP 38 — HyDE**
+- [x] **STEP 38 — HyDE**
   Do: `hyde.py` probe → embed → RRF-merge with question search; probe discarded.
   Done when: trace shows probe results merged; +1 LLM call per uncached question; paraphrase evals re-run.
 
