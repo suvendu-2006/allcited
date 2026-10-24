@@ -53,7 +53,7 @@
 
 ## PHASE 2 — ANSWERING
 
-- [ ] **STEP 11 — The one brain client**
+- [x] **STEP 11 — The one brain client**
   Do: `llm/client.py` — single OpenAI-compatible async client; `llm/provider.py` resolves default(Groq) / BYOK(headers) / Ollama; retries (3×, backoff, 429/5xx only), 60s timeout, idle-read 30s.
   Done when: same question answered 3 ways — server key, a test BYOK header, and local Ollama (`localhost:11434`) — identical code path.
 
