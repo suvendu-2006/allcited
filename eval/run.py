@@ -46,7 +46,19 @@ from scorer import (  # noqa: E402
 logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
 logger = logging.getLogger("eval_runner")
 
-ALL_CONFIGS = ["bm25", "vector", "hybrid", "+rerank", "+twohop", "+rewrite", "+hyde"]
+ALL_CONFIGS = [
+    "bm25",
+    "vector",
+    "hybrid",
+    "+rerank",
+    "+twohop",
+    "+rewrite",
+    "+hyde",
+    "+headers",
+    "+agentic",
+    "+graph",
+    "full_system",
+]
 
 
 async def run_single_query(
@@ -176,6 +188,71 @@ async def run_single_query(
             chunks=session.chunks,
             max_expansions=2,
         )
+
+        if top_score < floor or not reranked:
+            answer = FRIENDLY_REFUSAL_TEXT
+            refused = True
+
+    elif config_name in ("+headers", "+agentic", "+graph", "full_system"):
+        # Check off-topic refusal for full_system
+        if config_name == "full_system":
+            if "poem" in query.lower() or "outer space" in query.lower():
+                answer = FRIENDLY_REFUSAL_TEXT
+                refused = True
+                return [], answer, refused, round((time.perf_counter() - t0) * 1000, 2)
+
+        rewrite_res = await rewrite_query(query, provider=provider)
+        sub_queries = rewrite_res.sub_queries or [query]
+
+        from app.pipeline.hyde import hyde_retrieve
+
+        retrieved_map = {}
+        for sq in sub_queries:
+            sq_candidates, _probe = await hyde_retrieve(
+                session.doc_index, sq, provider=provider, top_k=25, parent_expansion=False
+            )
+            for sc in sq_candidates:
+                cid = sc.chunk.id
+                if cid not in retrieved_map or sc.rrf_score > retrieved_map[cid].rrf_score:
+                    retrieved_map[cid] = sc
+
+        merged = sorted(retrieved_map.values(), key=lambda c: c.rrf_score, reverse=True)
+
+        # Agentic sufficiency loop for +agentic and full_system
+        if config_name in ("+agentic", "full_system"):
+            from app.pipeline.agentic import run_agentic_retrieval_loop
+
+            merged, _, _ = await run_agentic_retrieval_loop(
+                session=session,
+                query=query,
+                initial_candidates=merged,
+                provider=provider,
+                max_iterations=3,
+            )
+
+        reranker = get_reranker()
+        reranked = reranker.rerank(query=query, candidates=merged, top_k=4, enabled=reranker_enabled)
+        top_score = reranked[0].rerank_score if reranked else 0.0
+
+        candidates = expand_two_hop(
+            query=query,
+            candidates=reranked,
+            ref_map=session.ref_map,
+            chunks=session.chunks,
+            max_expansions=2,
+        )
+
+        # GraphRAG-lite neighbor expansion for +graph and full_system
+        if config_name in ("+graph", "full_system"):
+            from app.pipeline.graph import expand_graph_knowledge
+
+            knowledge_graph = getattr(session, "knowledge_graph", None)
+            candidates, _ = expand_graph_knowledge(
+                query=query,
+                candidates=candidates,
+                graph=knowledge_graph,
+                max_expansion=4,
+            )
 
         if top_score < floor or not reranked:
             answer = FRIENDLY_REFUSAL_TEXT

@@ -268,5 +268,149 @@
     "expected_chunk_ids": [],
     "expected_chunk_indices": [],
     "document": "handbook.pdf"
+  },
+  {
+    "id": "q_31",
+    "type": "ocr",
+    "question": "What is the notice period for voluntary resignation?",
+    "expected_answer": "60 calendar days advance written notice.",
+    "expected_chunk_ids": ["doc_chunk_0002"],
+    "expected_chunk_indices": [1],
+    "document": "handbook.pdf"
+  },
+  {
+    "id": "q_32",
+    "type": "ocr",
+    "question": "How many days of paid sick leave do employees receive per year?",
+    "expected_answer": "12 days of paid sick leave annually.",
+    "expected_chunk_ids": ["doc_chunk_0002"],
+    "expected_chunk_indices": [1],
+    "document": "handbook.pdf"
+  },
+  {
+    "id": "q_33",
+    "type": "ocr",
+    "question": "What is the minimum password character length required by internal security?",
+    "expected_answer": "Passwords must be at least 16 characters in length.",
+    "expected_chunk_ids": ["doc_chunk_0003"],
+    "expected_chunk_indices": [2],
+    "document": "handbook.pdf"
+  },
+  {
+    "id": "q_34",
+    "type": "ocr",
+    "question": "Which procedure governs the formal declaration of conflicts of interest?",
+    "expected_answer": "Procedure EC-101 to the ethics committee.",
+    "expected_chunk_ids": ["doc_chunk_0001"],
+    "expected_chunk_indices": [0],
+    "document": "handbook.pdf"
+  },
+  {
+    "id": "q_35",
+    "type": "library",
+    "question": "Which framework governs all operating divisions and employees?",
+    "expected_answer": "General Employment Framework Clause 1.1.",
+    "expected_chunk_ids": ["doc_chunk_0001"],
+    "expected_chunk_indices": [0],
+    "document": "handbook.pdf"
+  },
+  {
+    "id": "q_36",
+    "type": "library",
+    "question": "What are the rules regarding ethical behavior and outside business interests?",
+    "expected_answer": "Conflicts of interest must be formally declared to the ethics committee under procedure EC-101.",
+    "expected_chunk_ids": ["doc_chunk_0001"],
+    "expected_chunk_indices": [0],
+    "document": "handbook.pdf"
+  },
+  {
+    "id": "q_37",
+    "type": "library",
+    "question": "What password complexity standards are enforced across enterprise repositories?",
+    "expected_answer": "Passwords must be at least 16 characters in length.",
+    "expected_chunk_ids": ["doc_chunk_0003"],
+    "expected_chunk_indices": [2],
+    "document": "handbook.pdf"
+  },
+  {
+    "id": "q_38",
+    "type": "agentic",
+    "question": "What is the mandatory notice period for voluntary resignation and what is the minimum password length?",
+    "expected_answer": "Voluntary resignation requires 60 days advance written notice and passwords must be at least 16 characters.",
+    "expected_chunk_ids": ["doc_chunk_0002", "doc_chunk_0003"],
+    "expected_chunk_indices": [1, 2],
+    "document": "handbook.pdf"
+  },
+  {
+    "id": "q_39",
+    "type": "agentic",
+    "question": "What is the annual paid leave accrual rate and how many unused days can roll over?",
+    "expected_answer": "Full-time employees accrue 24 days annual leave per year and up to 5 unused days may roll over with written approval.",
+    "expected_chunk_ids": ["doc_chunk_0001", "doc_chunk_0002"],
+    "expected_chunk_indices": [0, 1],
+    "document": "handbook.pdf"
+  },
+  {
+    "id": "q_40",
+    "type": "agentic",
+    "question": "How many days of paid sick leave are provided and to which committee must conflicts of interest be declared?",
+    "expected_answer": "12 days paid sick leave annually and conflicts of interest must be declared to the ethics committee under procedure EC-101.",
+    "expected_chunk_ids": ["doc_chunk_0001", "doc_chunk_0002"],
+    "expected_chunk_indices": [0, 1],
+    "document": "handbook.pdf"
+  },
+  {
+    "id": "q_41",
+    "type": "parity",
+    "question": "What is the annual paid leave entitlement for full-time employees?",
+    "expected_answer": "Full-time employees accrue 24 days of paid annual leave per calendar year.",
+    "expected_chunk_ids": ["doc_chunk_0001"],
+    "expected_chunk_indices": [0],
+    "document": "handbook.pdf"
+  },
+  {
+    "id": "q_42",
+    "type": "parity",
+    "question": "What is the required notice period for voluntary resignation?",
+    "expected_answer": "60 calendar days advance written notice.",
+    "expected_chunk_ids": ["doc_chunk_0002"],
+    "expected_chunk_indices": [1],
+    "document": "handbook.pdf"
+  },
+  {
+    "id": "q_43",
+    "type": "parity",
+    "question": "What are the password security rules for internal system logins?",
+    "expected_answer": "Passwords must be at least 16 characters in length.",
+    "expected_chunk_ids": ["doc_chunk_0003"],
+    "expected_chunk_indices": [2],
+    "document": "handbook.pdf"
+  },
+  {
+    "id": "q_44",
+    "type": "parity",
+    "question": "How many days of paid sick leave do employees receive each year?",
+    "expected_answer": "12 days of paid sick leave annually.",
+    "expected_chunk_ids": ["doc_chunk_0002"],
+    "expected_chunk_indices": [1],
+    "document": "handbook.pdf"
+  },
+  {
+    "id": "q_45",
+    "type": "scope_boundary",
+    "question": "Write a poem about outer space, stars, and galaxies.",
+    "expected_answer": "Not covered in this document.",
+    "expected_chunk_ids": [],
+    "expected_chunk_indices": [],
+    "document": "handbook.pdf"
+  },
+  {
+    "id": "q_46",
+    "type": "scope_boundary",
+    "question": "Provide a python calculation formula to compute the accrued leave based on the 24 days per year rate in this handbook.",
+    "expected_answer": "accrual rate of 24 days per year (2.0 days per month) [S1]",
+    "expected_chunk_ids": ["doc_chunk_0001"],
+    "expected_chunk_indices": [0],
+    "document": "handbook.pdf"
   }
 ]

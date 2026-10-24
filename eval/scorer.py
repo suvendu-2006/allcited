@@ -141,8 +141,10 @@ def score_answer_correctness(
     )
     is_effectively_refused = refused or is_refusal_phrase
 
-    if question_type == "absent":
-        # Absent questions MUST be refused
+    if question_type == "absent" or (
+        question_type == "scope_boundary" and "not covered" in expected_answer.lower()
+    ):
+        # Absent and off-topic requests MUST be refused
         if is_effectively_refused:
             return True, True, 1.0, "correct_refusal"
         return False, False, 0.0, "missed_refusal"
@@ -209,7 +211,7 @@ class AggregateSummary:
         self.total_questions += 1
         self.latencies_ms.append(latency_ms)
 
-        if q_type == "absent":
+        if q_type == "absent" or q_type == "scope_boundary" and not retrieval_hit:
             self.absent_total += 1
             if refusal_correct:
                 self.absent_refused += 1
