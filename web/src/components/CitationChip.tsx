@@ -13,6 +13,7 @@ export function CitationChip({ citation, onClick }: CitationChipProps) {
   const [showTooltip, setShowTooltip] = useState(false);
 
   const isTwoHop = Boolean(citation.is_two_hop);
+  const isOcr = Boolean(citation.is_ocr) || citation.label.includes("(OCR)");
   const sectionText = citation.section_path?.length ? citation.section_path.join(" > ") : "";
 
   return (
@@ -23,13 +24,20 @@ export function CitationChip({ citation, onClick }: CitationChipProps) {
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
         className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 text-xs font-semibold rounded cursor-pointer transition-colors ${
-          isTwoHop
+          isOcr
+            ? "bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700 hover:bg-amber-200"
+            : isTwoHop
             ? "bg-purple-100 dark:bg-purple-950/60 text-purple-750 dark:text-purple-300 border border-purple-300 dark:border-purple-700 hover:bg-purple-200"
             : "bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-700 hover:bg-blue-200"
         }`}
       >
         {isTwoHop ? <Sparkles className="w-2.5 h-2.5" /> : <Link2 className="w-2.5 h-2.5" />}
         <span>[{citation.label}]</span>
+        {isOcr && !citation.label.includes("(OCR)") && (
+          <span className="text-[9px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300 bg-amber-200 dark:bg-amber-900/80 px-1 py-0.2 rounded ml-0.5">
+            OCR
+          </span>
+        )}
       </button>
 
       {showTooltip && (

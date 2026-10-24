@@ -19,3 +19,7 @@ class ParsedBlock(BaseModel):
         default="",
         description="Filename, URL, or identifier of the source document",
     )
+    is_ocr: bool = Field(
+        default=False,
+        description="True if this block was extracted via OCR fallback",
+    )

@@ -21,6 +21,7 @@ class Chunk(BaseModel):
     source: str = Field(default="", description="Source filename or origin")
     metadata: dict = Field(default_factory=dict, description="Custom metadata tags and filters")
     contextual_header: Optional[str] = Field(default=None, description="LLM-generated context header")
+    is_ocr: bool = Field(default=False, description="True if chunk was extracted via OCR fallback")
 
     @property
     def embed_text(self) -> str:
@@ -36,6 +37,7 @@ class _SentenceItem(NamedTuple):
     section_path: List[str]
     page: Optional[int]
     source: str
+    is_ocr: bool = False
 
 
 def estimate_tokens(text: str) -> int:
@@ -94,6 +96,7 @@ def chunk_blocks(
         parent_id = " > ".join(section_path) if section_path else ""
         page = items[0].page if items else None
         source = items[0].source if items else ""
+        is_ocr = any(item.is_ocr for item in items)
         chunk_index += 1
         return Chunk(
             id=f"{doc_id}_chunk_{chunk_index:04d}",
@@ -105,6 +108,7 @@ def chunk_blocks(
             section_path=section_path,
             page=page,
             source=source,
+            is_ocr=is_ocr,
         )
 
     for block in blocks:
@@ -121,6 +125,7 @@ def chunk_blocks(
                 section_path=list(block.section_path),
                 page=block.page,
                 source=block.source,
+                is_ocr=getattr(block, "is_ocr", False),
             )
 
             # If adding this sentence exceeds target_tokens and we already have content

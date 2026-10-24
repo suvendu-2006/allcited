@@ -66,18 +66,25 @@ export function Message({ message, onCitationClick }: MessageProps) {
       console.error("Failed to submit feedback", e);
     }
   };
-  const citationsMap = new Map((message.citations || []).map((c) => [c.label, c]));
+  const citationsMap = new Map<string, Citation>();
+  (message.citations || []).forEach((c) => {
+    citationsMap.set(c.label, c);
+    const stripped = c.label.replace(/\s*\(OCR\)/, "").trim();
+    if (stripped) {
+      citationsMap.set(stripped, c);
+    }
+  });
 
   // Parse [S#] citations into interactive CitationChips
   const renderFormattedText = (text: string) => {
     if (!text) return null;
 
-    const parts = text.split(/(\[S\d+\])/g);
+    const parts = text.split(/(\[S\d+(?:\s*\(OCR\))?\])/g);
     return parts.map((part, idx) => {
-      const match = part.match(/\[S(\d+)\]/);
+      const match = part.match(/\[S(\d+)(?:\s*\(OCR\))?\]/);
       if (match) {
-        const label = `S${match[1]}`;
-        const citation = citationsMap.get(label);
+        const baseLabel = `S${match[1]}`;
+        const citation = citationsMap.get(part.slice(1, -1)) || citationsMap.get(baseLabel);
         if (citation) {
           return (
             <CitationChip

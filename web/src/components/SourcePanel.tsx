@@ -112,6 +112,7 @@ export function SourcePanel({
         {filteredCitations.map((c) => {
           const isSelected = activeLabel === c.label;
           const isTwoHop = Boolean(c.is_two_hop);
+          const isOcr = Boolean(c.is_ocr) || c.label.includes("(OCR)");
 
           return (
             <div
@@ -123,9 +124,13 @@ export function SourcePanel({
               onClick={() => onSelectCitation?.(c.label)}
               className={`p-3.5 rounded-xl border text-xs transition-all cursor-pointer ${
                 isSelected
-                  ? isTwoHop
+                  ? isOcr
+                    ? "border-amber-500 ring-2 ring-amber-500/20 bg-amber-50/60 dark:bg-amber-950/30 shadow-md"
+                    : isTwoHop
                     ? "border-purple-500 ring-2 ring-purple-500/20 bg-purple-50/60 dark:bg-purple-950/30 shadow-md"
                     : "border-blue-500 ring-2 ring-blue-500/20 bg-blue-50/60 dark:bg-blue-950/30 shadow-md"
+                  : isOcr
+                  ? "border-amber-200 dark:border-amber-900/60 bg-amber-50/20 dark:bg-amber-950/10 hover:border-amber-300"
                   : isTwoHop
                   ? "border-purple-200 dark:border-purple-900/60 bg-purple-50/20 dark:bg-purple-950/10 hover:border-purple-300"
                   : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700"
@@ -136,13 +141,20 @@ export function SourcePanel({
                 <div className="flex items-center gap-1.5">
                   <span
                     className={`font-semibold px-2 py-0.5 rounded text-[11px] ${
-                      isTwoHop
+                      isOcr
+                        ? "bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700"
+                        : isTwoHop
                         ? "bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-700"
                         : "bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700"
                     }`}
                   >
                     [{c.label}]
                   </span>
+                  {isOcr && (
+                    <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                      OCR
+                    </span>
+                  )}
                   <span className="font-mono text-[10px] text-slate-400">
                     {c.chunk_id.replace(/^sess_[^_]+_/, "")}
                   </span>

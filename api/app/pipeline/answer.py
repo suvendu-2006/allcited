@@ -47,6 +47,7 @@ class CitationItem(BaseModel):
     is_two_hop: bool = Field(default=False, description="True if added via two-hop expansion")
     added_reason: Optional[str] = Field(default=None, description="Reason if added via two-hop")
     doc_name: Optional[str] = Field(default=None, description="Document filename for library citations")
+    is_ocr: bool = Field(default=False, description="True if extracted via OCR fallback")
 
 
 def build_grounded_prompt(
@@ -125,9 +126,12 @@ def post_pass_citations(
         if 1 <= idx <= num_sources:
             src = sources[idx - 1]
             is_graph_rel = bool(src.added_reason and "related:" in src.added_reason)
-            label = f"related: S{idx}" if is_graph_rel else f"S{idx}"
-            if label not in seen_labels:
+            is_ocr = bool(getattr(src, "is_ocr", False) or getattr(src.chunk, "is_ocr", False))
+            base_lbl = f"related: S{idx}" if is_graph_rel else f"S{idx}"
+            label = f"{base_lbl} (OCR)" if is_ocr else base_lbl
+            if label not in seen_labels and base_lbl not in seen_labels:
                 seen_labels.add(label)
+                seen_labels.add(base_lbl)
                 citations.append(
                     CitationItem(
                         label=label,
@@ -138,8 +142,15 @@ def post_pass_citations(
                         is_two_hop=src.is_two_hop,
                         added_reason=src.added_reason,
                         doc_name=getattr(src.chunk, "doc_name", None) or getattr(src.chunk, "source", None) or None,
+                        is_ocr=is_ocr,
                     )
                 )
+
+    # Flag OCR citations in answer text with (OCR) flag
+    for idx, src in enumerate(sources, start=1):
+        is_ocr = bool(getattr(src, "is_ocr", False) or getattr(src.chunk, "is_ocr", False))
+        if is_ocr:
+            cleaned = re.sub(rf"\[S{idx}\](?!\s*\(OCR\))", f"[S{idx}] (OCR)", cleaned)
 
     return cleaned, citations
 

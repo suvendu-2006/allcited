@@ -389,8 +389,29 @@ def create_sample_spreadsheet(output_path: str):
     print(f"Created {output_path}")
 
 
+def create_scanned_pdf(input_pdf_path: str, output_pdf_path: str):
+    """
+    Generate a scanned PDF by rasterizing each page into an image
+    and re-saving without a digital text layer (<50 chars text), forcing OCR fallback.
+    """
+    doc = fitz.open(input_pdf_path)
+    out_doc = fitz.open()
+
+    for page in doc:
+        pix = page.get_pixmap(dpi=150)
+        out_page = out_doc.new_page(width=page.rect.width, height=page.rect.height)
+        out_page.insert_image(out_page.rect, stream=pix.tobytes("jpeg"))
+
+    Path(output_pdf_path).parent.mkdir(parents=True, exist_ok=True)
+    out_doc.save(output_pdf_path, deflate=True, garbage=4)
+    out_doc.close()
+    doc.close()
+    print(f"Created {output_pdf_path}")
+
+
 if __name__ == "__main__":
     create_handbook_pdf("eval/fixtures/handbook.pdf")
     create_handbook_docx("eval/fixtures/handbook.docx")
     create_sample_deck("eval/fixtures/presentation.pptx")
     create_sample_spreadsheet("eval/fixtures/financials.xlsx")
+    create_scanned_pdf("eval/fixtures/handbook.pdf", "eval/fixtures/scanned_handbook.pdf")

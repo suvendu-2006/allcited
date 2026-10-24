@@ -64,6 +64,10 @@ class TwoHopChunk(BaseModel):
     def parent_section_id(self) -> Optional[str]:
         return self.chunk.parent_section_id
 
+    @property
+    def is_ocr(self) -> bool:
+        return bool(getattr(self.chunk, "is_ocr", False))
+
 
 def normalize_to_twohop_chunk(c: Any, default_rank: Optional[int] = None) -> TwoHopChunk:
     """Normalize RerankedChunk, ScoredChunk, TwoHopChunk, or Chunk into a TwoHopChunk."""

@@ -1,15 +1,48 @@
+import logging
+import re
 from collections import Counter
 from io import BytesIO
 from typing import List, Union
 
 import pymupdf as fitz
+import pytesseract
+from PIL import Image
 
+from app.config import get_settings
 from app.pipeline.parsers.base import ParsedBlock
+
+logger = logging.getLogger(__name__)
 
 
 class PDFParserError(Exception):
     """Raised when PDF cannot be read or parsed."""
     pass
+
+
+def _ocr_page(page: fitz.Page, pno: int) -> str:
+    """Render page to high-res image and perform Tesseract OCR (eng+hin)."""
+    try:
+        settings = get_settings()
+        ocr_langs = getattr(settings, "OCR_LANGS", "eng+hin")
+    except Exception:
+        ocr_langs = "eng+hin"
+
+    try:
+        pix = page.get_pixmap(dpi=200)
+        img = Image.open(BytesIO(pix.tobytes("png")))
+    except Exception as e:
+        logger.error("Failed to render page %d to pixmap: %s", pno, e)
+        return ""
+
+    try:
+        return pytesseract.image_to_string(img, lang=ocr_langs)
+    except Exception as e:
+        logger.warning("OCR failed on page %d with lang=%s: %s; falling back to 'eng'", pno, ocr_langs, e)
+        try:
+            return pytesseract.image_to_string(img, lang="eng")
+        except Exception as e2:
+            logger.error("OCR fallback to 'eng' failed on page %d: %s", pno, e2)
+            return ""
 
 
 def parse_pdf(
@@ -58,6 +91,72 @@ def parse_pdf(
     section_path: List[str] = []
 
     for pno, page in enumerate(doc, start=1):
+        raw_page_text = page.get_text().strip()
+        if len(raw_page_text) < 50:
+            # Scanned / rasterized page with <50 chars text -> trigger OCR fallback
+            ocr_text = _ocr_page(page, pno)
+            for raw_para in ocr_text.split("\n\n"):
+                clean_para = "".join(ch for ch in raw_para if ch == "\n" or ch == "\t" or ch >= " ").strip()
+                if not clean_para:
+                    continue
+                lines = [line_str.strip() for line_str in clean_para.splitlines() if line_str.strip()]
+                if not lines:
+                    continue
+                first_line = lines[0]
+                is_heading_candidate = (
+                    len(first_line) < 100
+                    and (
+                        re.match(r"^(\d+(\.\d+)*\b|rule\b|clause\b|section\b|schedule\b)", first_line, re.IGNORECASE)
+                        or first_line.isupper()
+                        or (first_line.istitle() and len(first_line) < 60)
+                    )
+                )
+                if is_heading_candidate:
+                    heading_title = " ".join(first_line.split())
+                    if re.match(r"^\d+\.\s+", heading_title) or not section_path:
+                        section_path = [heading_title]
+                    elif re.match(r"^\d+\.\d+\s+", heading_title):
+                        section_path = [section_path[0], heading_title] if section_path else [heading_title]
+                    else:
+                        if len(section_path) >= 2:
+                            section_path = [section_path[0], section_path[1], heading_title]
+                        elif len(section_path) == 1:
+                            section_path = [section_path[0], heading_title]
+                        else:
+                            section_path = [heading_title]
+
+                    blocks.append(
+                        ParsedBlock(
+                            text=heading_title,
+                            section_path=list(section_path),
+                            page=pno,
+                            source=source_name,
+                            is_ocr=True,
+                        )
+                    )
+                    body_lines = lines[1:]
+                    if body_lines:
+                        blocks.append(
+                            ParsedBlock(
+                                text=" ".join(body_lines),
+                                section_path=list(section_path),
+                                page=pno,
+                                source=source_name,
+                                is_ocr=True,
+                            )
+                        )
+                else:
+                    blocks.append(
+                        ParsedBlock(
+                            text=" ".join(lines),
+                            section_path=list(section_path),
+                            page=pno,
+                            source=source_name,
+                            is_ocr=True,
+                        )
+                    )
+            continue
+
         page_dict = page.get_text("dict")
 
         for block in page_dict.get("blocks", []):
