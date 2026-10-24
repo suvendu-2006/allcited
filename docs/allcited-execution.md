@@ -101,7 +101,7 @@
   Do: `Chat/Message/Composer` components; `lib/sse.ts` reader with reconnect; token streaming; stage status line (searching → re-reading → composing).
   Done when: full conversation works in browser with visible streaming and stage line.
 
-- [ ] **STEP 22 — Upload tray**
+- [x] **STEP 22 — Upload tray**
   Do: `Upload.tsx` — drag-drop, client mime/size guard, progress states from ingest events, chunk count toast.
   Done when: upload → "✅ 214 chunks ready" → immediate questioning, no page reload.
 
