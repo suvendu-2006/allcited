@@ -301,7 +301,7 @@ def create_handbook_docx(output_path: str):
 
 def create_sample_deck(output_path: str):
     from pptx import Presentation
-    from pptx.util import Inches, Pt
+    from pptx.util import Inches
 
     prs = Presentation()
 

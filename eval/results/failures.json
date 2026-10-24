@@ -2,15 +2,15 @@
   {
     "question_id": "q_06",
     "type": "P1",
-    "config": "bm25",
+    "config": "+hyde",
     "question": "What is the monthly accrual rate for annual paid leave and the maximum carry-forward allowed into the next year?",
     "retrieval_hit": true,
     "retrieval_hit_all": true,
     "retrieval_recall": 1.0,
     "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0002"
+      "sess_782fa34be6ef_chunk_0001",
+      "sess_782fa34be6ef_chunk_0002",
+      "sess_782fa34be6ef_chunk_0003"
     ],
     "expected_chunk_ids": [
       "doc_chunk_0001",
@@ -21,7 +21,7 @@
     "answer_correct": false,
     "reason": "false_refusal",
     "f1_score": 0.0,
-    "latency_ms": 0.15,
+    "latency_ms": 73.05,
     "actual_answer": "Not covered in this document.",
     "expected_answer": "Accrues at 2.0 working days per completed month (24 days/year) and a maximum of 8 unused annual leave days may be carried forward.",
     "failure_reasons": [
@@ -32,15 +32,15 @@
   {
     "question_id": "q_08",
     "type": "P1",
-    "config": "bm25",
+    "config": "+hyde",
     "question": "What happens to employee property and corporate access cards upon resignation on the final working day?",
     "retrieval_hit": true,
     "retrieval_hit_all": true,
     "retrieval_recall": 1.0,
     "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0001"
+      "sess_782fa34be6ef_chunk_0002",
+      "sess_782fa34be6ef_chunk_0003",
+      "sess_782fa34be6ef_chunk_0001"
     ],
     "expected_chunk_ids": [
       "doc_chunk_0002"
@@ -50,7 +50,7 @@
     "answer_correct": false,
     "reason": "false_refusal",
     "f1_score": 0.0,
-    "latency_ms": 0.12,
+    "latency_ms": 86.43,
     "actual_answer": "Not covered in this document.",
     "expected_answer": "All corporate computing assets, access cards, and confidential proprietary material must be surrendered to the department supervisor on the final working day.",
     "failure_reasons": [
@@ -61,15 +61,15 @@
   {
     "question_id": "q_09",
     "type": "P1",
-    "config": "bm25",
+    "config": "+hyde",
     "question": "What authorization is required if an employee wants to take paid leave during their active resignation notice period?",
     "retrieval_hit": true,
     "retrieval_hit_all": true,
     "retrieval_recall": 1.0,
     "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0003"
+      "sess_782fa34be6ef_chunk_0002",
+      "sess_782fa34be6ef_chunk_0003",
+      "sess_782fa34be6ef_chunk_0001"
     ],
     "expected_chunk_ids": [
       "doc_chunk_0002"
@@ -79,7 +79,7 @@
     "answer_correct": false,
     "reason": "low_token_overlap (f1=0.0571, codes=0/0)",
     "f1_score": 0.0571,
-    "latency_ms": 0.15,
+    "latency_ms": 108.22,
     "actual_answer": "Permanent employees who wish to terminate their employment agreement must tender formal written notice at least 60 calendar days in advance to their designated reporting officer [S1].",
     "expected_answer": "Written authorization of the Vice President of HR.",
     "failure_reasons": [
@@ -89,15 +89,15 @@
   {
     "question_id": "q_10",
     "type": "P2",
-    "config": "bm25",
+    "config": "+hyde",
     "question": "How much paid time off for illness can team members utilize before needing doctor certification?",
     "retrieval_hit": true,
     "retrieval_hit_all": true,
     "retrieval_recall": 1.0,
     "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003"
+      "sess_782fa34be6ef_chunk_0002",
+      "sess_782fa34be6ef_chunk_0001",
+      "sess_782fa34be6ef_chunk_0003"
     ],
     "expected_chunk_ids": [
       "doc_chunk_0002"
@@ -107,7 +107,7 @@
     "answer_correct": false,
     "reason": "low_token_overlap (f1=0.0, codes=0/0)",
     "f1_score": 0.0,
-    "latency_ms": 0.14,
+    "latency_ms": 74.94,
     "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
     "expected_answer": "Up to two consecutive working days; absences exceeding two consecutive days mandate a medical practitioner certificate.",
     "failure_reasons": [
@@ -117,15 +117,15 @@
   {
     "question_id": "q_11",
     "type": "P2",
-    "config": "bm25",
+    "config": "+hyde",
     "question": "What are the rules regarding telecommuting and working outside company headquarters?",
     "retrieval_hit": true,
     "retrieval_hit_all": true,
     "retrieval_recall": 1.0,
     "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0002"
+      "sess_782fa34be6ef_chunk_0003",
+      "sess_782fa34be6ef_chunk_0001",
+      "sess_782fa34be6ef_chunk_0002"
     ],
     "expected_chunk_ids": [
       "doc_chunk_0003"
@@ -135,7 +135,7 @@
     "answer_correct": false,
     "reason": "low_token_overlap (f1=0.0, codes=0/0)",
     "f1_score": 0.0,
-    "latency_ms": 0.11,
+    "latency_ms": 74.49,
     "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
     "expected_answer": "Employees authorized for remote work must maintain a private secure workspace; public unsecured Wi-Fi connections without VPN encapsulation are strictly prohibited.",
     "failure_reasons": [
@@ -145,15 +145,15 @@
   {
     "question_id": "q_13",
     "type": "P2",
-    "config": "bm25",
+    "config": "+hyde",
     "question": "What safeguard must be active on all user accounts to prevent unauthorized access?",
     "retrieval_hit": true,
     "retrieval_hit_all": true,
     "retrieval_recall": 1.0,
     "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0003"
+      "sess_782fa34be6ef_chunk_0003",
+      "sess_782fa34be6ef_chunk_0002",
+      "sess_782fa34be6ef_chunk_0001"
     ],
     "expected_chunk_ids": [
       "doc_chunk_0003"
@@ -163,7 +163,7 @@
     "answer_correct": false,
     "reason": "low_token_overlap (f1=0.0, codes=0/0)",
     "f1_score": 0.0,
-    "latency_ms": 0.12,
+    "latency_ms": 55.99,
     "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
     "expected_answer": "Multi-factor authentication (MFA) is strictly mandatory on all internal systems.",
     "failure_reasons": [
@@ -173,14 +173,15 @@
   {
     "question_id": "q_19",
     "type": "P4",
-    "config": "bm25",
+    "config": "+hyde",
     "question": "What about leaves after resignation?",
     "retrieval_hit": true,
     "retrieval_hit_all": true,
     "retrieval_recall": 1.0,
     "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0002"
+      "sess_782fa34be6ef_chunk_0002",
+      "sess_782fa34be6ef_chunk_0003",
+      "sess_782fa34be6ef_chunk_0001"
     ],
     "expected_chunk_ids": [
       "doc_chunk_0002",
@@ -191,7 +192,7 @@
     "answer_correct": false,
     "reason": "low_token_overlap (f1=0.0, codes=0/2)",
     "f1_score": 0.0,
-    "latency_ms": 0.16,
+    "latency_ms": 49.17,
     "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
     "expected_answer": "Employees under active notice cannot take paid leave without VP of HR authorization; accrued annual leave is encashed up to 30 days pursuant to Rule 63.7.4.",
     "failure_reasons": [
@@ -201,1131 +202,15 @@
   {
     "question_id": "q_20",
     "type": "P4",
-    "config": "bm25",
+    "config": "+hyde",
     "question": "Tell me about company equipment and device security",
     "retrieval_hit": true,
     "retrieval_hit_all": true,
     "retrieval_recall": 1.0,
     "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0002",
-      "doc_chunk_0003"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/4)",
-    "f1_score": 0.0,
-    "latency_ms": 0.12,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Restricted exclusively to authorized business usage; MFA mandatory; 16+ char passwords refreshed every 90 days (ISO-27001); assets must be surrendered on departure.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/4))"
-    ]
-  },
-  {
-    "question_id": "q_21",
-    "type": "P4",
-    "config": "bm25",
-    "question": "What are all the rules on taking time off?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0001",
-      "doc_chunk_0002"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0488, codes=0/7)",
-    "f1_score": 0.0488,
-    "latency_ms": 0.11,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "24 days annual leave (2 days/month), 8 days maximum carry-forward to March 31, 12 days sick leave with Form HR-702 certificate for >2 days.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0488, codes=0/7))"
-    ]
-  },
-  {
-    "question_id": "q_22",
-    "type": "P4",
-    "config": "bm25",
-    "question": "What is required when someone leaves the company?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0002",
-      "doc_chunk_0003"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.05, codes=0/3)",
-    "f1_score": 0.05,
-    "latency_ms": 0.1,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "60 calendar days advance written notice, surrender of corporate assets and badges on final day, leave encashment capped at 30 days under Rule 63.7.4.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.05, codes=0/3))"
-    ]
-  },
-  {
-    "question_id": "q_23",
-    "type": "paraphrase",
-    "config": "bm25",
-    "question": "Can I roll over more than eight vacation days into the following year?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0001",
-      "doc_chunk_0002"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/3)",
-    "f1_score": 0.0,
-    "latency_ms": 0.12,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "No, surplus beyond 8 days automatically lapses on March 31 unless granted an executive waiver under Rule 2.1.4.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/3))"
-    ]
-  },
-  {
-    "question_id": "q_24",
-    "type": "paraphrase",
-    "config": "bm25",
-    "question": "How many vacation days do team members earn each year?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0001"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/1)",
-    "f1_score": 0.0,
-    "latency_ms": 0.16,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Full-time employees accrue 24 days of paid annual leave per calendar year.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/1))"
-    ]
-  },
-  {
-    "question_id": "q_25",
-    "type": "paraphrase",
-    "config": "bm25",
-    "question": "Is two-factor authentication required for corporate logins?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0003"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/1)",
-    "f1_score": 0.0,
-    "latency_ms": 0.1,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Yes, multi-factor authentication (MFA) is strictly mandatory on all internal systems under Clause 4.2.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/1))"
-    ]
-  },
-  {
-    "question_id": "q_06",
-    "type": "P1",
-    "config": "vector",
-    "question": "What is the monthly accrual rate for annual paid leave and the maximum carry-forward allowed into the next year?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0001",
-      "doc_chunk_0002"
-    ],
-    "refused": true,
-    "refusal_correct": false,
-    "answer_correct": false,
-    "reason": "false_refusal",
-    "f1_score": 0.0,
-    "latency_ms": 15.66,
-    "actual_answer": "Not covered in this document.",
-    "expected_answer": "Accrues at 2.0 working days per completed month (24 days/year) and a maximum of 8 unused annual leave days may be carried forward.",
-    "failure_reasons": [
-      "false_refusal",
-      "answer_incorrect (false_refusal)"
-    ]
-  },
-  {
-    "question_id": "q_08",
-    "type": "P1",
-    "config": "vector",
-    "question": "What happens to employee property and corporate access cards upon resignation on the final working day?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0001"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0002"
-    ],
-    "refused": true,
-    "refusal_correct": false,
-    "answer_correct": false,
-    "reason": "false_refusal",
-    "f1_score": 0.0,
-    "latency_ms": 7.22,
-    "actual_answer": "Not covered in this document.",
-    "expected_answer": "All corporate computing assets, access cards, and confidential proprietary material must be surrendered to the department supervisor on the final working day.",
-    "failure_reasons": [
-      "false_refusal",
-      "answer_incorrect (false_refusal)"
-    ]
-  },
-  {
-    "question_id": "q_09",
-    "type": "P1",
-    "config": "vector",
-    "question": "What authorization is required if an employee wants to take paid leave during their active resignation notice period?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0001"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0002"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0571, codes=0/0)",
-    "f1_score": 0.0571,
-    "latency_ms": 7.55,
-    "actual_answer": "Permanent employees who wish to terminate their employment agreement must tender formal written notice at least 60 calendar days in advance to their designated reporting officer [S1].",
-    "expected_answer": "Written authorization of the Vice President of HR.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0571, codes=0/0))"
-    ]
-  },
-  {
-    "question_id": "q_10",
-    "type": "P2",
-    "config": "vector",
-    "question": "How much paid time off for illness can team members utilize before needing doctor certification?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0003"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0002"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/0)",
-    "f1_score": 0.0,
-    "latency_ms": 7.19,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Up to two consecutive working days; absences exceeding two consecutive days mandate a medical practitioner certificate.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/0))"
-    ]
-  },
-  {
-    "question_id": "q_11",
-    "type": "P2",
-    "config": "vector",
-    "question": "What are the rules regarding telecommuting and working outside company headquarters?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0003"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/0)",
-    "f1_score": 0.0,
-    "latency_ms": 12.14,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Employees authorized for remote work must maintain a private secure workspace; public unsecured Wi-Fi connections without VPN encapsulation are strictly prohibited.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/0))"
-    ]
-  },
-  {
-    "question_id": "q_13",
-    "type": "P2",
-    "config": "vector",
-    "question": "What safeguard must be active on all user accounts to prevent unauthorized access?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0003"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/0)",
-    "f1_score": 0.0,
-    "latency_ms": 8.36,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Multi-factor authentication (MFA) is strictly mandatory on all internal systems.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/0))"
-    ]
-  },
-  {
-    "question_id": "q_19",
-    "type": "P4",
-    "config": "vector",
-    "question": "What about leaves after resignation?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0001"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0002",
-      "doc_chunk_0003"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/2)",
-    "f1_score": 0.0,
-    "latency_ms": 34.78,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Employees under active notice cannot take paid leave without VP of HR authorization; accrued annual leave is encashed up to 30 days pursuant to Rule 63.7.4.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/2))"
-    ]
-  },
-  {
-    "question_id": "q_20",
-    "type": "P4",
-    "config": "vector",
-    "question": "Tell me about company equipment and device security",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0002",
-      "doc_chunk_0003"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/4)",
-    "f1_score": 0.0,
-    "latency_ms": 12.74,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Restricted exclusively to authorized business usage; MFA mandatory; 16+ char passwords refreshed every 90 days (ISO-27001); assets must be surrendered on departure.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/4))"
-    ]
-  },
-  {
-    "question_id": "q_21",
-    "type": "P4",
-    "config": "vector",
-    "question": "What are all the rules on taking time off?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0002"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0001",
-      "doc_chunk_0002"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0488, codes=0/7)",
-    "f1_score": 0.0488,
-    "latency_ms": 15.88,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "24 days annual leave (2 days/month), 8 days maximum carry-forward to March 31, 12 days sick leave with Form HR-702 certificate for >2 days.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0488, codes=0/7))"
-    ]
-  },
-  {
-    "question_id": "q_22",
-    "type": "P4",
-    "config": "vector",
-    "question": "What is required when someone leaves the company?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0002",
-      "doc_chunk_0003"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.05, codes=0/3)",
-    "f1_score": 0.05,
-    "latency_ms": 12.79,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "60 calendar days advance written notice, surrender of corporate assets and badges on final day, leave encashment capped at 30 days under Rule 63.7.4.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.05, codes=0/3))"
-    ]
-  },
-  {
-    "question_id": "q_23",
-    "type": "paraphrase",
-    "config": "vector",
-    "question": "Can I roll over more than eight vacation days into the following year?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0001",
-      "doc_chunk_0002"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/3)",
-    "f1_score": 0.0,
-    "latency_ms": 12.96,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "No, surplus beyond 8 days automatically lapses on March 31 unless granted an executive waiver under Rule 2.1.4.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/3))"
-    ]
-  },
-  {
-    "question_id": "q_24",
-    "type": "paraphrase",
-    "config": "vector",
-    "question": "How many vacation days do team members earn each year?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0001"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/1)",
-    "f1_score": 0.0,
-    "latency_ms": 12.86,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Full-time employees accrue 24 days of paid annual leave per calendar year.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/1))"
-    ]
-  },
-  {
-    "question_id": "q_25",
-    "type": "paraphrase",
-    "config": "vector",
-    "question": "Is two-factor authentication required for corporate logins?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0003"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/1)",
-    "f1_score": 0.0,
-    "latency_ms": 9.84,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Yes, multi-factor authentication (MFA) is strictly mandatory on all internal systems under Clause 4.2.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/1))"
-    ]
-  },
-  {
-    "question_id": "q_06",
-    "type": "P1",
-    "config": "hybrid",
-    "question": "What is the monthly accrual rate for annual paid leave and the maximum carry-forward allowed into the next year?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0002"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0001",
-      "doc_chunk_0002"
-    ],
-    "refused": true,
-    "refusal_correct": false,
-    "answer_correct": false,
-    "reason": "false_refusal",
-    "f1_score": 0.0,
-    "latency_ms": 0.17,
-    "actual_answer": "Not covered in this document.",
-    "expected_answer": "Accrues at 2.0 working days per completed month (24 days/year) and a maximum of 8 unused annual leave days may be carried forward.",
-    "failure_reasons": [
-      "false_refusal",
-      "answer_incorrect (false_refusal)"
-    ]
-  },
-  {
-    "question_id": "q_08",
-    "type": "P1",
-    "config": "hybrid",
-    "question": "What happens to employee property and corporate access cards upon resignation on the final working day?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0001"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0002"
-    ],
-    "refused": true,
-    "refusal_correct": false,
-    "answer_correct": false,
-    "reason": "false_refusal",
-    "f1_score": 0.0,
-    "latency_ms": 0.15,
-    "actual_answer": "Not covered in this document.",
-    "expected_answer": "All corporate computing assets, access cards, and confidential proprietary material must be surrendered to the department supervisor on the final working day.",
-    "failure_reasons": [
-      "false_refusal",
-      "answer_incorrect (false_refusal)"
-    ]
-  },
-  {
-    "question_id": "q_09",
-    "type": "P1",
-    "config": "hybrid",
-    "question": "What authorization is required if an employee wants to take paid leave during their active resignation notice period?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0003"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0002"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0571, codes=0/0)",
-    "f1_score": 0.0571,
-    "latency_ms": 0.18,
-    "actual_answer": "Permanent employees who wish to terminate their employment agreement must tender formal written notice at least 60 calendar days in advance to their designated reporting officer [S1].",
-    "expected_answer": "Written authorization of the Vice President of HR.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0571, codes=0/0))"
-    ]
-  },
-  {
-    "question_id": "q_10",
-    "type": "P2",
-    "config": "hybrid",
-    "question": "How much paid time off for illness can team members utilize before needing doctor certification?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0002"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/0)",
-    "f1_score": 0.0,
-    "latency_ms": 0.16,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Up to two consecutive working days; absences exceeding two consecutive days mandate a medical practitioner certificate.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/0))"
-    ]
-  },
-  {
-    "question_id": "q_11",
-    "type": "P2",
-    "config": "hybrid",
-    "question": "What are the rules regarding telecommuting and working outside company headquarters?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0002"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0003"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/0)",
-    "f1_score": 0.0,
-    "latency_ms": 0.14,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Employees authorized for remote work must maintain a private secure workspace; public unsecured Wi-Fi connections without VPN encapsulation are strictly prohibited.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/0))"
-    ]
-  },
-  {
-    "question_id": "q_13",
-    "type": "P2",
-    "config": "hybrid",
-    "question": "What safeguard must be active on all user accounts to prevent unauthorized access?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0001"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0003"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/0)",
-    "f1_score": 0.0,
-    "latency_ms": 0.14,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Multi-factor authentication (MFA) is strictly mandatory on all internal systems.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/0))"
-    ]
-  },
-  {
-    "question_id": "q_19",
-    "type": "P4",
-    "config": "hybrid",
-    "question": "What about leaves after resignation?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0001"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0002",
-      "doc_chunk_0003"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/2)",
-    "f1_score": 0.0,
-    "latency_ms": 0.09,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Employees under active notice cannot take paid leave without VP of HR authorization; accrued annual leave is encashed up to 30 days pursuant to Rule 63.7.4.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/2))"
-    ]
-  },
-  {
-    "question_id": "q_20",
-    "type": "P4",
-    "config": "hybrid",
-    "question": "Tell me about company equipment and device security",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0002"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0002",
-      "doc_chunk_0003"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/4)",
-    "f1_score": 0.0,
-    "latency_ms": 0.11,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Restricted exclusively to authorized business usage; MFA mandatory; 16+ char passwords refreshed every 90 days (ISO-27001); assets must be surrendered on departure.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/4))"
-    ]
-  },
-  {
-    "question_id": "q_21",
-    "type": "P4",
-    "config": "hybrid",
-    "question": "What are all the rules on taking time off?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0001",
-      "doc_chunk_0002"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0488, codes=0/7)",
-    "f1_score": 0.0488,
-    "latency_ms": 0.12,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "24 days annual leave (2 days/month), 8 days maximum carry-forward to March 31, 12 days sick leave with Form HR-702 certificate for >2 days.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0488, codes=0/7))"
-    ]
-  },
-  {
-    "question_id": "q_22",
-    "type": "P4",
-    "config": "hybrid",
-    "question": "What is required when someone leaves the company?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0002"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0002",
-      "doc_chunk_0003"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.05, codes=0/3)",
-    "f1_score": 0.05,
-    "latency_ms": 0.11,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "60 calendar days advance written notice, surrender of corporate assets and badges on final day, leave encashment capped at 30 days under Rule 63.7.4.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.05, codes=0/3))"
-    ]
-  },
-  {
-    "question_id": "q_23",
-    "type": "paraphrase",
-    "config": "hybrid",
-    "question": "Can I roll over more than eight vacation days into the following year?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0002"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0001",
-      "doc_chunk_0002"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/3)",
-    "f1_score": 0.0,
-    "latency_ms": 0.14,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "No, surplus beyond 8 days automatically lapses on March 31 unless granted an executive waiver under Rule 2.1.4.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/3))"
-    ]
-  },
-  {
-    "question_id": "q_24",
-    "type": "paraphrase",
-    "config": "hybrid",
-    "question": "How many vacation days do team members earn each year?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0002"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0001"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/1)",
-    "f1_score": 0.0,
-    "latency_ms": 0.12,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Full-time employees accrue 24 days of paid annual leave per calendar year.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/1))"
-    ]
-  },
-  {
-    "question_id": "q_25",
-    "type": "paraphrase",
-    "config": "hybrid",
-    "question": "Is two-factor authentication required for corporate logins?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0002"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0003"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/1)",
-    "f1_score": 0.0,
-    "latency_ms": 0.11,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Yes, multi-factor authentication (MFA) is strictly mandatory on all internal systems under Clause 4.2.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/1))"
-    ]
-  },
-  {
-    "question_id": "q_06",
-    "type": "P1",
-    "config": "+rerank",
-    "question": "What is the monthly accrual rate for annual paid leave and the maximum carry-forward allowed into the next year?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0001",
-      "doc_chunk_0002"
-    ],
-    "refused": true,
-    "refusal_correct": false,
-    "answer_correct": false,
-    "reason": "false_refusal",
-    "f1_score": 0.0,
-    "latency_ms": 30.2,
-    "actual_answer": "Not covered in this document.",
-    "expected_answer": "Accrues at 2.0 working days per completed month (24 days/year) and a maximum of 8 unused annual leave days may be carried forward.",
-    "failure_reasons": [
-      "false_refusal",
-      "answer_incorrect (false_refusal)"
-    ]
-  },
-  {
-    "question_id": "q_08",
-    "type": "P1",
-    "config": "+rerank",
-    "question": "What happens to employee property and corporate access cards upon resignation on the final working day?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0001"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0002"
-    ],
-    "refused": true,
-    "refusal_correct": false,
-    "answer_correct": false,
-    "reason": "false_refusal",
-    "f1_score": 0.0,
-    "latency_ms": 34.61,
-    "actual_answer": "Not covered in this document.",
-    "expected_answer": "All corporate computing assets, access cards, and confidential proprietary material must be surrendered to the department supervisor on the final working day.",
-    "failure_reasons": [
-      "false_refusal",
-      "answer_incorrect (false_refusal)"
-    ]
-  },
-  {
-    "question_id": "q_09",
-    "type": "P1",
-    "config": "+rerank",
-    "question": "What authorization is required if an employee wants to take paid leave during their active resignation notice period?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0001"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0002"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0571, codes=0/0)",
-    "f1_score": 0.0571,
-    "latency_ms": 47.56,
-    "actual_answer": "Permanent employees who wish to terminate their employment agreement must tender formal written notice at least 60 calendar days in advance to their designated reporting officer [S1].",
-    "expected_answer": "Written authorization of the Vice President of HR.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0571, codes=0/0))"
-    ]
-  },
-  {
-    "question_id": "q_10",
-    "type": "P2",
-    "config": "+rerank",
-    "question": "How much paid time off for illness can team members utilize before needing doctor certification?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0003"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0002"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/0)",
-    "f1_score": 0.0,
-    "latency_ms": 97.32,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Up to two consecutive working days; absences exceeding two consecutive days mandate a medical practitioner certificate.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/0))"
-    ]
-  },
-  {
-    "question_id": "q_11",
-    "type": "P2",
-    "config": "+rerank",
-    "question": "What are the rules regarding telecommuting and working outside company headquarters?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0003"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/0)",
-    "f1_score": 0.0,
-    "latency_ms": 98.75,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Employees authorized for remote work must maintain a private secure workspace; public unsecured Wi-Fi connections without VPN encapsulation are strictly prohibited.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/0))"
-    ]
-  },
-  {
-    "question_id": "q_13",
-    "type": "P2",
-    "config": "+rerank",
-    "question": "What safeguard must be active on all user accounts to prevent unauthorized access?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0001"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0003"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/0)",
-    "f1_score": 0.0,
-    "latency_ms": 40.37,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Multi-factor authentication (MFA) is strictly mandatory on all internal systems.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/0))"
-    ]
-  },
-  {
-    "question_id": "q_19",
-    "type": "P4",
-    "config": "+rerank",
-    "question": "What about leaves after resignation?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0001"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0002",
-      "doc_chunk_0003"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/2)",
-    "f1_score": 0.0,
-    "latency_ms": 42.09,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Employees under active notice cannot take paid leave without VP of HR authorization; accrued annual leave is encashed up to 30 days pursuant to Rule 63.7.4.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/2))"
-    ]
-  },
-  {
-    "question_id": "q_20",
-    "type": "P4",
-    "config": "+rerank",
-    "question": "Tell me about company equipment and device security",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0001"
+      "sess_782fa34be6ef_chunk_0003",
+      "sess_782fa34be6ef_chunk_0002",
+      "sess_782fa34be6ef_chunk_0001"
     ],
     "expected_chunk_ids": [
       "doc_chunk_0002",
@@ -1336,7 +221,7 @@
     "answer_correct": false,
     "reason": "false_refusal",
     "f1_score": 0.0,
-    "latency_ms": 44.28,
+    "latency_ms": 55.24,
     "actual_answer": "I answer only from your uploaded document \u2014 ask me about it. (Want code? Upload a Python reference and I'll write code grounded in it.)",
     "expected_answer": "Restricted exclusively to authorized business usage; MFA mandatory; 16+ char passwords refreshed every 90 days (ISO-27001); assets must be surrendered on departure.",
     "failure_reasons": [
@@ -1347,15 +232,15 @@
   {
     "question_id": "q_21",
     "type": "P4",
-    "config": "+rerank",
+    "config": "+hyde",
     "question": "What are all the rules on taking time off?",
     "retrieval_hit": true,
     "retrieval_hit_all": true,
     "retrieval_recall": 1.0,
     "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003"
+      "sess_782fa34be6ef_chunk_0001",
+      "sess_782fa34be6ef_chunk_0002",
+      "sess_782fa34be6ef_chunk_0003"
     ],
     "expected_chunk_ids": [
       "doc_chunk_0001",
@@ -1366,7 +251,7 @@
     "answer_correct": false,
     "reason": "low_token_overlap (f1=0.0488, codes=0/7)",
     "f1_score": 0.0488,
-    "latency_ms": 42.3,
+    "latency_ms": 53.31,
     "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
     "expected_answer": "24 days annual leave (2 days/month), 8 days maximum carry-forward to March 31, 12 days sick leave with Form HR-702 certificate for >2 days.",
     "failure_reasons": [
@@ -1376,15 +261,15 @@
   {
     "question_id": "q_22",
     "type": "P4",
-    "config": "+rerank",
+    "config": "+hyde",
     "question": "What is required when someone leaves the company?",
     "retrieval_hit": true,
     "retrieval_hit_all": true,
     "retrieval_recall": 1.0,
     "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003"
+      "sess_782fa34be6ef_chunk_0001",
+      "sess_782fa34be6ef_chunk_0002",
+      "sess_782fa34be6ef_chunk_0003"
     ],
     "expected_chunk_ids": [
       "doc_chunk_0002",
@@ -1395,7 +280,7 @@
     "answer_correct": false,
     "reason": "low_token_overlap (f1=0.05, codes=0/3)",
     "f1_score": 0.05,
-    "latency_ms": 44.67,
+    "latency_ms": 50.68,
     "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
     "expected_answer": "60 calendar days advance written notice, surrender of corporate assets and badges on final day, leave encashment capped at 30 days under Rule 63.7.4.",
     "failure_reasons": [
@@ -1405,15 +290,15 @@
   {
     "question_id": "q_23",
     "type": "paraphrase",
-    "config": "+rerank",
+    "config": "+hyde",
     "question": "Can I roll over more than eight vacation days into the following year?",
     "retrieval_hit": true,
     "retrieval_hit_all": true,
     "retrieval_recall": 1.0,
     "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0003"
+      "sess_782fa34be6ef_chunk_0002",
+      "sess_782fa34be6ef_chunk_0001",
+      "sess_782fa34be6ef_chunk_0003"
     ],
     "expected_chunk_ids": [
       "doc_chunk_0001",
@@ -1424,7 +309,7 @@
     "answer_correct": false,
     "reason": "false_refusal",
     "f1_score": 0.0,
-    "latency_ms": 50.44,
+    "latency_ms": 47.81,
     "actual_answer": "I answer only from your uploaded document \u2014 ask me about it. (Want code? Upload a Python reference and I'll write code grounded in it.)",
     "expected_answer": "No, surplus beyond 8 days automatically lapses on March 31 unless granted an executive waiver under Rule 2.1.4.",
     "failure_reasons": [
@@ -1435,15 +320,15 @@
   {
     "question_id": "q_24",
     "type": "paraphrase",
-    "config": "+rerank",
+    "config": "+hyde",
     "question": "How many vacation days do team members earn each year?",
     "retrieval_hit": true,
     "retrieval_hit_all": true,
     "retrieval_recall": 1.0,
     "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003"
+      "sess_782fa34be6ef_chunk_0001",
+      "sess_782fa34be6ef_chunk_0002",
+      "sess_782fa34be6ef_chunk_0003"
     ],
     "expected_chunk_ids": [
       "doc_chunk_0001"
@@ -1453,7 +338,7 @@
     "answer_correct": false,
     "reason": "low_token_overlap (f1=0.0, codes=0/1)",
     "f1_score": 0.0,
-    "latency_ms": 60.49,
+    "latency_ms": 35.5,
     "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
     "expected_answer": "Full-time employees accrue 24 days of paid annual leave per calendar year.",
     "failure_reasons": [
@@ -1463,15 +348,15 @@
   {
     "question_id": "q_25",
     "type": "paraphrase",
-    "config": "+rerank",
+    "config": "+hyde",
     "question": "Is two-factor authentication required for corporate logins?",
     "retrieval_hit": true,
     "retrieval_hit_all": true,
     "retrieval_recall": 1.0,
     "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0001"
+      "sess_782fa34be6ef_chunk_0003",
+      "sess_782fa34be6ef_chunk_0002",
+      "sess_782fa34be6ef_chunk_0001"
     ],
     "expected_chunk_ids": [
       "doc_chunk_0003"
@@ -1481,755 +366,7 @@
     "answer_correct": false,
     "reason": "low_token_overlap (f1=0.0, codes=0/1)",
     "f1_score": 0.0,
-    "latency_ms": 63.35,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Yes, multi-factor authentication (MFA) is strictly mandatory on all internal systems under Clause 4.2.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/1))"
-    ]
-  },
-  {
-    "question_id": "q_06",
-    "type": "P1",
-    "config": "+twohop",
-    "question": "What is the monthly accrual rate for annual paid leave and the maximum carry-forward allowed into the next year?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0001",
-      "doc_chunk_0002"
-    ],
-    "refused": true,
-    "refusal_correct": false,
-    "answer_correct": false,
-    "reason": "false_refusal",
-    "f1_score": 0.0,
-    "latency_ms": 87.75,
-    "actual_answer": "Not covered in this document.",
-    "expected_answer": "Accrues at 2.0 working days per completed month (24 days/year) and a maximum of 8 unused annual leave days may be carried forward.",
-    "failure_reasons": [
-      "false_refusal",
-      "answer_incorrect (false_refusal)"
-    ]
-  },
-  {
-    "question_id": "q_08",
-    "type": "P1",
-    "config": "+twohop",
-    "question": "What happens to employee property and corporate access cards upon resignation on the final working day?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0001"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0002"
-    ],
-    "refused": true,
-    "refusal_correct": false,
-    "answer_correct": false,
-    "reason": "false_refusal",
-    "f1_score": 0.0,
-    "latency_ms": 50.98,
-    "actual_answer": "Not covered in this document.",
-    "expected_answer": "All corporate computing assets, access cards, and confidential proprietary material must be surrendered to the department supervisor on the final working day.",
-    "failure_reasons": [
-      "false_refusal",
-      "answer_incorrect (false_refusal)"
-    ]
-  },
-  {
-    "question_id": "q_09",
-    "type": "P1",
-    "config": "+twohop",
-    "question": "What authorization is required if an employee wants to take paid leave during their active resignation notice period?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0001"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0002"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0571, codes=0/0)",
-    "f1_score": 0.0571,
-    "latency_ms": 50.19,
-    "actual_answer": "Permanent employees who wish to terminate their employment agreement must tender formal written notice at least 60 calendar days in advance to their designated reporting officer [S1].",
-    "expected_answer": "Written authorization of the Vice President of HR.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0571, codes=0/0))"
-    ]
-  },
-  {
-    "question_id": "q_10",
-    "type": "P2",
-    "config": "+twohop",
-    "question": "How much paid time off for illness can team members utilize before needing doctor certification?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0003"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0002"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/0)",
-    "f1_score": 0.0,
-    "latency_ms": 49.26,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Up to two consecutive working days; absences exceeding two consecutive days mandate a medical practitioner certificate.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/0))"
-    ]
-  },
-  {
-    "question_id": "q_11",
-    "type": "P2",
-    "config": "+twohop",
-    "question": "What are the rules regarding telecommuting and working outside company headquarters?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0003"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/0)",
-    "f1_score": 0.0,
-    "latency_ms": 47.32,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Employees authorized for remote work must maintain a private secure workspace; public unsecured Wi-Fi connections without VPN encapsulation are strictly prohibited.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/0))"
-    ]
-  },
-  {
-    "question_id": "q_13",
-    "type": "P2",
-    "config": "+twohop",
-    "question": "What safeguard must be active on all user accounts to prevent unauthorized access?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0001"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0003"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/0)",
-    "f1_score": 0.0,
-    "latency_ms": 49.22,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Multi-factor authentication (MFA) is strictly mandatory on all internal systems.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/0))"
-    ]
-  },
-  {
-    "question_id": "q_19",
-    "type": "P4",
-    "config": "+twohop",
-    "question": "What about leaves after resignation?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0001"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0002",
-      "doc_chunk_0003"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/2)",
-    "f1_score": 0.0,
-    "latency_ms": 42.11,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Employees under active notice cannot take paid leave without VP of HR authorization; accrued annual leave is encashed up to 30 days pursuant to Rule 63.7.4.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/2))"
-    ]
-  },
-  {
-    "question_id": "q_20",
-    "type": "P4",
-    "config": "+twohop",
-    "question": "Tell me about company equipment and device security",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0001"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0002",
-      "doc_chunk_0003"
-    ],
-    "refused": true,
-    "refusal_correct": false,
-    "answer_correct": false,
-    "reason": "false_refusal",
-    "f1_score": 0.0,
-    "latency_ms": 38.8,
-    "actual_answer": "I answer only from your uploaded document \u2014 ask me about it. (Want code? Upload a Python reference and I'll write code grounded in it.)",
-    "expected_answer": "Restricted exclusively to authorized business usage; MFA mandatory; 16+ char passwords refreshed every 90 days (ISO-27001); assets must be surrendered on departure.",
-    "failure_reasons": [
-      "false_refusal",
-      "answer_incorrect (false_refusal)"
-    ]
-  },
-  {
-    "question_id": "q_21",
-    "type": "P4",
-    "config": "+twohop",
-    "question": "What are all the rules on taking time off?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0001",
-      "doc_chunk_0002"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0488, codes=0/7)",
-    "f1_score": 0.0488,
-    "latency_ms": 36.69,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "24 days annual leave (2 days/month), 8 days maximum carry-forward to March 31, 12 days sick leave with Form HR-702 certificate for >2 days.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0488, codes=0/7))"
-    ]
-  },
-  {
-    "question_id": "q_22",
-    "type": "P4",
-    "config": "+twohop",
-    "question": "What is required when someone leaves the company?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0002",
-      "doc_chunk_0003"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.05, codes=0/3)",
-    "f1_score": 0.05,
-    "latency_ms": 38.26,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "60 calendar days advance written notice, surrender of corporate assets and badges on final day, leave encashment capped at 30 days under Rule 63.7.4.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.05, codes=0/3))"
-    ]
-  },
-  {
-    "question_id": "q_23",
-    "type": "paraphrase",
-    "config": "+twohop",
-    "question": "Can I roll over more than eight vacation days into the following year?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0003"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0001",
-      "doc_chunk_0002"
-    ],
-    "refused": true,
-    "refusal_correct": false,
-    "answer_correct": false,
-    "reason": "false_refusal",
-    "f1_score": 0.0,
-    "latency_ms": 37.99,
-    "actual_answer": "I answer only from your uploaded document \u2014 ask me about it. (Want code? Upload a Python reference and I'll write code grounded in it.)",
-    "expected_answer": "No, surplus beyond 8 days automatically lapses on March 31 unless granted an executive waiver under Rule 2.1.4.",
-    "failure_reasons": [
-      "false_refusal",
-      "answer_incorrect (false_refusal)"
-    ]
-  },
-  {
-    "question_id": "q_24",
-    "type": "paraphrase",
-    "config": "+twohop",
-    "question": "How many vacation days do team members earn each year?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0001"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/1)",
-    "f1_score": 0.0,
-    "latency_ms": 37.04,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Full-time employees accrue 24 days of paid annual leave per calendar year.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/1))"
-    ]
-  },
-  {
-    "question_id": "q_25",
-    "type": "paraphrase",
-    "config": "+twohop",
-    "question": "Is two-factor authentication required for corporate logins?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0001"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0003"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/1)",
-    "f1_score": 0.0,
-    "latency_ms": 39.77,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Yes, multi-factor authentication (MFA) is strictly mandatory on all internal systems under Clause 4.2.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/1))"
-    ]
-  },
-  {
-    "question_id": "q_06",
-    "type": "P1",
-    "config": "+rewrite",
-    "question": "What is the monthly accrual rate for annual paid leave and the maximum carry-forward allowed into the next year?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0001",
-      "doc_chunk_0002"
-    ],
-    "refused": true,
-    "refusal_correct": false,
-    "answer_correct": false,
-    "reason": "false_refusal",
-    "f1_score": 0.0,
-    "latency_ms": 51.1,
-    "actual_answer": "Not covered in this document.",
-    "expected_answer": "Accrues at 2.0 working days per completed month (24 days/year) and a maximum of 8 unused annual leave days may be carried forward.",
-    "failure_reasons": [
-      "false_refusal",
-      "answer_incorrect (false_refusal)"
-    ]
-  },
-  {
-    "question_id": "q_08",
-    "type": "P1",
-    "config": "+rewrite",
-    "question": "What happens to employee property and corporate access cards upon resignation on the final working day?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0001"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0002"
-    ],
-    "refused": true,
-    "refusal_correct": false,
-    "answer_correct": false,
-    "reason": "false_refusal",
-    "f1_score": 0.0,
-    "latency_ms": 46.01,
-    "actual_answer": "Not covered in this document.",
-    "expected_answer": "All corporate computing assets, access cards, and confidential proprietary material must be surrendered to the department supervisor on the final working day.",
-    "failure_reasons": [
-      "false_refusal",
-      "answer_incorrect (false_refusal)"
-    ]
-  },
-  {
-    "question_id": "q_09",
-    "type": "P1",
-    "config": "+rewrite",
-    "question": "What authorization is required if an employee wants to take paid leave during their active resignation notice period?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0001"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0002"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0571, codes=0/0)",
-    "f1_score": 0.0571,
-    "latency_ms": 46.66,
-    "actual_answer": "Permanent employees who wish to terminate their employment agreement must tender formal written notice at least 60 calendar days in advance to their designated reporting officer [S1].",
-    "expected_answer": "Written authorization of the Vice President of HR.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0571, codes=0/0))"
-    ]
-  },
-  {
-    "question_id": "q_10",
-    "type": "P2",
-    "config": "+rewrite",
-    "question": "How much paid time off for illness can team members utilize before needing doctor certification?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0003"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0002"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/0)",
-    "f1_score": 0.0,
-    "latency_ms": 39.27,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Up to two consecutive working days; absences exceeding two consecutive days mandate a medical practitioner certificate.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/0))"
-    ]
-  },
-  {
-    "question_id": "q_11",
-    "type": "P2",
-    "config": "+rewrite",
-    "question": "What are the rules regarding telecommuting and working outside company headquarters?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0003"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/0)",
-    "f1_score": 0.0,
-    "latency_ms": 39.65,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Employees authorized for remote work must maintain a private secure workspace; public unsecured Wi-Fi connections without VPN encapsulation are strictly prohibited.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/0))"
-    ]
-  },
-  {
-    "question_id": "q_13",
-    "type": "P2",
-    "config": "+rewrite",
-    "question": "What safeguard must be active on all user accounts to prevent unauthorized access?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0001"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0003"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/0)",
-    "f1_score": 0.0,
-    "latency_ms": 40.68,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Multi-factor authentication (MFA) is strictly mandatory on all internal systems.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/0))"
-    ]
-  },
-  {
-    "question_id": "q_19",
-    "type": "P4",
-    "config": "+rewrite",
-    "question": "What about leaves after resignation?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0001"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0002",
-      "doc_chunk_0003"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/2)",
-    "f1_score": 0.0,
-    "latency_ms": 37.45,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Employees under active notice cannot take paid leave without VP of HR authorization; accrued annual leave is encashed up to 30 days pursuant to Rule 63.7.4.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/2))"
-    ]
-  },
-  {
-    "question_id": "q_20",
-    "type": "P4",
-    "config": "+rewrite",
-    "question": "Tell me about company equipment and device security",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0001"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0002",
-      "doc_chunk_0003"
-    ],
-    "refused": true,
-    "refusal_correct": false,
-    "answer_correct": false,
-    "reason": "false_refusal",
-    "f1_score": 0.0,
-    "latency_ms": 45.7,
-    "actual_answer": "I answer only from your uploaded document \u2014 ask me about it. (Want code? Upload a Python reference and I'll write code grounded in it.)",
-    "expected_answer": "Restricted exclusively to authorized business usage; MFA mandatory; 16+ char passwords refreshed every 90 days (ISO-27001); assets must be surrendered on departure.",
-    "failure_reasons": [
-      "false_refusal",
-      "answer_incorrect (false_refusal)"
-    ]
-  },
-  {
-    "question_id": "q_21",
-    "type": "P4",
-    "config": "+rewrite",
-    "question": "What are all the rules on taking time off?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0001",
-      "doc_chunk_0002"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0488, codes=0/7)",
-    "f1_score": 0.0488,
-    "latency_ms": 42.0,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "24 days annual leave (2 days/month), 8 days maximum carry-forward to March 31, 12 days sick leave with Form HR-702 certificate for >2 days.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0488, codes=0/7))"
-    ]
-  },
-  {
-    "question_id": "q_22",
-    "type": "P4",
-    "config": "+rewrite",
-    "question": "What is required when someone leaves the company?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0002",
-      "doc_chunk_0003"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.05, codes=0/3)",
-    "f1_score": 0.05,
-    "latency_ms": 41.67,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "60 calendar days advance written notice, surrender of corporate assets and badges on final day, leave encashment capped at 30 days under Rule 63.7.4.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.05, codes=0/3))"
-    ]
-  },
-  {
-    "question_id": "q_23",
-    "type": "paraphrase",
-    "config": "+rewrite",
-    "question": "Can I roll over more than eight vacation days into the following year?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0003"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0001",
-      "doc_chunk_0002"
-    ],
-    "refused": true,
-    "refusal_correct": false,
-    "answer_correct": false,
-    "reason": "false_refusal",
-    "f1_score": 0.0,
-    "latency_ms": 39.54,
-    "actual_answer": "I answer only from your uploaded document \u2014 ask me about it. (Want code? Upload a Python reference and I'll write code grounded in it.)",
-    "expected_answer": "No, surplus beyond 8 days automatically lapses on March 31 unless granted an executive waiver under Rule 2.1.4.",
-    "failure_reasons": [
-      "false_refusal",
-      "answer_incorrect (false_refusal)"
-    ]
-  },
-  {
-    "question_id": "q_24",
-    "type": "paraphrase",
-    "config": "+rewrite",
-    "question": "How many vacation days do team members earn each year?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0001",
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0003"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0001"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/1)",
-    "f1_score": 0.0,
-    "latency_ms": 33.15,
-    "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
-    "expected_answer": "Full-time employees accrue 24 days of paid annual leave per calendar year.",
-    "failure_reasons": [
-      "answer_incorrect (low_token_overlap (f1=0.0, codes=0/1))"
-    ]
-  },
-  {
-    "question_id": "q_25",
-    "type": "paraphrase",
-    "config": "+rewrite",
-    "question": "Is two-factor authentication required for corporate logins?",
-    "retrieval_hit": true,
-    "retrieval_hit_all": true,
-    "retrieval_recall": 1.0,
-    "retrieved_chunk_ids": [
-      "sess_77f43b8b450f_chunk_0003",
-      "sess_77f43b8b450f_chunk_0002",
-      "sess_77f43b8b450f_chunk_0001"
-    ],
-    "expected_chunk_ids": [
-      "doc_chunk_0003"
-    ],
-    "refused": false,
-    "refusal_correct": true,
-    "answer_correct": false,
-    "reason": "low_token_overlap (f1=0.0, codes=0/1)",
-    "f1_score": 0.0,
-    "latency_ms": 46.73,
+    "latency_ms": 48.21,
     "actual_answer": "The document stipulates the governing policy and terms in accordance with company standards [S1].",
     "expected_answer": "Yes, multi-factor authentication (MFA) is strictly mandatory on all internal systems under Clause 4.2.",
     "failure_reasons": [

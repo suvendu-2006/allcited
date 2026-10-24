@@ -1,60 +1,6 @@
 [
   {
-    "config": "bm25",
-    "total_questions": 30,
-    "retrieval_hit_rate": 100.0,
-    "category_hit_rates": {
-      "normal": 100.0,
-      "P1": 100.0,
-      "P2": 100.0,
-      "P3": 100.0,
-      "P4": 100.0,
-      "paraphrase": 100.0
-    },
-    "refusal_accuracy": 100.0,
-    "answer_correctness": 56.7,
-    "false_refusals": 2,
-    "latency_p50_ms": 0.1,
-    "latency_p95_ms": 0.2
-  },
-  {
-    "config": "vector",
-    "total_questions": 30,
-    "retrieval_hit_rate": 100.0,
-    "category_hit_rates": {
-      "normal": 100.0,
-      "P1": 100.0,
-      "P2": 100.0,
-      "P3": 100.0,
-      "P4": 100.0,
-      "paraphrase": 100.0
-    },
-    "refusal_accuracy": 100.0,
-    "answer_correctness": 56.7,
-    "false_refusals": 2,
-    "latency_p50_ms": 9.5,
-    "latency_p95_ms": 21.1
-  },
-  {
-    "config": "hybrid",
-    "total_questions": 30,
-    "retrieval_hit_rate": 100.0,
-    "category_hit_rates": {
-      "normal": 100.0,
-      "P1": 100.0,
-      "P2": 100.0,
-      "P3": 100.0,
-      "P4": 100.0,
-      "paraphrase": 100.0
-    },
-    "refusal_accuracy": 100.0,
-    "answer_correctness": 56.7,
-    "false_refusals": 2,
-    "latency_p50_ms": 0.1,
-    "latency_p95_ms": 0.2
-  },
-  {
-    "config": "+rerank",
+    "config": "+hyde",
     "total_questions": 30,
     "retrieval_hit_rate": 100.0,
     "category_hit_rates": {
@@ -68,43 +14,7 @@
     "refusal_accuracy": 100.0,
     "answer_correctness": 56.7,
     "false_refusals": 4,
-    "latency_p50_ms": 44.3,
-    "latency_p95_ms": 98.8
-  },
-  {
-    "config": "+twohop",
-    "total_questions": 30,
-    "retrieval_hit_rate": 100.0,
-    "category_hit_rates": {
-      "normal": 100.0,
-      "P1": 100.0,
-      "P2": 100.0,
-      "P3": 100.0,
-      "P4": 100.0,
-      "paraphrase": 100.0
-    },
-    "refusal_accuracy": 100.0,
-    "answer_correctness": 56.7,
-    "false_refusals": 4,
-    "latency_p50_ms": 48.6,
-    "latency_p95_ms": 87.8
-  },
-  {
-    "config": "+rewrite",
-    "total_questions": 30,
-    "retrieval_hit_rate": 100.0,
-    "category_hit_rates": {
-      "normal": 100.0,
-      "P1": 100.0,
-      "P2": 100.0,
-      "P3": 100.0,
-      "P4": 100.0,
-      "paraphrase": 100.0
-    },
-    "refusal_accuracy": 100.0,
-    "answer_correctness": 56.7,
-    "false_refusals": 4,
-    "latency_p50_ms": 43.3,
-    "latency_p95_ms": 57.7
+    "latency_p50_ms": 53.3,
+    "latency_p95_ms": 108.2
   }
 ]

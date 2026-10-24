@@ -4,8 +4,8 @@ scripts/export_eval_candidates.py - Export downvoted feedback items into eval ca
 """
 import argparse
 import json
-from pathlib import Path
 import sys
+from pathlib import Path
 
 # Ensure api directory is on sys.path
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -14,7 +14,6 @@ API_DIR = REPO_ROOT / "api"
 if str(API_DIR) not in sys.path:
     sys.path.insert(0, str(API_DIR))
 
-from app.feedback import get_feedback_store
 
 
 def main():

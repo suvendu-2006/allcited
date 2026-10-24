@@ -46,7 +46,7 @@ from scorer import (  # noqa: E402
 logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
 logger = logging.getLogger("eval_runner")
 
-ALL_CONFIGS = ["bm25", "vector", "hybrid", "+rerank", "+twohop", "+rewrite"]
+ALL_CONFIGS = ["bm25", "vector", "hybrid", "+rerank", "+twohop", "+rewrite", "+hyde"]
 
 
 async def run_single_query(
@@ -126,6 +126,39 @@ async def run_single_query(
         retrieved_map = {}
         for sq in sub_queries:
             sq_candidates = hybrid_retrieve(session.doc_index, sq, top_k=25, parent_expansion=False)
+            for sc in sq_candidates:
+                cid = sc.chunk.id
+                if cid not in retrieved_map or sc.rrf_score > retrieved_map[cid].rrf_score:
+                    retrieved_map[cid] = sc
+
+        merged = sorted(retrieved_map.values(), key=lambda c: c.rrf_score, reverse=True)
+        reranker = get_reranker()
+        reranked = reranker.rerank(query=query, candidates=merged, top_k=4, enabled=reranker_enabled)
+        top_score = reranked[0].rerank_score if reranked else 0.0
+
+        candidates = expand_two_hop(
+            query=query,
+            candidates=reranked,
+            ref_map=session.ref_map,
+            chunks=session.chunks,
+            max_expansions=2,
+        )
+
+        if top_score < floor or not reranked:
+            answer = FRIENDLY_REFUSAL_TEXT
+            refused = True
+
+    elif config_name == "+hyde":
+        rewrite_res = await rewrite_query(query, provider=provider)
+        sub_queries = rewrite_res.sub_queries or [query]
+
+        from app.pipeline.hyde import hyde_retrieve
+
+        retrieved_map = {}
+        for sq in sub_queries:
+            sq_candidates, _probe = await hyde_retrieve(
+                session.doc_index, sq, provider=provider, top_k=25, parent_expansion=False
+            )
             for sc in sq_candidates:
                 cid = sc.chunk.id
                 if cid not in retrieved_map or sc.rrf_score > retrieved_map[cid].rrf_score:

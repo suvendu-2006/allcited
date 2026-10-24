@@ -182,23 +182,42 @@ async def stream_answer_pipeline(
             yield sse_piece
         return
 
-    # 2. Cache (Semantic cache stub - hit: false in step 16)
+    # 2. Provider resolution (needed early for HyDE and downstream generation)
+    effective_preferred = preferred_provider
+    if effective_preferred is None and not byok_key and not settings.GROQ_API_KEY:
+        effective_preferred = "stub"
+
+    provider: ResolvedProvider = resolve_provider(
+        byok_key=byok_key,
+        byok_base_url=byok_base_url,
+        byok_model=byok_model,
+        preferred_provider=effective_preferred,
+    )
+
+    # 3. Cache (Semantic cache stub - hit: false in step 16)
     yield format_sse("cache", {"hit": False})
 
-    # 3. Rewrite
+    # 4. Rewrite
     t0 = time.perf_counter()
     rewrite_res = await rewrite_query(query)
     latencies["rewrite_ms"] = round((time.perf_counter() - t0) * 1000, 2)
     sub_queries = rewrite_res.sub_queries or [query]
     yield format_sse("rewrite", {"sub_queries": sub_queries, "reason": rewrite_res.reason})
 
-    # 4. Retrieve (Hybrid BM25 + Vector)
+    # 5. Retrieve (Hybrid BM25 + Vector + HyDE probe)
     t0 = time.perf_counter()
     retrieved_map = {}
+    from app.pipeline.hyde import hyde_retrieve
     from app.pipeline.retrieve import hybrid_retrieve
 
     for sq in sub_queries:
-        sq_candidates = hybrid_retrieve(session.doc_index, sq, top_k=25)
+        if settings.HYDE_ENABLED:
+            sq_candidates, _probe = await hyde_retrieve(
+                session.doc_index, sq, provider=provider, top_k=25
+            )
+        else:
+            sq_candidates = hybrid_retrieve(session.doc_index, sq, top_k=25)
+
         for sc in sq_candidates:
             cid = sc.chunk.id
             if cid not in retrieved_map or sc.rrf_score > retrieved_map[cid].rrf_score:
@@ -206,9 +225,9 @@ async def stream_answer_pipeline(
 
     candidates = sorted(retrieved_map.values(), key=lambda c: c.rrf_score, reverse=True)
     latencies["retrieve_ms"] = round((time.perf_counter() - t0) * 1000, 2)
-    yield format_sse("retrieve", {"candidate_count": len(candidates)})
+    yield format_sse("retrieve", {"candidate_count": len(candidates), "hyde_enabled": settings.HYDE_ENABLED})
 
-    # 5. Re-ranker
+    # 6. Re-ranker
     t0 = time.perf_counter()
     reranker = get_reranker()
     reranked = reranker.rerank(
@@ -222,7 +241,7 @@ async def stream_answer_pipeline(
     top_score = reranked[0].rerank_score if reranked else 0.0
     yield format_sse("rerank", {"reranked_count": len(reranked), "top_score": round(top_score, 4)})
 
-    # 5b. Relevance floor check: if top_score < floor -> friendly refusal card (0 LLM calls)
+    # 6b. Relevance floor check: if top_score < floor -> friendly refusal card (0 LLM calls)
     floor = getattr(settings, "RELEVANCE_FLOOR", RELEVANCE_FLOOR)
     if top_score < floor or not reranked:
         logger.info(
@@ -246,6 +265,9 @@ async def stream_answer_pipeline(
                 injection_flagged=False,
                 refused=True,
                 refusal_reason="low_relevance",
+                hyde_enabled=settings.HYDE_ENABLED,
+                provider=provider.provider_type,
+                model=provider.model,
                 total_tokens=0,
                 latencies_ms=latencies,
             )
@@ -264,7 +286,7 @@ async def stream_answer_pipeline(
         )
         return
 
-    # 6. Two-hop cross-reference expansion
+    # 7. Two-hop cross-reference expansion
     t0 = time.perf_counter()
     ref_map: ReferenceMap = getattr(session, "ref_map", ReferenceMap())
     final_sources = expand_two_hop(
@@ -278,17 +300,7 @@ async def stream_answer_pipeline(
     two_hop_count = sum(1 for s in final_sources if s.is_two_hop)
     yield format_sse("expand", {"two_hop_count": two_hop_count, "total_chunks": len(final_sources)})
 
-    # 7. Grounded LLM Stream
-    effective_preferred = preferred_provider
-    if effective_preferred is None and not byok_key and not settings.GROQ_API_KEY:
-        effective_preferred = "stub"
-
-    provider: ResolvedProvider = resolve_provider(
-        byok_key=byok_key,
-        byok_base_url=byok_base_url,
-        byok_model=byok_model,
-        preferred_provider=effective_preferred,
-    )
+    # 8. Grounded LLM Stream
     prompt_messages, injection_flagged = build_grounded_prompt(
         query, final_sources, return_flagged=True
     )
@@ -348,6 +360,7 @@ async def stream_answer_pipeline(
             refused=is_refusal,
             refusal_reason="not_covered" if is_refusal else None,
             prompt_hash=prompt_hash,
+            hyde_enabled=settings.HYDE_ENABLED,
             provider=provider.provider_type,
             model=provider.model,
             total_tokens=total_tokens,

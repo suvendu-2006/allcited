@@ -29,6 +29,7 @@ export interface TraceData {
   two_hop_count: number;
   total_sources: number;
   injection_flagged: boolean;
+  hyde_enabled?: boolean;
   refused: boolean;
   refusal_reason?: string | null;
   provider: string;
@@ -187,7 +188,9 @@ export function TraceViewer({
                     <span className="text-base font-bold text-slate-900 dark:text-slate-100">
                       {trace.retrieved_count}
                     </span>
-                    <span className="text-[10px] text-slate-400 block">hybrid candidates</span>
+                    <span className="text-[10px] text-slate-400 block">
+                      {trace.hyde_enabled ? "hybrid + HyDE" : "hybrid candidates"}
+                    </span>
                   </div>
 
                   <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-center">

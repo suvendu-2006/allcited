@@ -29,6 +29,7 @@ class TraceRecord(BaseModel):
     refused: bool = False
     refusal_reason: Optional[str] = None
     prompt_hash: Optional[str] = None
+    hyde_enabled: bool = False
     provider: str = "stub"
     model: str = ""
     total_tokens: int = 0
