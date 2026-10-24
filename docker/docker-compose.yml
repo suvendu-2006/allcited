@@ -1,0 +1,73 @@
+version: "3.8"
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: allcited-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    restart: unless-stopped
+
+  ollama-pull:
+    image: curlimages/curl:latest
+    container_name: allcited-ollama-pull
+    depends_on:
+      ollama:
+        condition: service_healthy
+    command: >
+      sh -c "echo 'Checking/pulling qwen2.5:3b for private offline edition...' &&
+             curl -s -f -X POST http://ollama:11434/api/pull -d '{\"name\": \"qwen2.5:3b\", \"stream\": false}' &&
+             echo 'qwen2.5:3b ready.'"
+    restart: "no"
+
+  api:
+    build:
+      context: ../api
+      dockerfile: Dockerfile
+    container_name: allcited-api
+    ports:
+      - "8000:8000"
+    environment:
+      - MODE=private
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - DEFAULT_LLM_MODEL=qwen2.5:3b
+      - ENVIRONMENT=production
+      - CORS_ORIGINS=["http://localhost:3000","http://127.0.0.1:3000"]
+    depends_on:
+      ollama:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ../web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+    container_name: allcited-web
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  ollama_models:
