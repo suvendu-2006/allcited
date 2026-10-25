@@ -56,3 +56,7 @@ A pre-revamp `node` process (pid 73817 unless changed) still serves **HTTP 500**
 - One "seamless" in a code comment (`src/lib/waveTransition.ts:6`) — reword while touching the file
 - Verify the hero serif renders in **both** themes (was Georgia in dark, sampled Bricolage in light)
 - The §5 verification doc references and §4 copy in `ALLCITED.md` need the §-removal sync from FIX 1
+
+
+## FIX 7 — Full-site copy, ULTRA-SIMPLE version (owner request, updated 2026-10-25)
+§4C was still too complex per the owner. **Apply ALLCITED.md §4D verbatim — it supersedes §4C.** Short sentences, small words, structure unchanged. Includes a find→replace jargon table. **Also FIX (bug found in audit): the landing stat counters rendered "3%" and "2" instead of 87% and 46 — verify the rolling counters settle on final values (and render instantly under prefers-reduced-motion).** Gate: §4D strings verbatim · jargon-replacement grep = 0 hits · RAG on landing, /product, /how-it-works · stats show 87% / 46 / 6 after animation completes.

@@ -4,8 +4,6 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "./ui/ThemeToggle";
-import { Button } from "./ui/button";
-import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface NavbarProps {
@@ -14,29 +12,43 @@ interface NavbarProps {
 }
 
 const NAV_LINKS = [
-  { href: "/product", label: "Product" },
-  { href: "/how-it-works", label: "How it works" },
-  { href: "/exam", label: "The exam" },
-  { href: "/pricing", label: "Pricing" },
-  { href: "/library", label: "Shelf" },
-  { href: "/dev", label: "/dev", isMono: true },
+  { href: "/product", label: "Product", sub: "Architecture & Defenses" },
+  { href: "/how-it-works", label: "How it works", sub: "Receipts Anatomy" },
+  { href: "/exam", label: "The exam", sub: "46-Question Benchmark" },
+  { href: "/pricing", label: "Pricing", sub: "Free & Pro Tiers" },
+  { href: "/library", label: "Shelf", sub: "Private Archive" },
+  { href: "/dev", label: "/dev", sub: "Design System Tokens", isMono: true },
 ];
 
 export function Navbar({ onOpenSettings, apiConnected }: NavbarProps) {
   const pathname = usePathname();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [localTime, setLocalTime] = useState<string>("11 . 00");
 
-  // Close mobile menu on route change
+  // Live ticking local clock formatted as "HH . MM" per Awwwards reference
   useEffect(() => {
-    setMobileMenuOpen(false);
+    const updateClock = () => {
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, "0");
+      const mm = String(now.getMinutes()).padStart(2, "0");
+      setLocalTime(`${hh} . ${mm}`);
+    };
+    updateClock();
+    const interval = setInterval(updateClock, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Close menu on route change
+  useEffect(() => {
+    setMenuOpen(false);
   }, [pathname]);
 
-  // Handle Escape key to close mobile menu
+  // Close on Escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setMobileMenuOpen(false);
+      if (e.key === "Escape") setMenuOpen(false);
     };
-    if (mobileMenuOpen) {
+    if (menuOpen) {
       document.body.style.overflow = "hidden";
       window.addEventListener("keydown", handleKeyDown);
     }
@@ -44,147 +56,206 @@ export function Navbar({ onOpenSettings, apiConnected }: NavbarProps) {
       document.body.style.overflow = "unset";
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [mobileMenuOpen]);
+  }, [menuOpen]);
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full border-b border-border bg-bg-surface/85 backdrop-blur-md px-4 sm:px-6 h-14 flex items-center justify-between flex-shrink-0 transition-colors">
-        <div className="flex items-center gap-4 sm:gap-6">
+      <header className="sticky top-0 z-40 w-full border-b border-border bg-bg-surface/90 backdrop-blur-md px-4 sm:px-8 h-16 flex items-center justify-between flex-shrink-0 transition-colors select-none">
+        {/* Left: Editorial Label per Awwwards Site of the Day reference */}
+        <div className="flex items-center gap-6">
           <Link
             href="/"
-            className="flex items-center gap-2 hover:opacity-90 transition-opacity"
+            className="flex flex-col text-left leading-tight hover:opacity-80 transition-opacity"
           >
-            <span className="font-display text-lg font-bold tracking-tight text-ink-primary">
-              Allcited
+            <span className="font-mono text-[10px] uppercase tracking-[0.2em] font-bold text-ink-primary">
+              AWWWARDS
             </span>
-            <span className="font-mono text-[10px] uppercase tracking-wider px-1.5 py-0.2 rounded bg-accent-primary/10 text-accent-primary border border-accent-primary/20">
-              v1.0
+            <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-gray-warm">
+              SITE OF THE DAY
             </span>
           </Link>
 
-          {/* Desktop Nav with Animated Active Underline per §6.2 */}
-          <nav className="hidden md:flex items-center gap-5 text-xs font-medium text-gray-warm">
-            {NAV_LINKS.map((link) => {
-              const isActive = pathname === link.href;
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`relative py-1 transition-all duration-120 hover:-translate-y-[1px] ${
-                    isActive
-                      ? "text-ink-primary font-semibold"
-                      : "hover:text-ink-primary"
-                  } ${link.isMono ? "font-mono" : ""}`}
-                >
-                  <span>{link.label}</span>
-                  {isActive && (
-                    <motion.span
-                      layoutId="nav-active-pill"
-                      className="absolute bottom-0 left-0 right-0 h-[2px] bg-accent-primary rounded-full"
-                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                    />
-                  )}
-                </Link>
-              );
-            })}
+          {/* Quick desktop links inline */}
+          <nav className="hidden lg:flex items-center gap-5 text-xs font-mono text-gray-warm">
+            <Link
+              href="/product"
+              className={`hover:text-ink-primary transition-colors ${
+                pathname === "/product" ? "text-ink-primary font-semibold" : ""
+              }`}
+            >
+              Product
+            </Link>
+            <Link
+              href="/how-it-works"
+              className={`hover:text-ink-primary transition-colors ${
+                pathname === "/how-it-works" ? "text-ink-primary font-semibold" : ""
+              }`}
+            >
+              How it works
+            </Link>
+            <Link
+              href="/exam"
+              className={`hover:text-ink-primary transition-colors ${
+                pathname === "/exam" ? "text-ink-primary font-semibold" : ""
+              }`}
+            >
+              The exam
+            </Link>
           </nav>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          {/* Settings Trigger if handler provided */}
+        {/* Center: Signature Cursive Brand Logo per reference */}
+        <Link
+          href="/"
+          className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center hover:opacity-85 transition-opacity"
+        >
+          <span className="font-handwriting text-3xl sm:text-4xl text-ink-primary tracking-wide -rotate-2">
+            Allcited.
+          </span>
+        </Link>
+
+        {/* Right: Menu + Local Time + Circular Orbit Theme Toggle */}
+        <div className="flex items-center gap-4 sm:gap-6">
+          {/* MENU / CONTACT links */}
+          <div className="flex flex-col text-right leading-tight">
+            <button
+              type="button"
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="font-mono text-[10.5px] uppercase tracking-[0.18em] font-semibold text-ink-primary hover:text-accent-primary transition-colors text-right"
+            >
+              {menuOpen ? "CLOSE" : "MENU"}
+            </button>
+            <Link
+              href="/pricing"
+              className="font-mono text-[9px] uppercase tracking-[0.14em] text-gray-warm hover:text-ink-primary transition-colors text-right"
+            >
+              PRICING
+            </Link>
+          </div>
+
+          {/* LOCAL TIME Clock */}
+          <div className="hidden sm:flex flex-col text-right leading-tight">
+            <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-gray-warm">
+              LOCAL TIME
+            </span>
+            <span className="font-mono text-[11px] font-bold text-ink-primary tracking-wider tabular-nums">
+              {localTime}
+            </span>
+          </div>
+
+          {/* Circular Orbit Dial Theme Toggle */}
+          <div className="pl-1">
+            <ThemeToggle />
+          </div>
+
+          {/* Settings Trigger if available */}
           {onOpenSettings && (
             <button
               type="button"
               onClick={onOpenSettings}
-              title="Who does the thinking? (Settings)"
-              className="p-1.5 rounded-[6px] text-ink-ghost hover:text-ink-primary hover:bg-bg-sunken transition-colors cursor-pointer font-mono text-xs"
+              title="Model Settings"
+              className="font-mono text-xs text-ink-ghost hover:text-ink-primary p-1 rounded transition-colors"
             >
               ⚙
             </button>
           )}
 
-          {/* Theme Toggle with Web Reveal (§6.5) */}
-          <ThemeToggle />
-
-          {/* Quick CTA */}
-          <Link href="/?workspace=true" className="hidden sm:inline-flex">
-            <Button variant="primary" size="sm" className="text-xs h-8">
-              Open Allcited
-            </Button>
-          </Link>
-
-          {/* API Health Dot */}
+          {/* Backend Online Dot indicator */}
           {apiConnected !== undefined && (
-            <div
-              className="hidden lg:flex items-center gap-1.5 pl-1"
+            <span
+              className={`w-2 h-2 rounded-full ${
+                apiConnected ? "bg-[#28C840] dark:bg-[#5AD46F] animate-pulse" : "bg-danger"
+              }`}
               title={apiConnected ? "Backend online" : "Backend offline"}
-            >
-              <span
-                className={`w-2 h-2 rounded-full ${
-                  apiConnected
-                    ? "bg-[#28C840] dark:bg-[#5AD46F] animate-pulse"
-                    : "bg-danger"
-                }`}
-              />
-            </div>
+            />
           )}
-
-          {/* Mobile Menu Hamburger */}
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle navigation menu"
-            className="md:hidden p-1.5 rounded-[6px] text-ink-ghost hover:text-ink-primary hover:bg-bg-sunken transition-colors"
-          >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
         </div>
       </header>
 
-      {/* Mobile Full-Screen Overlay Nav per §6.2 */}
+      {/* Full-Screen Minimalist Menu Drawer */}
       <AnimatePresence>
-        {mobileMenuOpen && (
+        {menuOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -8 }}
+            initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 top-14 z-50 bg-bg-base/95 backdrop-blur-lg md:hidden p-6 flex flex-col justify-between"
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+            className="fixed inset-0 top-16 z-50 bg-bg-base/98 backdrop-blur-xl p-6 sm:p-12 flex flex-col justify-between overflow-y-auto"
           >
-            <div className="space-y-4 pt-4">
-              {NAV_LINKS.map((link, idx) => {
-                const isActive = pathname === link.href;
-                return (
-                  <motion.div
-                    key={link.href}
-                    initial={{ opacity: 0, x: -12 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.04 + 0.05 }}
-                  >
-                    <Link
-                      href={link.href}
-                      className={`block text-xl font-display py-2 border-b border-border/40 ${
-                        isActive
-                          ? "text-accent-primary font-semibold"
-                          : "text-ink-primary"
-                      } ${link.isMono ? "font-mono text-base" : ""}`}
+            <div className="max-w-4xl w-full mx-auto space-y-6 pt-4">
+              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-gray-warm block border-b border-border pb-2">
+                Index Navigation
+              </span>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {NAV_LINKS.map((link, idx) => {
+                  const isActive = pathname === link.href;
+                  return (
+                    <motion.div
+                      key={link.href}
+                      initial={{ opacity: 0, x: -16 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.04 + 0.05 }}
                     >
-                      {link.label}
-                    </Link>
-                  </motion.div>
-                );
-              })}
+                      <Link
+                        href={link.href}
+                        onClick={() => setMenuOpen(false)}
+                        className={`group block p-4 rounded-interactive border transition-all duration-150 ${
+                          isActive
+                            ? "bg-bg-surface border-accent-primary/50 shadow-xs"
+                            : "bg-bg-surface/50 border-border hover:bg-bg-surface hover:border-ink-primary/30"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span
+                            className={`text-xl font-display font-semibold transition-colors ${
+                              isActive
+                                ? "text-accent-primary"
+                                : "text-ink-primary group-hover:text-accent-primary"
+                            } ${link.isMono ? "font-mono text-base" : ""}`}
+                          >
+                            {link.label}
+                          </span>
+                          <span className="font-mono text-xs text-gray-warm group-hover:translate-x-1 transition-transform">
+                            →
+                          </span>
+                        </div>
+                        <span className="font-mono text-[11px] text-gray-warm block mt-1">
+                          {link.sub}
+                        </span>
+                      </Link>
+                    </motion.div>
+                  );
+                })}
+              </div>
             </div>
 
-            <div className="space-y-3 pb-8">
-              <Link href="/?workspace=true" className="w-full block">
-                <Button variant="primary" className="w-full text-sm">
+            <div className="max-w-4xl w-full mx-auto pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-gray-warm">
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/?workspace=true"
+                  onClick={() => setMenuOpen(false)}
+                  className="px-4 py-2 rounded-interactive bg-accent-primary text-primary-foreground font-semibold hover:brightness-95 transition-all text-xs"
+                >
                   Open Workspace
-                </Button>
-              </Link>
-              <p className="font-mono text-[11px] text-ink-ghost text-center">
-                Built with React 18 · Next.js 14 · Allcited v1.0
-              </p>
+                </Link>
+                {onOpenSettings && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onOpenSettings();
+                    }}
+                    className="px-3 py-2 rounded-interactive border border-border bg-bg-surface hover:bg-bg-sunken text-xs"
+                  >
+                    Configure Model ⚙
+                  </button>
+                )}
+              </div>
+
+              <div className="text-center sm:text-right font-mono text-[11px] text-ink-ghost">
+                Allcited v1.0 · Grounded Truth Architecture
+              </div>
             </div>
           </motion.div>
         )}

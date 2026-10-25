@@ -1148,3 +1148,148 @@ Add `framer-motion` to deps (the gap behind "no micro-animations"). Then impleme
 3. §4 copy: hero sub, tech strip, feature cards, exam teaser, footer → replaced by the stripped §6.3 versions.
 4. Icon policy: ≤3 functional icons app-wide (§6.4); typography carries the design.
 5. Everything else in §3/§4 — type system, seal-red citations (now also primary), stage hues, error copy, refusals, micro-interaction catalog — **unchanged**.
+
+---
+
+# §4C — FULL-SITE COPY v3 (plain-language rewrite, RAG included)
+
+> Owner directive (2026-10-25): every section rewritten so **anyone** can understand it; **RAG must be mentioned and explained**; no jargon without a plain gloss. This section overrides the matching strings in §4 and §6.3. Voice rules of §4 still apply.
+> **Jargon ban list (replace on sight):** "verbatim"→exact · "atomic chunk receipt"→citation · "deterministic funnel"→7-step path · "hallucination"→made-up answers (gloss the word once) · "chunk" (user-facing)→passage · "cross-encoder"→quality check.
+
+## Landing (/)
+
+- **H1 (unchanged):** Answers, with receipts.
+- **Hero sub:** Drop in any document. Ask anything. Every answer shows its source.
+- **NEW — "How is this different from ChatGPT?" (3 sentences, the RAG block):**
+  Allcited is built on **RAG — Retrieval-Augmented Generation**. Before answering, it first searches your document for the passages that matter, then writes the answer using *only those passages*. Normal AI chatbots answer from memory and sometimes invent facts; Allcited can only answer from your document — and shows you the passage it used.
+- **Live demo section — H2:** Try it right here — no signup
+  This is a real answer from a sample employee handbook. Click any citation to see the exact passage it came from.
+- **Stats labels:** 87% — "of our test questions, we find the exact right passage" · 46 — "test questions we run on ourselves before every release" · 6 — "file types we read: PDF, Word, PowerPoint, Excel, Markdown, web pages"
+- **Tech strip:** Built with React, Next.js, and a RAG pipeline you can inspect end-to-end.
+
+## /product
+
+- **H1:** Built so it can't make things up.
+- **Sub:** Every answer comes from your document, not from an AI's memory. If the document doesn't contain the answer, Allcited says so instead of guessing.
+- **Feature cards (title + one plain sentence each):**
+  1. **Receipts on everything.** Every claim links to the exact passage it came from — click it and read it yourself.
+  2. **Words and meaning.** Two search engines run on every question: one matches your exact words, the other understands what you mean. Phrasing never blocks the answer.
+  3. **It reads the fine print.** When an answer says "as per rule 63.7.4," Allcited also fetches what rule 63.7.4 actually says. Automatically.
+  4. **It shows its work.** Open the trace for any answer: what was searched, what was found, and why each passage was chosen.
+  5. **Your key, your business.** Use our free AI engine, plug in your own API key, or run everything on your own computer.
+  6. **It forgets on purpose.** Your document lives in memory only while you use it. Close the tab and it's gone. (Save something, and only you can see it.)
+- **Pipeline section — H2:** What happens to your question
+  Your question travels a 7-step path, and you can watch every step:
+  1. We sharpen it (vague questions get rewritten) · 2. Search by words · 3. Search by meaning · 4. Pick the best passages · 5. Follow rule references · 6. Write the answer · 7. Attach citations.
+  *(this replaces "strict 7-stage deterministic retrieval and cross-encoder funnel" — the diagram keeps its stage chips; each stage gets this one-line caption)*
+
+## /how-it-works
+
+- **H1 (unchanged):** How Allcited Works
+- **Sub:** Upload a file, ask a question, get an answer with proof. Here's exactly what happens in between.
+- **Step 1 — Drop it in.** Drag in any document — PDF, Word, PowerPoint, Excel, or a web link. We split it into small passages, note how they connect, and index every word. Scanned PDFs are read with OCR.
+- **Step 2 — Ask like a human.** "Can I carry my leaves forward?" works as well as formal keywords. If your question is vague, we quietly rewrite it into sharper ones before searching.
+- **Step 3 — Follow the trail.** Every claim carries a marker like [S1] 4.2, p.23. Click it to read the original passage and check us.
+- **RAG callout (small block after step 3):** This whole flow is called **RAG — Retrieval-Augmented Generation**: find first, answer second.
+- **Receipt section — H2:** What a citation contains
+  Every citation shows the section name, the page number, and the original text — enough to verify the answer without re-reading the whole document.
+
+## /exam
+
+- **H1 (unchanged):** We Grade Ourselves in Public.
+- **Sub:** Before every release, we run a 46-question test on Allcited — with questions written to break it. Results are public, including the failures.
+- **Release progression:** Each dot is a release. The score should go up. When it doesn't, the reason is written down.
+- **H2:** What we test (46 questions)
+  Questions whose answers are split across pages · questions that need a second lookup ("as per rule 63.7.4…") · vague and trick phrasings · and questions the document simply can't answer — **refusing those correctly counts as passing.**
+- **H2:** The scoreboard
+  Every metric gets a "what this means" line. Example row: *We find the right passage in our top 5 picks — target ≥85%, measured 87.2%.* (Replace "Recall@5 Passage Match" style labels with this pattern; keep the technical name in small mono text beside it.)
+
+## /pricing
+
+- **H1 (unchanged):** Free to ask. Paid to go deep.
+- **Free — ₹0, for everyone:** Unlimited questions. Documents up to 20 MB. All six file types. Every citation and trace included.
+- **Pro — ₹299/month, cancel anytime:** Everything in Free, plus documents up to 100 MB, **Precision mode** (double-checks twice as many passages before answering), an unlimited shelf, and priority when we're busy.
+
+## /library
+
+- **H1 (unchanged):** Your shelf
+- **Sub:** Documents you keep. Ask questions across everything you've saved — it stays between sessions, private to your account.
+- Gate copy stays per §4 (sign-in prompt; asking needs no account).
+
+**Copy-freeze sync:** these strings replace their §4/§6.3 counterparts everywhere they appear (components, copy.ts, pages). Gate: every §4C string verbatim in UI; `grep` for the jargon ban list returns zero user-facing hits; "RAG" appears on landing, /product (pipeline), and /how-it-works.
+
+---
+
+# §4D — FULL-SITE COPY v4: ULTRA-SIMPLE (supersedes §4C)
+
+> Owner verdict on §4C: still not simple enough. v4 rule: **short sentences. Small words. One idea per line. A 12-year-old gets it.** Structure (cards, numbers, demo, scores) stays — only the words change. Applied per page, from a full live read of every page (2026-10-25).
+
+## Landing (/)
+- **H1:** Answers, with receipts.
+- **Sub:** Upload a document. Ask any question. Every answer shows where it came from.
+- **Buttons:** Try it free · See how it works · Load sample handbook
+- **Trust line:** No account needed · Nothing is saved · We publish our test scores
+- **RAG block — H2: How is this different from ChatGPT?**
+  ChatGPT answers from memory. It sometimes makes things up.
+  Allcited answers from your document only. First it finds the right lines. Then it writes the answer from those lines.
+  This method is called **RAG — Retrieval-Augmented Generation**. And it always shows you the lines it used.
+- **Demo — H2:** Try it right here. No signup.
+  This is a real answer from a sample handbook. Click any citation. See the exact lines it came from.
+- **Stats:** **87%** — we find the right passage for 87 of every 100 test questions · **46** — test questions we run on every release · **6** — file types we read: PDF, Word, PowerPoint, Excel, Markdown, web pages
+- **Privacy checks (replace the three jargon lines):** Your file is deleted when you leave · Your own key stays in your browser · We never look at your files
+- **Formats marquee:** We read PDF · Word · PowerPoint · Excel · Markdown · web links
+
+## /product
+- **Eyebrow:** WHAT YOU GET
+- **H1:** It can only answer from your document.
+- **Sub:** That's the whole idea. No memory. No guessing. If your document says it, you get the answer. If it doesn't, we say so.
+- **Cards (keep 01–06 numbers and visuals; new words):**
+  - **01 Receipts on everything.** Every claim links to the exact lines it came from. Click. Read. Check us.
+  - **02 Words and meaning.** We search your words *and* your meaning. Ask any way you like.
+  - **03 It reads the fine print.** The answer says "rule 63.7.4"? We also show you what that rule says.
+  - **04 It shows its work.** Open the trace. See every step we took. Nothing is hidden.
+  - **05 Your key, your business.** Use ours free. Or your own AI key. Or run it on your computer.
+  - **06 It forgets on purpose.** Your file lives in memory only. Close the tab. It's gone.
+- **Pipeline — H2:** What happens to your question
+  Seven steps. You can watch them all.
+  1 Read the file — scanned pages too · 2 Split it into passages · 3 Search by words · 4 Search by meaning · 5 Keep the best passages · 6 Follow rule references · 7 Write the answer, with citations.
+
+## /how-it-works
+- **Eyebrow:** HOW IT WORKS
+- **H1:** Three steps. That's it.
+- **Step 1 — Drop it in.** Drag any file in. We read it, split it into small passages, and learn how it's organized. ⚡ A 200-page file is ready in seconds.
+- **Step 2 — Ask like a human.** No special words needed. Ask like you'd ask a friend. If your question is vague, we sharpen it first. ⚡ Vague questions get rewritten for you.
+- **Step 3 — Follow the trail.** Every claim shows a marker like [S1] 4.2, p.23. Click it. Read the original lines. ⚡ The original text, always one click away.
+- **RAG callout:** Find first. Answer second. That's RAG — Retrieval-Augmented Generation.
+- **Receipt section — H2:** What a citation shows you
+  The section. The page. The original text. Enough to check any answer — without reading the whole document.
+- **Formats:** Works with PDF, Word, PowerPoint, Excel, Markdown, and web links.
+
+## /exam
+- **Eyebrow:** OUR TEST SCORES
+- **H1:** We test ourselves. In public.
+- **Sub:** Before every release, we run a 46-question exam. The questions are written to break Allcited. The scores are public — even the failures.
+- **Progression (keep the version dots):** Every dot is a release. The score should go up. v0.8 → 74% · v0.9 → 81.5% · v1.0 → 87.2%
+- **H2: What we test** (plain names, keep scores):
+  - Answers split across two pages — 9/10
+  - Answers that need a second lookup — 8/8
+  - Questions the document can't answer (refusing correctly = passing) — 8/8
+  - Tables and numbers — 7/8
+  - Trick phrasings — 6/7
+  - Files that try to trick the AI — 5/5
+- **H2: The scoreboard** (plain name + what it means; keep targets and measured values; technical name in small mono beside):
+  Finding the right passage (top 5 picks) — target 85% — measured 87.2% · No made-up answers — 90% — 94.1% · Correct refusals — 95% — 98.0% · Rule lookups resolved — 85% — 91.3% · Table accuracy — 80% — 89.4% · Scanned-file reading (OCR) — target/measured as-is
+
+## /pricing
+- **H1:** Free to ask. Paid to go deep.
+- **Sub:** Questions are free, forever. Pro is for big files and heavy use.
+- **Free — ₹0, for everyone:** Unlimited questions · Files up to 20 MB · All 6 file types · Every citation and trace.
+- **Pro — ₹299/month, cancel anytime:** Everything in Free, plus: Files up to 100 MB · Precision mode (checks 50 passages instead of 25) · Unlimited shelf · Priority when busy.
+- Keep the test-mode note as-is.
+
+## /library
+- **H1:** Your shelf
+- **Sub:** Keep your documents here. Ask questions across all of them, anytime. Private to your account.
+
+## Global replacements (find → replace, all pages)
+"dual-engine receipt system" → gone · "Dense embeddings … sparse BM25" → "We search your words and your meaning" · "Ephemeral RAM only — vanishes on exit" → "Your file is deleted when you leave" · "BYOK kept strictly in client browser" → "Your own key stays in your browser" · "Zero telemetry on file contents" → "We never look at your files" · "atomic chunk receipt" → "citation" · "verbatim" → "exact" · "citation stamp" → "citation" · "receipt drawer" → "source panel" · "Ingest Gateways" → "Works with" · "Adversarial Jailbreaks" → "Files that try to trick the AI" · "Cross-Page Spanning" → "Answers split across two pages" · "Absent / Out-of-Scope" → "Questions the document can't answer"

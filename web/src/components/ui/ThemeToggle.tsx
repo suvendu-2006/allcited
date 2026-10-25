@@ -12,7 +12,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
       type="button"
       onClick={(e) => toggleTheme(e)}
       aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
-      className={`relative inline-flex items-center justify-center w-9 h-9 rounded-interactive border border-border bg-bg-surface hover:bg-bg-sunken text-ink-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary cursor-pointer ${className}`}
+      className={`relative inline-flex items-center justify-center p-0.5 rounded-full text-ink-primary hover:opacity-80 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary cursor-pointer active:scale-95 ${className}`}
     >
       <ThemeToggleLogo theme={theme} />
     </button>

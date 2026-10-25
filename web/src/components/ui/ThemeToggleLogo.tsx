@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { Sun, Moon } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface ThemeToggleLogoProps {
@@ -10,28 +9,44 @@ interface ThemeToggleLogoProps {
 }
 
 /**
- * ThemeToggleLogo Slot v2 (§6.5)
- *
- * Designed as a one-file swap for the owner's custom toggle-icon reference.
- * Currently renders an accessible morphing sun/moon emblem with a 90° rotation on click.
+ * Circular Orbit Dial Theme Toggle Logo
+ * Modeled after the Awwwards Site of the Day reference:
+ * - Minimalist wire circle perimeter track.
+ * - Orbiting satellite dot that smoothly translates and rotates along the orbit
+ *   when toggling between light (sun) and dark (moon) phases.
  */
 export function ThemeToggleLogo({ theme, className = "" }: ThemeToggleLogoProps) {
   const isDark = theme === "dark";
 
   return (
-    <motion.div
-      key={theme}
-      initial={{ rotate: -90, scale: 0.85, opacity: 0 }}
-      animate={{ rotate: 0, scale: 1, opacity: 1 }}
-      exit={{ rotate: 90, scale: 0.85, opacity: 0 }}
-      transition={{ type: "spring", stiffness: 420, damping: 28 }}
-      className={`relative flex items-center justify-center ${className}`}
+    <div
+      className={`relative w-8 h-8 rounded-full border border-ink-primary/60 dark:border-ink-primary/70 flex items-center justify-center transition-colors duration-200 select-none ${className}`}
+      aria-hidden="true"
     >
-      {isDark ? (
-        <Sun className="w-4 h-4 text-accent-hot transition-transform hover:rotate-45" />
-      ) : (
-        <Moon className="w-4 h-4 text-accent-primary transition-transform hover:-rotate-12" />
-      )}
-    </motion.div>
+      {/* Orbiting Satellite Dot */}
+      <motion.div
+        className="absolute inset-0 flex items-center justify-center pointer-events-none"
+        animate={{
+          rotate: isDark ? 210 : 35,
+        }}
+        transition={{
+          type: "spring",
+          stiffness: 280,
+          damping: 24,
+        }}
+      >
+        {/* The dot positioned near the perimeter */}
+        <motion.div
+          className={`w-1.5 h-1.5 rounded-full border border-current ${
+            isDark
+              ? "bg-accent-primary border-accent-primary shadow-[0_0_6px_rgba(232,118,90,0.8)]"
+              : "bg-transparent border-ink-primary"
+          }`}
+          style={{
+            transform: "translateY(-9px)",
+          }}
+        />
+      </motion.div>
+    </div>
   );
 }
