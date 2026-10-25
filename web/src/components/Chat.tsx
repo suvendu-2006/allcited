@@ -5,7 +5,8 @@ import { Citation, PipelineStage, streamQuery } from "@/lib/sse";
 import { ChatMessage, Message } from "./Message";
 import { Composer } from "./Composer";
 import { Upload } from "./Upload";
-import { BookOpen, Sparkles, ShieldCheck } from "lucide-react";
+import { EmptyState } from "./EmptyState";
+import { ErrorState } from "./ErrorState";
 
 interface ChatProps {
   sessionId?: string | null;
@@ -21,7 +22,15 @@ interface ChatProps {
     chunkCount: number;
     pageCount: number;
   }) => void;
+  onOpenSettings?: () => void;
 }
+
+// Dry-wit rotating copy per §4 copy freeze
+const SEARCHING_VARIANTS = [
+  "reading the shelves…",
+  "flipping pages…",
+  "hunting for §-marks…",
+];
 
 export function Chat({
   sessionId,
@@ -32,11 +41,19 @@ export function Chat({
   preferredProvider,
   onCitationClick,
   onUploadSuccess,
+  onOpenSettings,
 }: ChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [streamError, setStreamError] = useState<{
+    code?: string;
+    message?: string;
+    requestId?: string;
+  } | null>(null);
+
   const abortControllerRef = useRef<AbortController | null>(null);
   const scrollEndRef = useRef<HTMLDivElement>(null);
+  const searchVariantIdx = useRef(0);
 
   // Auto-scroll to bottom on incoming message updates
   const scrollToBottom = () => {
@@ -47,11 +64,28 @@ export function Chat({
     scrollToBottom();
   }, [messages]);
 
+  const getStageHumanCopy = (stage: PipelineStage, originalMsg?: string): string => {
+    if (stage === "rewriting" || stage === "retrieving") {
+      const copy = SEARCHING_VARIANTS[searchVariantIdx.current % SEARCHING_VARIANTS.length];
+      return copy;
+    }
+    if (stage === "reranking") {
+      return "re-reading the 25 best passages…";
+    }
+    if (stage === "composing") {
+      return "writing it down…";
+    }
+    return originalMsg || stage;
+  };
+
   const handleSend = async (queryText: string) => {
     if (!sessionId) {
-      alert("Please upload or select an active document session first.");
+      alert("Drop or select a document first.");
       return;
     }
+
+    setStreamError(null);
+    searchVariantIdx.current = (searchVariantIdx.current + 1) % SEARCHING_VARIANTS.length;
 
     const userMessageId = `user_${Date.now()}`;
     const assistantMessageId = `asst_${Date.now()}`;
@@ -63,13 +97,14 @@ export function Chat({
       content: queryText,
     };
 
-    // 2. Add assistant placeholder
+    // 2. Add assistant placeholder with human rotating stage text
+    const initialStageText = SEARCHING_VARIANTS[searchVariantIdx.current % SEARCHING_VARIANTS.length];
     const assistantMsg: ChatMessage = {
       id: assistantMessageId,
       role: "assistant",
       content: "",
-      stage: "routing",
-      stageMessage: "Analyzing query...",
+      stage: "retrieving",
+      stageMessage: initialStageText,
     };
 
     setMessages((prev) => [...prev, userMsg, assistantMsg]);
@@ -88,10 +123,11 @@ export function Chat({
         preferredProvider,
         signal: controller.signal,
         onStageChange: (stage: PipelineStage, message: string) => {
+          const humanStageText = getStageHumanCopy(stage, message);
           setMessages((prev) =>
             prev.map((msg) =>
               msg.id === assistantMessageId
-                ? { ...msg, stage, stageMessage: message }
+                ? { ...msg, stage, stageMessage: humanStageText }
                 : msg
             )
           );
@@ -134,16 +170,24 @@ export function Chat({
           setIsGenerating(false);
         },
         onError: (err: Error) => {
+          // Parse potential error codes
+          let code = "generic";
+          const errStr = err.message.toLowerCase();
+          if (errStr.includes("swamped") || errStr.includes("rate limit") || errStr.includes("429")) {
+            code = "free_tier_busy";
+          } else if (errStr.includes("expired") || errStr.includes("404")) {
+            code = "session_expired";
+          }
+
+          setStreamError({
+            code,
+            message: err.message,
+            requestId: `req_${Math.random().toString(36).slice(2, 10)}`,
+          });
+
+          // Remove the empty assistant placeholder if failed early
           setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === assistantMessageId
-                ? {
-                    ...msg,
-                    content: `Error generating response: ${err.message}`,
-                    stage: "error",
-                  }
-                : msg
-            )
+            prev.filter((m) => m.id !== assistantMessageId || m.content.trim().length > 0)
           );
           setIsGenerating(false);
         },
@@ -162,77 +206,64 @@ export function Chat({
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-950">
+    <div className="flex flex-col h-full bg-bg-base">
       {/* Messages Viewport */}
       <div className="flex-1 overflow-y-auto px-4 py-6 md:px-8">
         <div className="max-w-3xl mx-auto">
           {messages.length === 0 ? (
-            <div className="text-center py-16 px-4">
-              <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-950/70 text-blue-600 dark:text-blue-400 mx-auto flex items-center justify-center mb-4 shadow-sm">
-                <BookOpen className="w-6 h-6" />
-              </div>
-              <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-1">
-                {documentName ? `Ask about "${documentName}"` : "Welcome to Allcited"}
-              </h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-6">
-                {documentName
-                  ? "Every answer is strictly grounded in your uploaded document with verifiable source citations."
-                  : "Upload a document to ask questions with receipt citations, cross-reference expansion, and zero hallucination."}
-              </p>
-
+            <div className="my-auto">
               {!sessionId && onUploadSuccess && (
-                <div className="max-w-md mx-auto mb-8">
+                <div className="max-w-xl mx-auto mb-6">
                   <Upload onUploadSuccess={onUploadSuccess} />
                 </div>
               )}
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-left max-w-2xl mx-auto">
-                <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    Strict Grounding
-                  </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400">
-                    Answers cite verified sources [S#]. External speculation is refused.
-                  </p>
-                </div>
-
-                <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-purple-600 dark:text-purple-400 mb-1">
-                    <BookOpen className="w-3.5 h-3.5" />
-                    Two-Hop Expansion
-                  </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400">
-                    Cross-referenced rules, clauses, and standards are dynamically resolved.
-                  </p>
-                </div>
-
-                <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 mb-1">
-                    <ShieldCheck className="w-3.5 h-3.5" />
-                    Privacy First
-                  </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400">
-                    No code execution. BYOK keys stay in browser localStorage.
-                  </p>
-                </div>
-              </div>
+              {/* Empty state per §4 copy freeze */}
+              <EmptyState onSelectSampleQuestion={(q) => handleSend(q)} />
             </div>
           ) : (
-            messages.map((msg) => (
-              <Message
-                key={msg.id}
-                message={msg}
-                onCitationClick={onCitationClick}
-              />
-            ))
+            <>
+              {documentName && (
+                <div className="mb-6 flex items-center justify-between pb-3 border-b border-border/60 text-xs text-gray-warm">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-accent-primary" />
+                    <span className="font-medium text-ink-primary truncate max-w-sm">
+                      {documentName}
+                    </span>
+                  </div>
+                  <span className="font-mono text-[11px] text-ink-ghost">
+                    grounded Q&A session
+                  </span>
+                </div>
+              )}
+
+              {messages.map((msg) => (
+                <Message
+                  key={msg.id}
+                  message={msg}
+                  onCitationClick={onCitationClick}
+                />
+              ))}
+
+              {streamError && (
+                <ErrorState
+                  code={streamError.code}
+                  message={streamError.message}
+                  requestId={streamError.requestId}
+                  onRetry={() => {
+                    const lastUser = [...messages].reverse().find((m) => m.role === "user");
+                    if (lastUser) handleSend(lastUser.content);
+                  }}
+                  onOpenSettings={onOpenSettings}
+                />
+              )}
+            </>
           )}
           <div ref={scrollEndRef} />
         </div>
       </div>
 
       {/* Composer Dock */}
-      <div className="p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur border-t border-slate-200 dark:border-slate-800">
+      <div className="p-4 bg-bg-surface/80 backdrop-blur-md border-t border-border">
         <div className="max-w-3xl mx-auto">
           <Composer
             onSend={handleSend}

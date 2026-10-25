@@ -9,32 +9,199 @@
 }
 
 @layer base {
+  /* Light Theme: "Paper" (wisprtype cream base, teal accent, seal red citations) */
   :root {
-    --background: #020617;
-    --foreground: #f8fafc;
-    --card: #0f172a;
-    --card-foreground: #f8fafc;
-    --popover: #0f172a;
-    --popover-foreground: #f8fafc;
-    --primary: #10b981;
-    --primary-foreground: #ffffff;
-    --secondary: #1e293b;
-    --secondary-foreground: #f8fafc;
-    --muted: #1e293b;
-    --muted-foreground: #94a3b8;
-    --accent: #1e293b;
-    --accent-foreground: #f8fafc;
-    --destructive: #ef4444;
-    --destructive-foreground: #ffffff;
-    --border: #1e293b;
-    --input: #1e293b;
-    --ring: #10b981;
-    --radius: 0.5rem;
+    --bg-base: #FAF8ED;
+    --bg-surface: #FFFFFF;
+    --bg-sunken: #F1EEE0;
+
+    --ink-primary: #16161A;
+    --ink-ghost: rgba(22, 22, 26, 0.45);
+
+    --accent-primary: #034F46;
+    --accent-cite: #A6362F;
+    --accent-hot: #C2410C;
+
+    --status-retrieve: #2D62FF;
+    --status-rerank: #FF5F57;
+    --status-twohop: #FEBC2E;
+    --status-cache: #28C840;
+
+    --danger: #7F1C34;
+    --border: rgba(22, 22, 26, 0.12);
+    --gray-warm: #71716A;
+
+    /* Tailwind mapped tokens */
+    --background: var(--bg-base);
+    --foreground: var(--ink-primary);
+    --card: var(--bg-surface);
+    --card-foreground: var(--ink-primary);
+    --popover: var(--bg-surface);
+    --popover-foreground: var(--ink-primary);
+    --primary: var(--accent-primary);
+    --primary-foreground: #FAF8ED;
+    --secondary: var(--bg-sunken);
+    --secondary-foreground: var(--ink-primary);
+    --muted: var(--bg-sunken);
+    --muted-foreground: var(--gray-warm);
+    --accent: var(--bg-sunken);
+    --accent-foreground: var(--ink-primary);
+    --destructive: var(--danger);
+    --destructive-foreground: #FFFFFF;
+    --ring: var(--accent-primary);
+    --radius-interactive: 10px;
+    --radius-input: 4px;
+    --radius-chrome: 0px;
+
+    --dot-color: rgba(22, 22, 26, 0.065);
   }
+
+  /* Dark Theme: "Teal-Ink Night" (wisprtype teal deepened into night) */
+  .dark {
+    --bg-base: #06211D;
+    --bg-surface: #0B2A24;
+    --bg-sunken: #10352E;
+
+    --ink-primary: #F2EFE0;
+    --ink-ghost: rgba(242, 239, 224, 0.48);
+
+    --accent-primary: #31C7A5;
+    --accent-cite: #F08A75;
+    --accent-hot: #FF7A4D;
+
+    --status-retrieve: #6E97FF;
+    --status-rerank: #FF8177;
+    --status-twohop: #FCC64B;
+    --status-cache: #5AD46F;
+
+    --danger: #F0788C;
+    --border: rgba(242, 239, 224, 0.14);
+    --gray-warm: #A8A69A;
+
+    /* Tailwind mapped tokens */
+    --background: var(--bg-base);
+    --foreground: var(--ink-primary);
+    --card: var(--bg-surface);
+    --card-foreground: var(--ink-primary);
+    --popover: var(--bg-surface);
+    --popover-foreground: var(--ink-primary);
+    --primary: var(--accent-primary);
+    --primary-foreground: #06211D;
+    --secondary: var(--bg-sunken);
+    --secondary-foreground: var(--ink-primary);
+    --muted: var(--bg-sunken);
+    --muted-foreground: var(--gray-warm);
+    --accent: var(--bg-sunken);
+    --accent-foreground: var(--ink-primary);
+    --destructive: var(--danger);
+    --destructive-foreground: #06211D;
+    --ring: var(--accent-primary);
+
+    --dot-color: rgba(242, 239, 224, 0.065);
+  }
+
   * {
     @apply border-border;
   }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+/* Texture: Dot Grid (for hero and empty states) */
+.dot-grid {
+  background-image: radial-gradient(var(--dot-color) 0.75px, transparent 0.75px);
+  background-size: 24px 24px;
+}
+
+/* View Transitions for Wave Theme Switch */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 9999;
+}
+
+/* Subtle Shimmer for Skeletons (warm tinted) */
+@keyframes warmShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--bg-sunken) 25%,
+    var(--bg-surface) 50%,
+    var(--bg-sunken) 75%
+  );
+  background-size: 200% 100%;
+  animation: warmShimmer 1.4s ease-in-out infinite;
+}
+
+/* Waving dotted border animation for upload tray drag-over */
+@keyframes waveDash {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: 24;
+  }
+}
+
+.waving-border {
+  background-image: repeating-linear-gradient(
+    0deg,
+    var(--accent-primary),
+    var(--accent-primary) 6px,
+    transparent 6px,
+    transparent 12px
+  ),
+  repeating-linear-gradient(
+    90deg,
+    var(--accent-primary),
+    var(--accent-primary) 6px,
+    transparent 6px,
+    transparent 12px
+  ),
+  repeating-linear-gradient(
+    180deg,
+    var(--accent-primary),
+    var(--accent-primary) 6px,
+    transparent 6px,
+    transparent 12px
+  ),
+  repeating-linear-gradient(
+    270deg,
+    var(--accent-primary),
+    var(--accent-primary) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+  background-size: 2px 100%, 100% 2px, 2px 100%, 100% 2px;
+  background-position: 0 0, 0 0, 100% 100%, 0 100%;
+  background-repeat: no-repeat;
+  animation: borderDance 1.2s linear infinite;
+}
+
+@keyframes borderDance {
+  0% {
+    background-position: 0 0, 0 0, 100% 100%, 0 100%;
+  }
+  100% {
+    background-position: 0 -24px, 24px 0, 100% 24px, -24px 100%;
   }
 }

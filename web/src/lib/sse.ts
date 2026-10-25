@@ -2,12 +2,15 @@ export interface Citation {
   label: string;
   chunk_id: string;
   page?: number | null;
+  page_number?: number | null;
   section_path?: string[];
   text_preview: string;
   is_two_hop?: boolean;
   added_reason?: string | null;
   is_ocr?: boolean;
   doc_name?: string | null;
+  document_id?: string | null;
+  score?: number | null;
 }
 
 export type PipelineStage =

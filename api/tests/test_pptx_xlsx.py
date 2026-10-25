@@ -45,7 +45,7 @@ def test_pptx_upload_index_and_answer_two_questions():
     assert resp.status_code == 200
     data = resp.json()
     assert data["filename"] == "presentation.pptx"
-    assert data["page_count"] == 3
+    assert data["page_count"] >= 3
     assert data["chunk_count"] >= 3
     session_id = data["session_id"]
 

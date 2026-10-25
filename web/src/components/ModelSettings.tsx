@@ -3,17 +3,18 @@
 import React, { useState, useEffect } from "react";
 import {
   X,
-  Shield,
   Key,
   Server,
   Cloud,
   CheckCircle2,
   AlertTriangle,
-  RefreshCw,
   Eye,
   EyeOff,
   Check,
+  Loader2,
 } from "lucide-react";
+import { Button } from "./ui/button";
+import { Input } from "./ui/Input";
 
 export type ProviderMode = "groq" | "byok" | "ollama";
 
@@ -39,7 +40,7 @@ export function ModelSettings({
   onClose,
   config,
   onSave,
-  apiUrl = "http://localhost:8000",
+  apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
 }: ModelSettingsProps) {
   const [mode, setMode] = useState<ProviderMode>(config.mode);
   const [byokKey, setByokKey] = useState(config.byokKey);
@@ -85,7 +86,7 @@ export function ModelSettings({
 
   const testOllamaConnection = async () => {
     setIsTestingOllama(true);
-    setOllamaStatus({ tested: false, online: false, message: "Testing connectivity..." });
+    setOllamaStatus({ tested: false, online: false, message: "Testing connectivity…" });
     try {
       const res = await fetch(`${apiUrl}/v1/models`);
       if (res.ok) {
@@ -103,21 +104,21 @@ export function ModelSettings({
           setOllamaStatus({
             tested: true,
             online: false,
-            message: "API reachable, but Ollama service is not responding. Ensure 'ollama serve' is running.",
+            message: "Can't reach your local Ollama. Is it running? (ollama serve)",
           });
         }
       } else {
         setOllamaStatus({
           tested: true,
           online: false,
-          message: "Allcited API returned an error probing models.",
+          message: "Can't reach your local Ollama. Is it running? (ollama serve)",
         });
       }
     } catch {
       setOllamaStatus({
         tested: true,
         online: false,
-        message: "Failed to connect to API gateway to test Ollama.",
+        message: "Can't reach your local Ollama. Is it running? (ollama serve)",
       });
     } finally {
       setIsTestingOllama(false);
@@ -134,7 +135,6 @@ export function ModelSettings({
       ollamaModel: ollamaModel.trim() || "llama3.2",
     };
 
-    // Store strictly in localStorage (browser-only)
     if (typeof window !== "undefined") {
       localStorage.setItem("allcited_provider_mode", updated.mode);
       localStorage.setItem("allcited_byok_key", updated.byokKey);
@@ -149,341 +149,268 @@ export function ModelSettings({
     setTimeout(() => {
       setSavedToast(false);
       onClose();
-    }, 700);
+    }, 1200);
   };
 
-  const clearBYOK = () => {
-    setByokKey("");
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("allcited_byok_key");
-    }
-  };
+  const keyFingerprint = byokKey ? `••••${byokKey.slice(-4)}` : "••••7f2a";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-150">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"
+      onClick={onClose}
+    >
       <div
-        className="w-full max-w-xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden max-h-[90vh]"
+        role="dialog"
+        aria-modal="true"
+        className="bg-bg-surface border border-border rounded-interactive shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 flex items-center justify-center text-blue-600 dark:text-blue-400">
-              <Server className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
-                LLM Provider Settings
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Choose cloud, BYOK key, or local private Ollama inference
-              </p>
-            </div>
+        {/* Header per §4 copy freeze */}
+        <div className="flex items-start justify-between px-6 py-4 border-b border-border bg-bg-surface/90">
+          <div>
+            <h2 className="text-base font-semibold text-ink-primary font-display">
+              Who does the thinking?
+            </h2>
+            <p className="text-xs text-gray-warm mt-0.5">
+              Choose your reasoning engine and privacy model.
+            </p>
           </div>
-
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            aria-label="Close settings"
+            className="p-1 rounded-[4px] text-ink-ghost hover:text-ink-primary hover:bg-bg-sunken transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Content Body */}
-        <div className="p-5 overflow-y-auto space-y-5 text-sm">
-          {/* Provider Tabs */}
-          <div className="grid grid-cols-3 gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
-            <button
-              type="button"
-              onClick={() => setMode("groq")}
-              className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-medium transition-all ${
-                mode === "groq"
-                  ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
-              }`}
-            >
-              <Cloud className="w-3.5 h-3.5" />
-              <span>Groq Cloud</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setMode("byok")}
-              className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-medium transition-all ${
-                mode === "byok"
-                  ? "bg-white dark:bg-slate-900 text-purple-600 dark:text-purple-400 shadow-sm"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
-              }`}
-            >
-              <Key className="w-3.5 h-3.5" />
-              <span>BYOK Key</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setMode("ollama")}
-              className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-medium transition-all ${
-                mode === "ollama"
-                  ? "bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-sm"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
-              }`}
-            >
-              <Server className="w-3.5 h-3.5" />
-              <span>Local Ollama</span>
-            </button>
-          </div>
-
-          {/* Mode 1: Groq Cloud */}
-          {mode === "groq" && (
-            <div className="space-y-4 animate-in fade-in duration-150">
-              <div className="p-4 rounded-xl border border-blue-200 dark:border-blue-900/60 bg-blue-50/50 dark:bg-blue-950/20 text-xs space-y-2">
-                <div className="flex items-center gap-2 font-semibold text-blue-900 dark:text-blue-300">
-                  <Cloud className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                  <span>Default Free Cloud Inference</span>
-                </div>
-                <p className="text-blue-800 dark:text-blue-300/80 leading-relaxed">
-                  Fast high-throughput answering using Groq Llama 3 models. No API keys or setup required.
-                </p>
-              </div>
-
-              <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 space-y-1.5 text-xs">
-                <div className="flex justify-between text-slate-500">
-                  <span>Engine:</span>
-                  <span className="font-medium text-slate-700 dark:text-slate-300">Groq LPUs</span>
-                </div>
-                <div className="flex justify-between text-slate-500">
-                  <span>Default Model:</span>
-                  <span className="font-mono text-slate-700 dark:text-slate-300">llama-3.3-70b-versatile</span>
-                </div>
-                <div className="flex justify-between text-slate-500">
-                  <span>Usage Cost:</span>
-                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">₹0 (Free Tier)</span>
-                </div>
-              </div>
+        {/* Content */}
+        <div className="p-6 overflow-y-auto space-y-4 text-xs text-ink-primary">
+          {savedToast && (
+            <div className="p-3 rounded-interactive bg-accent-primary/10 border border-accent-primary/30 text-ink-primary flex items-center gap-2 font-mono text-xs animate-fade-in">
+              <Check className="w-4 h-4 text-accent-primary" />
+              <span>Key saved — only you can see the last four: {keyFingerprint}</span>
             </div>
           )}
 
-          {/* Mode 2: BYOK */}
-          {mode === "byok" && (
-            <div className="space-y-4 animate-in fade-in duration-150">
-              {/* Security Banner */}
-              <div className="p-3.5 rounded-xl border border-purple-200 dark:border-purple-800/60 bg-purple-50/70 dark:bg-purple-950/30 text-purple-900 dark:text-purple-200 text-xs flex gap-3">
-                <Shield className="w-4 h-4 text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <div className="font-semibold">Your key stays in your browser</div>
-                  <p className="text-purple-800/90 dark:text-purple-300/90 leading-relaxed text-[11px]">
-                    BYOK credentials are saved strictly in your browser&apos;s <code className="bg-purple-200 dark:bg-purple-900/60 px-1 py-0.5 rounded">localStorage</code>. They are sent directly via client headers (<code className="bg-purple-200 dark:bg-purple-900/60 px-1 py-0.5 rounded">X-BYOK-Key</code>) and are <strong>never stored on the server</strong>, never written to disk, and never logged.
-                  </p>
-                </div>
+          {/* Mode 1: Allcited Free per §4 */}
+          <label
+            className={`flex items-start gap-3 p-3.5 rounded-interactive border cursor-pointer transition-all ${
+              mode === "groq"
+                ? "border-accent-primary bg-accent-primary/5 ring-1 ring-accent-primary/30"
+                : "border-border bg-bg-surface hover:bg-bg-sunken/40"
+            }`}
+          >
+            <input
+              type="radio"
+              name="provider_mode"
+              checked={mode === "groq"}
+              onChange={() => setMode("groq")}
+              className="mt-1 text-accent-primary focus:ring-accent-primary"
+            />
+            <div className="flex-1">
+              <div className="flex items-center gap-1.5 font-semibold text-sm text-ink-primary">
+                <Cloud className="w-4 h-4 text-accent-primary" />
+                <span>Allcited Free</span>
               </div>
+              <p className="text-xs text-gray-warm mt-0.5">
+                Our key, shared fairly. Busy at peak times.
+              </p>
+            </div>
+          </label>
 
-              {/* Quick Presets */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-slate-500">Quick Endpoint Presets:</label>
-                <div className="flex flex-wrap gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setByokBaseUrl("https://api.openai.com/v1");
-                      setByokModel("gpt-4o-mini");
-                    }}
-                    className="px-2.5 py-1 text-xs font-medium rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                  >
-                    OpenAI (gpt-4o-mini)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setByokBaseUrl("https://openrouter.ai/api/v1");
-                      setByokModel("anthropic/claude-3.5-haiku");
-                    }}
-                    className="px-2.5 py-1 text-xs font-medium rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                  >
-                    OpenRouter
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setByokBaseUrl("https://api.groq.com/openai/v1");
-                      setByokModel("llama-3.3-70b-versatile");
-                    }}
-                    className="px-2.5 py-1 text-xs font-medium rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                  >
-                    Groq Cloud
-                  </button>
+          {/* Mode 2: Your own key per §4 */}
+          <div
+            className={`p-3.5 rounded-interactive border transition-all ${
+              mode === "byok"
+                ? "border-accent-primary bg-accent-primary/5 ring-1 ring-accent-primary/30"
+                : "border-border bg-bg-surface hover:bg-bg-sunken/40"
+            }`}
+          >
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="radio"
+                name="provider_mode"
+                checked={mode === "byok"}
+                onChange={() => setMode("byok")}
+                className="mt-1 text-accent-primary focus:ring-accent-primary"
+              />
+              <div className="flex-1">
+                <div className="flex items-center gap-1.5 font-semibold text-sm text-ink-primary">
+                  <Key className="w-4 h-4 text-accent-primary" />
+                  <span>Your own key</span>
                 </div>
+                <p className="text-xs text-gray-warm mt-0.5">
+                  Your key, your speed, your limits.
+                </p>
+                {/* Promise in mono per §4 */}
+                <p className="font-mono text-[11px] text-gray-warm mt-1.5 bg-bg-sunken p-2 border border-border/60">
+                  Stays in your browser. Never stored, never logged, never sent anywhere but your provider.
+                </p>
               </div>
+            </label>
 
-              {/* Form Fields */}
-              <div className="space-y-3">
+            {mode === "byok" && (
+              <div className="mt-3.5 pt-3 border-t border-border/60 space-y-3 pl-7">
                 <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                      API Key
-                    </label>
-                    {byokKey && (
-                      <button
-                        type="button"
-                        onClick={clearBYOK}
-                        className="text-[11px] text-rose-500 hover:underline"
-                      >
-                        Clear Key
-                      </button>
-                    )}
-                  </div>
+                  <label className="block text-[11px] font-mono text-gray-warm mb-1">
+                    API Key (OpenAI, Anthropic, or Groq)
+                  </label>
                   <div className="relative">
-                    <input
+                    <Input
                       type={showKey ? "text" : "password"}
+                      placeholder="sk-..."
                       value={byokKey}
                       onChange={(e) => setByokKey(e.target.value)}
-                      placeholder="sk-..."
-                      className="w-full px-3 py-2 pr-9 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-mono focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="pr-9 font-mono text-xs"
                     />
                     <button
                       type="button"
                       onClick={() => setShowKey(!showKey)}
-                      className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-ghost hover:text-ink-primary"
                     >
                       {showKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                     </button>
                   </div>
+                  {byokKey && (
+                    <span className="font-mono text-[10px] text-gray-warm mt-1 block">
+                      fingerprint: {keyFingerprint}
+                    </span>
+                  )}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                      Base URL
+                    <label className="block text-[11px] font-mono text-gray-warm mb-1">
+                      Model ID
                     </label>
-                    <input
+                    <Input
                       type="text"
-                      value={byokBaseUrl}
-                      onChange={(e) => setByokBaseUrl(e.target.value)}
-                      placeholder="https://api.openai.com/v1"
-                      className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-mono focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                      Model Name
-                    </label>
-                    <input
-                      type="text"
+                      placeholder="gpt-4o-mini"
                       value={byokModel}
                       onChange={(e) => setByokModel(e.target.value)}
-                      placeholder="gpt-4o-mini"
-                      className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-mono focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="font-mono text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-mono text-gray-warm mb-1">
+                      Custom Base URL (optional)
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder="https://api.openai.com/v1"
+                      value={byokBaseUrl}
+                      onChange={(e) => setByokBaseUrl(e.target.value)}
+                      className="font-mono text-xs"
                     />
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* Mode 3: Ollama */}
-          {mode === "ollama" && (
-            <div className="space-y-4 animate-in fade-in duration-150">
-              <div className="p-3.5 rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/70 dark:bg-emerald-950/30 text-emerald-900 dark:text-emerald-200 text-xs flex gap-3">
-                <Server className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <div className="font-semibold">Private & Local Execution</div>
-                  <p className="text-emerald-800/90 dark:text-emerald-300/90 leading-relaxed text-[11px]">
-                    100% offline document Q&A. Model weights run directly on your workstation hardware. Zero data leaves your machine.
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    Ollama Base URL
-                  </label>
-                  <input
-                    type="text"
-                    value={ollamaBaseUrl}
-                    onChange={(e) => setOllamaBaseUrl(e.target.value)}
-                    placeholder="http://localhost:11434"
-                    className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    Model Tag
-                  </label>
-                  <input
-                    type="text"
-                    value={ollamaModel}
-                    onChange={(e) => setOllamaModel(e.target.value)}
-                    placeholder="llama3.2"
-                    className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-              </div>
-
-              {/* Test Button & Result */}
-              <div className="pt-1">
-                <button
-                  type="button"
-                  onClick={testOllamaConnection}
-                  disabled={isTestingOllama}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 cursor-pointer"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${isTestingOllama ? "animate-spin" : ""}`} />
-                  <span>Test Ollama Connection</span>
-                </button>
-
-                {ollamaStatus.tested && (
-                  <div
-                    className={`mt-2.5 p-2.5 rounded-lg text-xs flex items-center gap-2 border ${
-                      ollamaStatus.online
-                        ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 border-emerald-200 dark:border-emerald-800"
-                        : "bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border-amber-200 dark:border-amber-800"
-                    }`}
-                  >
-                    {ollamaStatus.online ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                    ) : (
-                      <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                    )}
-                    <span>{ollamaStatus.message}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 flex items-center justify-between flex-shrink-0">
-          <div className="text-xs text-slate-400">
-            {savedToast ? (
-              <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
-                <Check className="w-3.5 h-3.5" />
-                Settings saved!
-              </span>
-            ) : (
-              <span>Changes take effect on your next question</span>
             )}
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              className="px-4 py-1.5 text-xs font-medium rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-colors cursor-pointer"
-            >
-              Apply Settings
-            </button>
+          {/* Mode 3: Local (Ollama) per §4 */}
+          <div
+            className={`p-3.5 rounded-interactive border transition-all ${
+              mode === "ollama"
+                ? "border-accent-primary bg-accent-primary/5 ring-1 ring-accent-primary/30"
+                : "border-border bg-bg-surface hover:bg-bg-sunken/40"
+            }`}
+          >
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="radio"
+                name="provider_mode"
+                checked={mode === "ollama"}
+                onChange={() => setMode("ollama")}
+                className="mt-1 text-accent-primary focus:ring-accent-primary"
+              />
+              <div className="flex-1">
+                <div className="flex items-center gap-1.5 font-semibold text-sm text-ink-primary">
+                  <Server className="w-4 h-4 text-accent-primary" />
+                  <span>Local (Ollama)</span>
+                </div>
+                <p className="text-xs text-gray-warm mt-0.5">
+                  Runs on your machine. Nothing leaves it.
+                </p>
+              </div>
+            </label>
+
+            {mode === "ollama" && (
+              <div className="mt-3.5 pt-3 border-t border-border/60 space-y-3 pl-7">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[11px] font-mono text-gray-warm mb-1">
+                      Ollama Host
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder="http://localhost:11434"
+                      value={ollamaBaseUrl}
+                      onChange={(e) => setOllamaBaseUrl(e.target.value)}
+                      className="font-mono text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-mono text-gray-warm mb-1">
+                      Model Name
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder="llama3.2"
+                      value={ollamaModel}
+                      onChange={(e) => setOllamaModel(e.target.value)}
+                      className="font-mono text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={isTestingOllama}
+                    onClick={testOllamaConnection}
+                    className="text-xs h-7 gap-1"
+                  >
+                    {isTestingOllama && <Loader2 className="w-3 h-3 animate-spin" />}
+                    <span>{isTestingOllama ? "Probing…" : "Probe Ollama"}</span>
+                  </Button>
+
+                  {ollamaStatus.tested && (
+                    <span
+                      className={`font-mono text-[11px] flex items-center gap-1 ${
+                        ollamaStatus.online ? "text-accent-primary" : "text-danger"
+                      }`}
+                    >
+                      {ollamaStatus.online ? (
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                      ) : (
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                      )}
+                      <span>{ollamaStatus.message}</span>
+                    </span>
+                  )}
+                </div>
+
+                <p className="font-mono text-[10px] text-gray-warm">
+                  Local mode needs Allcited running on your computer. On the web, pick another mode.
+                </p>
+              </div>
+            )}
           </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-3 border-t border-border flex items-center justify-end gap-2 bg-bg-surface/90">
+          <Button variant="ghost" size="sm" onClick={onClose} className="text-xs">
+            Cancel
+          </Button>
+          <Button variant="primary" size="sm" onClick={handleSave} className="text-xs">
+            Save changes
+          </Button>
         </div>
       </div>
     </div>

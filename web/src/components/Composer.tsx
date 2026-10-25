@@ -16,9 +16,10 @@ export function Composer({
   onAbort,
   isGenerating = false,
   disabled = false,
-  placeholder = "Ask anything grounded in your document...",
+  placeholder = "Ask your document anything…",
 }: ComposerProps) {
   const [input, setInput] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -55,39 +56,52 @@ export function Composer({
   };
 
   return (
-    <div className="relative border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 shadow-sm focus-within:border-blue-500 dark:focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all p-2">
+    <div
+      className={`relative border border-border rounded-interactive bg-bg-surface shadow-xs transition-all duration-120 p-2.5 ${
+        isFocused
+          ? "border-accent-primary ring-2 ring-accent-primary/20"
+          : "hover:border-border"
+      } ${disabled ? "opacity-60 transition-opacity duration-120 cursor-not-allowed" : ""}`}
+    >
       <textarea
         ref={textareaRef}
         rows={1}
         value={input}
         onChange={handleInput}
         onKeyDown={handleKeyDown}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
         disabled={disabled}
-        placeholder={disabled ? "Please upload or select a document first..." : placeholder}
-        className="w-full resize-none bg-transparent px-3 py-1.5 text-sm outline-none text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 max-h-40 min-h-[38px]"
+        placeholder={placeholder}
+        className="w-full resize-none bg-transparent px-2 py-1 text-sm outline-none text-ink-primary placeholder:text-ink-ghost max-h-40 min-h-[38px] leading-relaxed"
       />
 
       <div className="flex items-center justify-between pt-1 px-1">
-        <span className="text-[11px] text-slate-400 dark:text-slate-500">
-          Press <kbd className="px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">Enter</kbd> to send, <kbd className="px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">Shift+Enter</kbd> for line break
+        {/* Hint per §4 copy freeze: ↵ to send · ⇧↵ for a new line */}
+        <span
+          className={`font-mono text-[11px] text-gray-warm transition-opacity duration-120 ${
+            isFocused ? "opacity-100" : "opacity-0 sm:opacity-80"
+          }`}
+        >
+          ↵ to send · ⇧↵ for a new line
         </span>
 
         {isGenerating ? (
           <button
             type="button"
             onClick={onAbort}
-            title="Stop generation"
-            className="w-8 h-8 rounded-full bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 flex items-center justify-center hover:bg-slate-800 dark:hover:bg-slate-200 transition-colors shadow-sm cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-[6px] bg-danger text-white text-xs font-medium hover:brightness-110 active:scale-95 transition-all shadow-xs cursor-pointer"
           >
-            <Square className="w-3.5 h-3.5 fill-current" />
+            <Square className="w-3 h-3 fill-current" />
+            <span>Stop answering</span>
           </button>
         ) : (
           <button
             type="button"
             onClick={handleSubmit}
             disabled={!input.trim() || disabled}
-            title="Send query"
-            className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 disabled:opacity-40 disabled:hover:bg-blue-600 transition-colors shadow-sm cursor-pointer disabled:cursor-not-allowed"
+            aria-label="Send question"
+            className="w-8 h-8 rounded-interactive bg-accent-primary text-primary-foreground flex items-center justify-center hover:brightness-95 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-xs"
           >
             <ArrowUp className="w-4 h-4" />
           </button>

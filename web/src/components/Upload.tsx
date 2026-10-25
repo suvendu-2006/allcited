@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useRef } from "react";
-import { UploadCloud, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { UploadCloud, CheckCircle2, AlertCircle, Link2, ArrowRight } from "lucide-react";
+import { Button } from "./ui/button";
 
 interface UploadProps {
   apiUrl?: string;
@@ -17,28 +18,81 @@ interface UploadProps {
 const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024; // 20 MB cap per plan
 const ALLOWED_EXTENSIONS = [".pdf", ".md", ".txt", ".docx", ".pptx", ".xlsx", ".html"];
 
-export function Upload({ apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000", onUploadSuccess, className = "" }: UploadProps) {
+const PROGRESS_STEPS = [
+  "Cutting into chunks…",
+  "Mapping cross-references…",
+  "Teaching the index…",
+];
+
+export function Upload({
+  apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
+  onUploadSuccess,
+  className = "",
+}: UploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [progressStepIdx, setProgressStepIdx] = useState(0);
+  const [progressPercent, setProgressPercent] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successToast, setSuccessToast] = useState<{ count: number; filename: string } | null>(null);
+  const [successInfo, setSuccessInfo] = useState<{ count: number; filename: string } | null>(null);
+  const [animatedCount, setAnimatedCount] = useState(0);
+
+  const [isUrlMode, setIsUrlMode] = useState(false);
+  const [urlInput, setUrlInput] = useState("");
+  const [isSubmittingUrl, setIsSubmittingUrl] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Rotating progress step simulation during upload
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isUploading) {
+      setProgressPercent(15);
+      interval = setInterval(() => {
+        setProgressStepIdx((prev) => (prev + 1) % PROGRESS_STEPS.length);
+        setProgressPercent((prev) => Math.min(prev + 25, 90));
+      }, 700);
+    } else {
+      setProgressPercent(0);
+      setProgressStepIdx(0);
+    }
+    return () => clearInterval(interval);
+  }, [isUploading]);
+
+  // Rolling count-up animation on success per §4.2
+  useEffect(() => {
+    if (successInfo) {
+      let start = 0;
+      const target = successInfo.count;
+      const duration = 600;
+      const stepTime = Math.max(Math.floor(duration / (target || 1)), 15);
+      const timer = setInterval(() => {
+        start += Math.ceil(target / 25);
+        if (start >= target) {
+          setAnimatedCount(target);
+          clearInterval(timer);
+        } else {
+          setAnimatedCount(start);
+        }
+      }, stepTime);
+      return () => clearInterval(timer);
+    }
+  }, [successInfo]);
+
   const validateFile = (file: File): string | null => {
     if (file.size > MAX_FILE_SIZE_BYTES) {
-      return `File size (${(file.size / (1024 * 1024)).toFixed(1)} MB) exceeds 20 MB plan limit`;
+      return "That's a big one. Free takes up to 20 MB — Pro takes 100.";
     }
     const ext = "." + file.name.split(".").pop()?.toLowerCase();
     if (!ALLOWED_EXTENSIONS.includes(ext)) {
-      return `Unsupported format. Allowed: ${ALLOWED_EXTENSIONS.join(", ")}`;
+      return "Couldn't read this file — it may be corrupt or password-protected. Nothing was saved.";
     }
     return null;
   };
 
   const handleFile = async (file: File) => {
     setErrorMessage(null);
-    setSuccessToast(null);
+    setSuccessInfo(null);
 
     const validationError = validateFile(file);
     if (validationError) {
@@ -59,8 +113,14 @@ export function Upload({ apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://loc
 
       if (!res.ok) {
         const errJson = await res.json().catch(() => null);
-        const msg = errJson?.detail?.error?.message || errJson?.detail || `Upload failed (HTTP ${res.status})`;
-        throw new Error(msg);
+        const code = errJson?.detail?.error?.code;
+        if (code === "doc_too_large" || res.status === 413) {
+          throw new Error("That's a big one. Free takes up to 20 MB — Pro takes 100.");
+        }
+        if (code === "doc_unreadable") {
+          throw new Error("Couldn't read this file — it may be corrupt or password-protected. Nothing was saved.");
+        }
+        throw new Error(errJson?.detail?.error?.message || "Couldn't read this file — it may be corrupt or password-protected. Nothing was saved.");
       }
 
       const data = await res.json();
@@ -69,7 +129,7 @@ export function Upload({ apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://loc
       const filename = data.filename || file.name;
       const sessionId = data.session_id;
 
-      setSuccessToast({ count: chunkCount, filename });
+      setSuccessInfo({ count: chunkCount, filename });
 
       onUploadSuccess({
         sessionId,
@@ -77,11 +137,6 @@ export function Upload({ apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://loc
         chunkCount,
         pageCount,
       });
-
-      // Clear success toast after 4s
-      setTimeout(() => {
-        setSuccessToast(null);
-      }, 4000);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       setErrorMessage(msg);
@@ -93,107 +148,203 @@ export function Upload({ apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://loc
     }
   };
 
-  const onDragOver = (e: React.DragEvent) => {
+  const handleUrlSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsDragging(true);
-  };
+    if (!urlInput.trim()) return;
 
-  const onDragLeave = () => {
-    setIsDragging(false);
-  };
+    setErrorMessage(null);
+    setSuccessInfo(null);
+    setIsSubmittingUrl(true);
 
-  const onDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleFile(e.dataTransfer.files[0]);
-    }
-  };
+    try {
+      const res = await fetch(`${apiUrl.replace(/\/$/, "")}/v1/ingest/url`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: urlInput.trim() }),
+      });
 
-  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      handleFile(e.target.files[0]);
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => null);
+        const code = errJson?.detail?.error?.code;
+        if (code === "url_blocked") {
+          throw new Error("That link points somewhere private — we don't fetch those. Safety thing.");
+        }
+        throw new Error(errJson?.detail?.error?.message || "Couldn't read from that URL. Check the link and try again.");
+      }
+
+      const data = await res.json();
+      const chunkCount = data.chunk_count || 0;
+      const pageCount = data.page_count || 1;
+      const filename = data.title || urlInput.trim();
+      const sessionId = data.session_id;
+
+      setSuccessInfo({ count: chunkCount, filename });
+      setUrlInput("");
+      setIsUrlMode(false);
+
+      onUploadSuccess({
+        sessionId,
+        filename,
+        chunkCount,
+        pageCount,
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setErrorMessage(msg);
+    } finally {
+      setIsSubmittingUrl(false);
     }
   };
 
   return (
     <div className={`relative ${className}`}>
-      {/* Toast Notification Banner */}
-      {successToast && (
-        <div className="mb-3 px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs font-medium flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+      {/* Success Banner with count-up per §3 & §4.2 */}
+      {successInfo && (
+        <div className="mb-3 px-3.5 py-2.5 rounded-interactive bg-accent-primary/10 border border-accent-primary/30 text-ink-primary text-xs font-medium flex items-center justify-between shadow-xs animate-fade-in">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+            <CheckCircle2 className="w-4 h-4 text-accent-primary flex-shrink-0" />
             <span>
-              ✅ {successToast.count} chunks ready for &quot;{successToast.filename}&quot;
+              ✅ <strong className="font-mono">{animatedCount}</strong> chunks ready — ask away.
             </span>
           </div>
+          <button
+            type="button"
+            onClick={() => setSuccessInfo(null)}
+            className="text-ink-ghost hover:text-ink-primary text-xs font-mono ml-2"
+          >
+            ✕
+          </button>
         </div>
       )}
 
-      {/* Error Banner */}
+      {/* Error Banner with §3 exact copy */}
       {errorMessage && (
-        <div className="mb-3 px-3 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200 text-xs font-medium flex items-center justify-between shadow-sm animate-in fade-in duration-150">
+        <div className="mb-3 px-3.5 py-2.5 rounded-interactive bg-danger/10 border-l-4 border-l-danger border border-border text-ink-primary text-xs font-medium flex items-center justify-between shadow-xs animate-fade-in">
           <div className="flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 flex-shrink-0" />
+            <AlertCircle className="w-4 h-4 text-danger flex-shrink-0" />
             <span>{errorMessage}</span>
           </div>
           <button
             type="button"
             onClick={() => setErrorMessage(null)}
-            className="text-rose-500 hover:text-rose-700 text-sm font-bold ml-2"
+            className="text-ink-ghost hover:text-ink-primary text-xs font-mono ml-2"
           >
-            ×
+            ✕
           </button>
         </div>
       )}
 
-      {/* Drag & Drop Target */}
-      <div
-        onDragOver={onDragOver}
-        onDragLeave={onDragLeave}
-        onDrop={onDrop}
-        onClick={() => !isUploading && fileInputRef.current?.click()}
-        className={`border-2 border-dashed rounded-2xl p-4 text-center cursor-pointer transition-all ${
-          isDragging
-            ? "border-blue-500 bg-blue-50/50 dark:bg-blue-950/30 scale-[1.01]"
-            : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900"
-        } ${isUploading ? "pointer-events-none opacity-80" : ""}`}
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".pdf,.md,.txt,.docx,.pptx,.xlsx,.html"
-          onChange={onFileChange}
-          className="hidden"
-        />
-
-        <div className="flex flex-col items-center justify-center gap-2">
-          {isUploading ? (
-            <>
-              <div className="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center animate-spin">
-                <Loader2 className="w-5 h-5" />
-              </div>
-              <p className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                Parsing, chunking, and embedding document...
-              </p>
-            </>
-          ) : (
-            <>
-              <div className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center">
-                <UploadCloud className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-xs font-medium text-slate-800 dark:text-slate-200">
-                  <span className="text-blue-600 dark:text-blue-400 hover:underline">Click to upload</span> or drag and drop
-                </p>
-                <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
-                  PDF, MD, TXT, DOCX, PPTX, XLSX (up to 20 MB)
-                </p>
-              </div>
-            </>
-          )}
-        </div>
+      {/* Mode Switcher */}
+      <div className="flex items-center justify-between mb-2 px-1">
+        <span className="text-[11px] font-mono text-gray-warm uppercase tracking-wider">
+          {isUrlMode ? "Web Link" : "File Upload"}
+        </span>
+        <button
+          type="button"
+          onClick={() => {
+            setIsUrlMode(!isUrlMode);
+            setErrorMessage(null);
+          }}
+          className="text-xs text-accent-primary hover:underline font-medium inline-flex items-center gap-1"
+        >
+          {isUrlMode ? "Upload file instead" : "Paste a URL instead"}
+        </button>
       </div>
+
+      {isUrlMode ? (
+        /* URL Input Form */
+        <form
+          onSubmit={handleUrlSubmit}
+          className="flex items-center gap-2 p-2 rounded-interactive border border-border bg-bg-surface"
+        >
+          <div className="relative flex-1">
+            <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-ghost" />
+            <input
+              type="url"
+              required
+              placeholder="https://example.com/handbook.html"
+              value={urlInput}
+              onChange={(e) => setUrlInput(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 text-xs rounded-input bg-bg-sunken border border-border text-ink-primary placeholder:text-ink-ghost focus:outline-none focus:ring-1 focus:ring-accent-primary"
+            />
+          </div>
+          <Button
+            type="submit"
+            size="sm"
+            disabled={isSubmittingUrl || !urlInput.trim()}
+            className="text-xs h-8 px-3"
+          >
+            {isSubmittingUrl ? "Fetching…" : "Fetch"}
+            <ArrowRight className="w-3.5 h-3.5 ml-1" />
+          </Button>
+        </form>
+      ) : (
+        /* Drag & Drop Target with Waving Border on Drag-over */
+        <div
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDragging(true);
+          }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setIsDragging(false);
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+              handleFile(e.dataTransfer.files[0]);
+            }
+          }}
+          onClick={() => !isUploading && fileInputRef.current?.click()}
+          className={`relative rounded-interactive p-6 text-center cursor-pointer transition-all duration-200 bg-bg-surface ${
+            isDragging
+              ? "waving-border bg-accent-primary/5 scale-[1.01]"
+              : "border border-dashed border-border hover:border-accent-primary/60 hover:bg-bg-sunken/40"
+          } ${isUploading ? "pointer-events-none opacity-90" : ""}`}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.md,.txt,.docx,.pptx,.xlsx,.html"
+            onChange={(e) => {
+              if (e.target.files && e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+              }
+            }}
+            className="hidden"
+          />
+
+          <div className="flex flex-col items-center justify-center gap-2">
+            {isUploading ? (
+              <div className="w-full max-w-xs space-y-3">
+                {/* Thin teal progress bar with ghost-percentage in mono per §4.2 */}
+                <div className="w-full bg-bg-sunken h-1.5 rounded-full overflow-hidden border border-border">
+                  <div
+                    className="bg-accent-primary h-full transition-all duration-300 ease-out"
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+                <div className="flex items-center justify-between text-[11px] font-mono text-gray-warm">
+                  <span>{PROGRESS_STEPS[progressStepIdx]}</span>
+                  <span className="text-ink-ghost">{progressPercent}%</span>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="w-10 h-10 rounded-full bg-bg-sunken border border-border text-accent-primary flex items-center justify-center transition-transform group-hover:scale-105">
+                  <UploadCloud className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-ink-primary font-display">
+                    {isDragging ? "Looks like a document. Let it go." : "Drop a document"}
+                  </h3>
+                  <p className="text-xs text-gray-warm mt-1">
+                    PDF, Word, PowerPoint, Excel, Markdown, or paste a URL
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

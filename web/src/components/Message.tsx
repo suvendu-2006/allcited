@@ -4,16 +4,14 @@ import React, { useState } from "react";
 import { Citation, PipelineStage } from "@/lib/sse";
 import { CitationChip } from "./CitationChip";
 import { TraceViewer } from "./TraceViewer";
+import { StageChip } from "./ui/StageChip";
 import {
-  Bot,
   User,
-  CheckCircle2,
-  Loader2,
   ShieldAlert,
-  Sparkles,
   ThumbsUp,
   ThumbsDown,
   Zap,
+  Sparkles,
 } from "lucide-react";
 
 export interface ChatMessage {
@@ -28,6 +26,7 @@ export interface ChatMessage {
   model?: string;
   totalTokens?: number;
   questionId?: string;
+  refusalType?: "not_in_doc" | "off_topic";
 }
 
 interface MessageProps {
@@ -66,6 +65,7 @@ export function Message({ message, onCitationClick }: MessageProps) {
       console.error("Failed to submit feedback", e);
     }
   };
+
   const citationsMap = new Map<string, Citation>();
   (message.citations || []).forEach((c) => {
     citationsMap.set(c.label, c);
@@ -101,12 +101,12 @@ export function Message({ message, onCitationClick }: MessageProps) {
 
   if (isUser) {
     return (
-      <div className="flex justify-end mb-4 animate-in fade-in slide-in-from-bottom-2 duration-150">
-        <div className="flex gap-2.5 max-w-[85%] md:max-w-[75%] flex-row-reverse">
-          <div className="w-8 h-8 rounded-full bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 flex items-center justify-center flex-shrink-0 text-xs font-semibold shadow-sm">
-            <User className="w-4 h-4" />
+      <div className="flex justify-end mb-4 animate-fade-in">
+        <div className="flex gap-2 max-w-[85%] md:max-w-[75%] flex-row-reverse">
+          <div className="w-7 h-7 rounded-full bg-bg-sunken border border-border text-ink-primary flex items-center justify-center flex-shrink-0 text-xs font-semibold shadow-xs">
+            <User className="w-3.5 h-3.5" />
           </div>
-          <div className="bg-slate-900 text-white dark:bg-slate-800 dark:text-slate-100 px-4 py-2.5 rounded-2xl rounded-tr-sm text-sm leading-relaxed shadow-sm">
+          <div className="bg-bg-sunken text-ink-primary border border-border px-4 py-2.5 rounded-interactive text-sm leading-relaxed shadow-xs">
             <p className="whitespace-pre-wrap">{message.content}</p>
           </div>
         </div>
@@ -114,13 +114,18 @@ export function Message({ message, onCitationClick }: MessageProps) {
     );
   }
 
-  // Assistant Message
+  // Assistant Message Refusal Check per §4 copy freeze
   const lowerContent = (message.content || "").toLowerCase();
-  const isRefusal =
+  const isOffTopic =
+    message.refusalType === "off_topic" ||
+    lowerContent.includes("python scraper") ||
+    lowerContent.includes("only answer from your document");
+  const isNotInDoc =
     Boolean(message.refused) ||
-    lowerContent.includes("does not contain information to answer") ||
-    lowerContent.includes("i cannot answer this based on the provided document") ||
-    lowerContent.includes("provided document does not contain");
+    message.refusalType === "not_in_doc" ||
+    lowerContent.includes("not covered in this document") ||
+    lowerContent.includes("honestly? this document doesn't say") ||
+    lowerContent.includes("does not contain information to answer");
 
   const isPending =
     message.stage &&
@@ -129,111 +134,134 @@ export function Message({ message, onCitationClick }: MessageProps) {
     message.stage !== "idle";
 
   return (
-    <div className="flex justify-start mb-6 animate-in fade-in slide-in-from-bottom-2 duration-150">
-      <div className="flex gap-3 max-w-[90%] md:max-w-[82%]">
-        <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm mt-0.5">
-          <Bot className="w-4 h-4" />
+    <div className="flex justify-start mb-6 animate-fade-in">
+      <div className="flex gap-3 max-w-[95%] md:max-w-[88%] w-full">
+        {/* Machine Voice Indicator */}
+        <div className="w-7 h-7 rounded-full bg-accent-primary/10 border border-accent-primary/20 text-accent-primary flex items-center justify-center flex-shrink-0 shadow-xs mt-0.5">
+          <span className="font-mono text-xs font-semibold">§</span>
         </div>
 
         <div className="flex-1 space-y-2">
-          {/* Active Pipeline Stage Progress Line */}
-          {isPending && (
-            <div className="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 px-3 py-1.5 rounded-lg w-fit shadow-xs">
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              <span>{message.stageMessage || "Processing query..."}</span>
+          {/* Active Pipeline Stage Status Line */}
+          {isPending && message.stage && (
+            <div className="flex items-center gap-2">
+              <StageChip
+                stage={
+                  message.stage === "rewriting" || message.stage === "retrieving"
+                    ? "searching"
+                    : message.stage === "reranking"
+                    ? "reranking"
+                    : message.stage === "composing"
+                    ? "composing"
+                    : "searching"
+                }
+                label={message.stageMessage || message.stage}
+                isActive
+              />
             </div>
           )}
 
-          {/* Skeleton placeholder before tokens begin arriving */}
-          {isPending && !message.content && (
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-3.5 rounded-2xl rounded-tl-sm shadow-sm space-y-2.5 max-w-lg">
-              <div className="h-3.5 bg-slate-200 dark:bg-slate-800 rounded-full animate-pulse w-3/4" />
-              <div className="h-3.5 bg-slate-200 dark:bg-slate-800 rounded-full animate-pulse w-full" />
-              <div className="h-3.5 bg-slate-200 dark:bg-slate-800 rounded-full animate-pulse w-5/6" />
+          {/* Refusal Card 1: Off-Topic per §4 copy freeze */}
+          {isOffTopic ? (
+            <div className="p-4 rounded-interactive border border-danger/30 bg-bg-surface border-l-4 border-l-danger text-ink-primary shadow-xs space-y-1.5 animate-fade-in">
+              <div className="flex items-center gap-2">
+                <ShieldAlert className="w-4 h-4 text-danger flex-shrink-0" />
+                <h3 className="font-semibold text-sm font-display text-ink-primary">
+                  I only answer from your document.
+                </h3>
+              </div>
+              <p className="text-xs text-gray-warm leading-relaxed">
+                That&apos;s what keeps me honest. Want code, though? Upload a Python book and I&apos;ll write it — cited line by line.
+              </p>
             </div>
-          )}
+          ) : isNotInDoc ? (
+            /* Refusal Card 2: Not in the document per §4 copy freeze */
+            <div className="p-4 rounded-interactive border border-danger/30 bg-bg-surface border-l-4 border-l-danger text-ink-primary shadow-xs space-y-1.5 animate-fade-in">
+              <div className="flex items-center gap-2">
+                <ShieldAlert className="w-4 h-4 text-danger flex-shrink-0" />
+                <h3 className="font-semibold text-sm font-display text-ink-primary">
+                  Honestly? This document doesn&apos;t say.
+                </h3>
+              </div>
+              <p className="text-xs text-gray-warm leading-relaxed">
+                I answer only from what you&apos;ve given me, and it isn&apos;t in here. Try rephrasing — or check you&apos;ve uploaded the full version.
+              </p>
+            </div>
+          ) : (
+            /* Normal Streaming / Answer Card */
+            <div className="p-4 rounded-interactive border border-border bg-bg-surface text-ink-primary shadow-xs">
+              <div className="text-sm leading-relaxed prose prose-neutral dark:prose-invert max-w-none break-words">
+                {renderFormattedText(message.content)}
+                {/* Blinking hot accent caret when composing */}
+                {isPending && (
+                  <span className="inline-block w-1.5 h-4 ml-1 bg-accent-hot animate-pulse align-middle" />
+                )}
+              </div>
 
-          {/* Refusal Card or Standard Answer */}
-          {message.content && (
-            <>
-              {isRefusal ? (
-                <div className="p-4 rounded-xl border border-amber-300/80 dark:border-amber-700/60 bg-amber-50/70 dark:bg-amber-950/25 text-amber-950 dark:text-amber-200 text-sm leading-relaxed shadow-sm space-y-2">
-                  <div className="flex items-center gap-2 font-semibold text-amber-800 dark:text-amber-300 text-xs">
-                    <ShieldAlert className="w-4 h-4 flex-shrink-0 text-amber-600 dark:text-amber-400" />
-                    <span>Grounded Refusal: Document Does Not Contain This Information</span>
-                  </div>
-                  <p className="whitespace-pre-wrap text-slate-700 dark:text-slate-300 text-xs leading-relaxed">
-                    {message.content}
-                  </p>
-                  <p className="text-[11px] text-amber-800/80 dark:text-amber-400/80 italic pt-1 border-t border-amber-200/60 dark:border-amber-900/40">
-                    Allcited strictly adheres to documented facts. Because the uploaded document contains no verified basis for this inquiry, a refusal was produced to prevent hallucination.
-                  </p>
-                </div>
-              ) : (
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-3 rounded-2xl rounded-tl-sm text-sm text-slate-800 dark:text-slate-100 shadow-sm leading-relaxed">
-                  <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap font-sans text-xs sm:text-sm">
-                    {renderFormattedText(message.content)}
-                  </div>
-
-                  {/* Source Receipts List */}
-                  {message.citations && message.citations.length > 0 && (
-                    <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center gap-1.5">
-                      <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 mr-1 flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                        Cited Sources:
-                      </span>
-                      {message.citations.map((c, i) => (
-                        <CitationChip
-                          key={i}
-                          citation={c}
-                          onClick={(cit) => onCitationClick?.(cit, message.citations)}
-                        />
-                      ))}
-                    </div>
-                  )}
+              {/* Sequential Citation Chips if citations exist */}
+              {message.citations && message.citations.length > 0 && (
+                <div className="mt-3.5 pt-3 border-t border-border/60 flex flex-wrap items-center gap-1.5">
+                  <span className="font-mono text-[11px] text-gray-warm mr-1">
+                    Sources:
+                  </span>
+                  {message.citations.map((c, idx) => (
+                    <span
+                      key={c.label}
+                      style={{ animationDelay: `${idx * 60}ms` }}
+                      className="animate-fade-in"
+                    >
+                      <CitationChip
+                        citation={c}
+                        onClick={(cit) => onCitationClick?.(cit, message.citations)}
+                      />
+                    </span>
+                  ))}
                 </div>
               )}
-            </>
+            </div>
           )}
 
-          {/* Metadata Footer */}
+          {/* Answer Footer per §4 copy freeze */}
           {message.stage === "done" && (
-            <div className="flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500 px-1 pt-0.5">
+            <div className="flex flex-wrap items-center justify-between text-[11px] text-gray-warm px-1 pt-0.5 gap-2">
               <div className="flex items-center gap-2">
                 {message.cached && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                    <Zap className="w-3 h-3 text-amber-500" />
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-accent-primary/10 text-accent-primary border border-accent-primary/30">
+                    <Zap className="w-3 h-3 text-accent-primary" />
                     instant · cached
                   </span>
                 )}
-                {message.model && !message.cached && <span>Model: {message.model}</span>}
-                {message.totalTokens !== undefined && <span>{message.totalTokens} tokens</span>}
+                {message.totalTokens !== undefined && (
+                  <span className="font-mono">{message.totalTokens} tokens</span>
+                )}
               </div>
 
               <div className="flex items-center gap-3">
+                {/* "Why this answer?" per §4 */}
                 {message.questionId && (
                   <button
                     type="button"
                     onClick={() => setShowTrace(true)}
-                    className="flex items-center gap-1 text-[11px] text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium transition-colors cursor-pointer"
-                    title="View decision path, retrieval stages, and latencies"
+                    className="flex items-center gap-1 text-[11px] text-accent-primary hover:underline font-medium transition-colors"
                   >
-                    <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                    <Sparkles className="w-3.5 h-3.5 text-accent-primary" />
                     Why this answer?
                   </button>
                 )}
 
+                {/* Feedback: Right? 👍 👎 per §4 */}
                 {message.questionId && (
-                  <div className="flex items-center gap-1 border-l border-slate-200 dark:border-slate-800 pl-2">
+                  <div className="flex items-center gap-1 border-l border-border pl-2.5">
+                    <span className="text-[11px] text-gray-warm mr-1">Right?</span>
                     <button
                       type="button"
                       onClick={() => handleFeedback(1)}
-                      className={`p-1 rounded-md transition-colors ${
+                      aria-label="Thumbs up"
+                      className={`p-1 rounded-[4px] transition-colors ${
                         feedback === "up"
-                          ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40"
-                          : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                          ? "text-accent-primary bg-accent-primary/10"
+                          : "text-ink-ghost hover:text-ink-primary hover:bg-bg-sunken"
                       }`}
-                      title="Good answer"
                     >
                       <ThumbsUp className="w-3.5 h-3.5" />
                     </button>
@@ -241,12 +269,12 @@ export function Message({ message, onCitationClick }: MessageProps) {
                     <button
                       type="button"
                       onClick={() => handleFeedback(-1)}
-                      className={`p-1 rounded-md transition-colors ${
+                      aria-label="Thumbs down"
+                      className={`p-1 rounded-[4px] transition-colors ${
                         feedback === "down"
-                          ? "text-rose-600 bg-rose-50 dark:bg-rose-950/40"
-                          : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                          ? "text-danger bg-danger/10"
+                          : "text-ink-ghost hover:text-ink-primary hover:bg-bg-sunken"
                       }`}
-                      title="Report an issue with this answer"
                     >
                       <ThumbsDown className="w-3.5 h-3.5" />
                     </button>
@@ -258,25 +286,25 @@ export function Message({ message, onCitationClick }: MessageProps) {
 
           {/* Feedback note input */}
           {showNoteInput && (
-            <div className="mt-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 flex items-center gap-2">
+            <div className="mt-2 p-2.5 rounded-interactive bg-bg-sunken border border-border flex items-center gap-2 animate-fade-in">
               <input
                 type="text"
                 placeholder="What was inaccurate or missing? (optional)"
                 value={feedbackNote}
                 onChange={(e) => setFeedbackNote(e.target.value)}
-                className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-2.5 py-1 rounded-lg text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="flex-1 bg-bg-surface border border-border px-2.5 py-1 rounded-input text-xs text-ink-primary focus:outline-none focus:ring-1 focus:ring-accent-primary"
               />
               <button
                 type="button"
                 onClick={() => handleFeedback(-1, feedbackNote)}
-                className="px-2.5 py-1 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-lg text-xs font-medium hover:bg-slate-800 dark:hover:bg-white transition-colors"
+                className="px-2.5 py-1 bg-accent-primary text-primary-foreground rounded-input text-xs font-medium hover:brightness-95 transition-colors"
               >
                 Submit
               </button>
               <button
                 type="button"
                 onClick={() => setShowNoteInput(false)}
-                className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs"
+                className="p-1 text-ink-ghost hover:text-ink-primary text-xs"
               >
                 Cancel
               </button>
