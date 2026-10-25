@@ -12,7 +12,7 @@ import { MagneticButton } from "@/components/MagneticButton";
 import { LiveMiniDemo } from "@/components/LiveMiniDemo";
 import { Button } from "@/components/ui/button";
 import { Footer } from "@/components/Footer";
-import { motion } from "framer-motion";
+import { motion, useMotionValue, useSpring } from "framer-motion";
 import { Star } from "lucide-react";
 
 export default function Home() {
@@ -34,23 +34,25 @@ export default function Home() {
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  // GitHub Star rotation state (interactive spin on hover and cursor movement)
-  const [starRotation, setStarRotation] = useState(0);
-  const [isStarHovered, setIsStarHovered] = useState(false);
-
-  const handleStarMouseMove = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    const delta = (Math.abs(e.movementX) + Math.abs(e.movementY)) || 2;
-    setStarRotation((prev) => prev + delta * 6);
-  };
+  // GitHub Star rotation physics (smooth GPU-accelerated spring motion on hover & cursor movement)
+  const starRotate = useMotionValue(0);
+  const starScale = useMotionValue(1);
+  const smoothStarRotate = useSpring(starRotate, { damping: 24, stiffness: 180, mass: 0.5 });
+  const smoothStarScale = useSpring(starScale, { damping: 20, stiffness: 220 });
 
   const handleStarMouseEnter = () => {
-    setIsStarHovered(true);
-    setStarRotation((prev) => prev + 360);
+    starScale.set(1.25);
+    starRotate.set(starRotate.get() + 360);
+  };
+
+  const handleStarMouseMove = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const delta = (Math.abs(e.movementX) + Math.abs(e.movementY)) || 1;
+    starRotate.set(starRotate.get() + delta * 4);
   };
 
   const handleStarMouseLeave = () => {
-    setIsStarHovered(false);
-    setStarRotation(0);
+    starScale.set(1);
+    starRotate.set(0);
   };
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -284,16 +286,12 @@ export default function Home() {
                         <path d="M9 18c-4.51 2-5-2-7-2" />
                       </svg>
                       <span>Star us on GitHub</span>
-                      <div
-                        className="inline-flex shrink-0 items-center justify-center transition-all duration-500 ease-out text-amber-500"
-                        style={{
-                          transform: isStarHovered
-                            ? `rotate(${starRotation}deg) scale(1.25)`
-                            : "rotate(0deg) scale(1)",
-                        }}
+                      <motion.div
+                        style={{ rotate: smoothStarRotate, scale: smoothStarScale }}
+                        className="inline-flex shrink-0 items-center justify-center text-amber-500 transform-gpu will-change-transform"
                       >
                         <Star className="h-4 w-4 fill-amber-500 drop-shadow-sm" />
-                      </div>
+                      </motion.div>
                     </a>
                   </MagneticButton>
                 </motion.div>
