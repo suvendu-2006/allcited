@@ -160,12 +160,12 @@ export default function HowItWorksPage() {
           </div>
         </section>
 
-        {/* Formats Marquee per §6.3 */}
-        <section className="py-6 border-y border-border overflow-hidden">
-          <div className="text-center font-mono text-xs text-gray-warm mb-3">
+        {/* Formats Marquee per §6.3 & §6.4 */}
+        <section className="py-6 border-y border-border overflow-hidden select-none">
+          <div className="text-center font-mono text-xs text-gray-warm mb-4">
             Supported Ingest Gateways
           </div>
-          <div className="flex items-center justify-center gap-3 flex-wrap">
+          <div className="flex items-center justify-center gap-3 flex-wrap mb-4">
             {FORMATS.map((fmt) => (
               <span
                 key={fmt}
@@ -175,9 +175,25 @@ export default function HowItWorksPage() {
               </span>
             ))}
           </div>
-          <p className="text-center font-mono text-[11px] text-ink-ghost mt-3">
-            PDF · DOCX · PPTX · XLSX · MD · TXT · any URL — six doors into one library.
-          </p>
+          <motion.div
+            className="flex items-center gap-8 whitespace-nowrap font-mono text-[11px] text-ink-ghost tracking-wider hover:[animation-play-state:paused]"
+            animate={{ x: ["0%", "-50%"] }}
+            transition={{
+              repeat: Infinity,
+              repeatType: "loop",
+              duration: 40,
+              ease: "linear",
+            }}
+          >
+            {[...Array(4)].map((_, i) => (
+              <span key={i} className="inline-flex items-center gap-6">
+                <span>PDF · DOCX · PPTX · XLSX · MD · TXT · any URL</span>
+                <span className="text-accent-primary">◆</span>
+                <span>six doors into one library.</span>
+                <span>·</span>
+              </span>
+            ))}
+          </motion.div>
         </section>
 
         {/* Bottom CTA */}

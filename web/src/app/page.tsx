@@ -415,10 +415,27 @@ Upon voluntary resignation or formal separation, accrued annual leave encashment
               <LiveMiniDemo />
             </section>
 
-            {/* Formats Marquee per §6.3 */}
-            <section className="py-6 border-y border-border bg-bg-surface/30 text-center font-mono text-xs text-gray-warm">
-              <span>PDF · DOCX · PPTX · XLSX · MD · TXT · any URL</span>
-              <span className="text-ink-ghost ml-2">— six doors into one library.</span>
+            {/* Formats Marquee per §6.3 & §6.4 */}
+            <section className="py-5 border-y border-border bg-bg-surface/30 overflow-hidden relative select-none">
+              <motion.div
+                className="flex items-center gap-8 whitespace-nowrap font-mono text-xs text-gray-warm tracking-wider hover:[animation-play-state:paused]"
+                animate={{ x: ["0%", "-50%"] }}
+                transition={{
+                  repeat: Infinity,
+                  repeatType: "loop",
+                  duration: 40,
+                  ease: "linear",
+                }}
+              >
+                {[...Array(4)].map((_, i) => (
+                  <span key={i} className="inline-flex items-center gap-6">
+                    <span className="text-ink-primary font-medium">PDF · DOCX · PPTX · XLSX · MD · TXT · any URL</span>
+                    <span className="text-accent-primary">◆</span>
+                    <span>six doors into one library.</span>
+                    <span className="text-ink-ghost">·</span>
+                  </span>
+                ))}
+              </motion.div>
             </section>
 
             {/* Footer v2 (3 columns + open source pledge) per §6.3 */}
