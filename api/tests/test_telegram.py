@@ -238,3 +238,77 @@ def test_telegram_chunking_and_formatting():
     assert "*[S1]*" in formatted
     assert "Page 2" in formatted
     assert "Leave Policy > Annual Leave" in formatted
+
+
+def test_telegram_error_event_handling():
+    """Verify that when stream_answer_pipeline emits an error event, Telegram message is updated."""
+    client = TestClient(app)
+    settings = get_settings()
+    headers = {"X-Telegram-Bot-Api-Secret-Token": settings.TELEGRAM_WEBHOOK_SECRET} if settings.TELEGRAM_WEBHOOK_SECRET else {}
+
+    mock_tg = MockTelegramClient()
+    set_telegram_client(mock_tg)
+
+    chat_id = 998877
+    chat_sessions[chat_id] = "active_session_123"
+
+    # Seed active session in store
+    from app.sessions import get_session_store
+    store = get_session_store()
+    store.create_session_from_bytes("dummy.txt", b"Dummy session content")
+    # Point chat_sessions to the real session ID
+    real_session = list(store._sessions.values())[-1]
+    chat_sessions[chat_id] = real_session.session_id
+
+    query_update = {
+        "update_id": 2001,
+        "message": {
+            "message_id": 60,
+            "chat": {"id": chat_id},
+            "text": "What is the content?",
+        },
+    }
+
+    async def mock_error_stream(session, query, **kwargs):
+        yield 'event: error\ndata: {"error": "LLM generation failed", "detail": "Rate limit reached"}\n\n'
+
+    with patch("app.telegram.stream_answer_pipeline", side_effect=mock_error_stream):
+        res = client.post("/v1/telegram/webhook", json=query_update, headers=headers)
+    assert res.status_code == 200
+
+    edited_texts = [m["text"] for m in mock_tg.edited_messages]
+    assert any("LLM generation failed" in t or "Rate limit reached" in t for t in edited_texts)
+
+
+def test_telegram_markdown_fallback_on_parse_error():
+    """Verify TelegramClient falls back to plain text when Telegram API rejects Markdown entities."""
+    import httpx
+    import pytest
+
+    # Create client with dummy token
+    tg = TelegramClient(token="dummy_token")
+
+    # Mock httpx client response: first call fails with Markdown entity parse error, second call succeeds with plain text
+    call_count = 0
+
+    class MockResponse:
+        def __init__(self, json_data):
+            self._json = json_data
+            self.status_code = 200
+
+        def json(self):
+            return self._json
+
+    async def mock_post(url, **kwargs):
+        nonlocal call_count
+        call_count += 1
+        json_body = kwargs.get("json", {})
+        if json_body.get("parse_mode") == "Markdown":
+            return MockResponse({"ok": False, "error_code": 400, "description": "Bad Request: can't parse entities"})
+        return MockResponse({"ok": True, "result": {"message_id": 101, "text": json_body.get("text")}})
+
+    with patch.object(httpx.AsyncClient, "post", side_effect=mock_post):
+        import asyncio
+        res = asyncio.run(tg.edit_message_text(chat_id=123, message_id=101, text="Code_with_unmatched_underscores", parse_mode="Markdown"))
+        assert res["ok"] is True
+        assert call_count == 2

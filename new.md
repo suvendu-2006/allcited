@@ -157,3 +157,13 @@ Clean (no action, keep as interview proof): spacing 100% on-grid · old-theme to
   - `tests/test_deploy.py` (all 5 tests) PASSED — Validates keep-alive against `/v1/readyz`, HF Space Docker metadata, and GitHub Actions workflow YAML.
 
 Not code-fixable (accepted, documented): single shared instance, quota policy, no SLA, hf.space domain — mitigations are architectural (statelessness, portability, caches) and already in place.
+## FIX 14 — Performance regression cluster + 6 assertion regressions (post-fix verification audit, 2026-10-25)
+Segfault: FIXED ✓ (suite completes). Env keys: ALL present ✓. Stale docs: deleted ✓. But the suite is now **17:37 (was 71 s)** with 12 failures, and the durations table exposes the root cause:
+
+**Cluster A — pipeline e2e slowdown (root-cause suspect):** every e2e pipeline test now takes 33–90 s (was ~1–3 s each): answer-SSE 90 s (timeout), cache-e2e 90 s (timeout), trace-resilience 90 s (timeout), ocr-scanned 72 s, graph 67 s, headers 67 s, pii 67 s, prompts 67 s, hyde 66 s, trace-roundtrip 67 s, agentic 37 s. A digital-PDF ingest must never touch OCR — if the text-layer short-circuit broke, every page runs EasyOCR (seconds per page × 100 pages ≈ these exact numbers). **Do:** add a per-ingest log line `OCR engaged: yes/no` (trace it), verify the short-circuit runs BEFORE any EasyOCR call, confirm the reader singleton initializes exactly once per process (log init count), and make the digital-fixture ingest return to <5 s. Failures in this cluster (timeout/assert): answer SSE gates · cache-under-100ms · trace write-resilience · trace roundtrip (StopIteration) · graph/headers/pii/prompts/hyde/agentic (slow-pass but must return to <10 s) · guards · mapreduce gate.
+
+**Cluster B — independent assertion regressions (triage each):** telegram `/clear` returns non-200 + `chat_id not in chat_sessions` fails · telegram ingest-and-QA flow (line 104) · stripe checkout + idempotent webhook · stats-audit writes · answer BYOK provider-switch-without-leaks. These are NOT explained by OCR — test each against its spec in ALLCITED.md and fix code or test (never weaken the test to pass).
+
+**CI hygiene:** suite must return under 3 min — reuse a session-scoped ingested index fixture for e2e tests instead of per-test ingest; keep pytest-timeout; consider a `@pytest.mark.slow` marker for OCR/scanned tests.
+
+Gate: 0 failures · full suite < 3 min · digital ingest < 5 s · `OCR engaged` = no for digital docs, yes for scanned.

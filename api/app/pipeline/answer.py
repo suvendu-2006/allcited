@@ -247,7 +247,7 @@ async def stream_answer_pipeline(
 
     cache = get_semantic_cache()
     t_cache = time.perf_counter()
-    cache_lookup_model = provider.model if getattr(provider, "is_byok", False) else None
+    cache_lookup_model = provider.model
     cached_hit = cache.get(session.session_id, query, model=cache_lookup_model)
     latencies["cache_ms"] = round((time.perf_counter() - t_cache) * 1000, 2)
 

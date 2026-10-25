@@ -118,7 +118,11 @@ async def create_checkout_session(
     c_url = cancel_url or settings.STRIPE_CANCEL_URL
 
     # If secret key is provided and not test placeholder
-    if settings.STRIPE_SECRET_KEY and not settings.STRIPE_SECRET_KEY.startswith("mock_"):
+    if (
+        settings.STRIPE_SECRET_KEY
+        and not settings.STRIPE_SECRET_KEY.startswith("mock_")
+        and "mock" not in settings.STRIPE_SECRET_KEY.lower()
+    ):
         stripe.api_key = settings.STRIPE_SECRET_KEY
         try:
             session = stripe.checkout.Session.create(

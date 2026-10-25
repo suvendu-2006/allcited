@@ -30,7 +30,7 @@ class TelegramClient:
         text: str,
         parse_mode: Optional[str] = "Markdown",
     ) -> Dict[str, Any]:
-        """Send a message to a chat."""
+        """Send a message to a chat with plain-text fallback if markdown parsing fails."""
         if not self.token:
             return {"ok": True, "result": {"message_id": 100, "chat": {"id": chat_id}, "text": text}}
 
@@ -40,7 +40,20 @@ class TelegramClient:
                 json={"chat_id": chat_id, "text": text, "parse_mode": parse_mode},
                 timeout=20.0,
             )
-            return resp.json()
+            data = resp.json()
+            if not data.get("ok") and parse_mode is not None:
+                logger.warning(
+                    "Telegram sendMessage failed with parse_mode=%s (%s); retrying with plain text",
+                    parse_mode,
+                    data.get("description"),
+                )
+                resp_plain = await client.post(
+                    f"{self.base_url}/sendMessage",
+                    json={"chat_id": chat_id, "text": text, "parse_mode": None},
+                    timeout=20.0,
+                )
+                return resp_plain.json()
+            return data
 
     async def edit_message_text(
         self,
@@ -49,7 +62,7 @@ class TelegramClient:
         text: str,
         parse_mode: Optional[str] = "Markdown",
     ) -> Dict[str, Any]:
-        """Edit an existing message text."""
+        """Edit an existing message text with plain-text fallback if markdown parsing fails."""
         if not self.token:
             return {"ok": True, "result": {"message_id": message_id, "chat": {"id": chat_id}, "text": text}}
 
@@ -64,7 +77,29 @@ class TelegramClient:
                 },
                 timeout=20.0,
             )
-            return resp.json()
+            data = resp.json()
+            if not data.get("ok"):
+                desc = str(data.get("description", ""))
+                if "message is not modified" in desc.lower():
+                    return data
+                if parse_mode is not None:
+                    logger.warning(
+                        "Telegram editMessageText failed with parse_mode=%s (%s); retrying with plain text",
+                        parse_mode,
+                        desc,
+                    )
+                    resp_plain = await client.post(
+                        f"{self.base_url}/editMessageText",
+                        json={
+                            "chat_id": chat_id,
+                            "message_id": message_id,
+                            "text": text,
+                            "parse_mode": None,
+                        },
+                        timeout=20.0,
+                    )
+                    return resp_plain.json()
+            return data
 
     async def get_file_bytes(self, file_id: str) -> bytes:
         """Download file content by file_id."""
@@ -151,7 +186,9 @@ def format_telegram_answer(answer: str, citations: List[CitationItem]) -> str:
         preview = cit.text_preview.replace("\n", " ").strip()
         if len(preview) > 120:
             preview = preview[:117] + "..."
-        receipts.append(f"• *[{cit.label}]*{ocr_tag}{two_hop_tag}{meta_str}:\n  _{preview}_")
+        # Escape markdown symbols in raw document snippet to prevent Telegram parsing errors
+        safe_preview = preview.replace("_", "\\_").replace("*", "\\*").replace("`", "\\`").replace("[", "\\[")
+        receipts.append(f"• *[{cit.label}]*{ocr_tag}{two_hop_tag}{meta_str}:\n  _{safe_preview}_")
 
     return answer + "\n" + "\n".join(receipts)
 
@@ -236,6 +273,7 @@ async def handle_question_query(
     accumulated_tokens: List[str] = []
     last_edit_time = time.time()
     citations: List[CitationItem] = []
+    answer_completed = False
 
     try:
         async for sse_chunk in stream_answer_pipeline(session=session, query=query):
@@ -259,16 +297,34 @@ async def handle_question_query(
                         if now - last_edit_time >= 1.5 and accumulated_tokens:
                             curr_text = "".join(accumulated_tokens)
                             if len(curr_text) <= 4000:
-                                await tg.edit_message_text(
-                                    chat_id=chat_id,
-                                    message_id=msg_id,
-                                    text=curr_text + " ▍",
-                                )
-                                last_edit_time = now
+                                try:
+                                    # Plain text for streaming preview to avoid broken markdown parse
+                                    await tg.edit_message_text(
+                                        chat_id=chat_id,
+                                        message_id=msg_id,
+                                        text=curr_text + " ▍",
+                                        parse_mode=None,
+                                    )
+                                    last_edit_time = now
+                                except Exception as edit_err:
+                                    logger.debug("Transient streaming edit error: %s", edit_err)
 
                     elif event_name == "citations":
                         raw_cits = payload.get("citations", [])
                         citations = [CitationItem(**c) for c in raw_cits]
+
+                    elif event_name == "error":
+                        err_title = payload.get("error", "Generation Error")
+                        err_detail = payload.get("detail", "")
+                        error_text = f"❌ *{err_title}*"
+                        if err_detail:
+                            error_text += f"\n\n_{err_detail}_"
+                        if msg_id:
+                            await tg.edit_message_text(chat_id=chat_id, message_id=msg_id, text=error_text)
+                        else:
+                            await tg.send_message(chat_id=chat_id, text=error_text)
+                        answer_completed = True
+                        return
 
                     elif event_name == "done":
                         final_answer = payload.get("answer", "".join(accumulated_tokens))
@@ -280,10 +336,36 @@ async def handle_question_query(
                                 chat_id=chat_id,
                                 message_id=msg_id,
                                 text=chunks[0],
+                                parse_mode="Markdown",
                             )
                             for extra_chunk in chunks[1:]:
                                 await tg.send_message(chat_id=chat_id, text=extra_chunk)
+                        answer_completed = True
                         return
+
+        # If generator finished without explicit done or error event:
+        if not answer_completed:
+            if accumulated_tokens:
+                final_answer = "".join(accumulated_tokens)
+                full_formatted = format_telegram_answer(final_answer, citations)
+                chunks = chunk_telegram_text(full_formatted, max_chars=4000)
+                if chunks and msg_id:
+                    await tg.edit_message_text(
+                        chat_id=chat_id,
+                        message_id=msg_id,
+                        text=chunks[0],
+                        parse_mode="Markdown",
+                    )
+                    for extra_chunk in chunks[1:]:
+                        await tg.send_message(chat_id=chat_id, text=extra_chunk)
+            else:
+                if msg_id:
+                    await tg.edit_message_text(
+                        chat_id=chat_id,
+                        message_id=msg_id,
+                        text="⚠️ No answer could be retrieved for this query. Please try rephrasing your question.",
+                        parse_mode=None,
+                    )
 
     except Exception as e:
         logger.exception("Error answering Telegram query: %s", e)

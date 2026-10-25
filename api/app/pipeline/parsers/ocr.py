@@ -37,6 +37,7 @@ _EASYOCR_SINGLETON: Optional[Any] = None
 _EASYOCR_SINGLETON_KEY: Optional[str] = None
 _EASYOCR_LOCK = threading.Lock()
 _EASYOCR_READERS: Dict[str, Any] = {}
+_EASYOCR_INIT_COUNT: int = 0
 
 
 def parse_easyocr_langs(langs_str: str) -> List[str]:
@@ -60,7 +61,7 @@ def get_easyocr_reader(langs: Optional[List[str]] = None) -> Any:
     Get or create module-level singleton EasyOCR reader instance.
     Cached at module level so initialization overhead (20-30s) occurs only once per process.
     """
-    global _EASYOCR_SINGLETON, _EASYOCR_SINGLETON_KEY
+    global _EASYOCR_SINGLETON, _EASYOCR_SINGLETON_KEY, _EASYOCR_INIT_COUNT
     import easyocr
 
     target_langs = langs or ["en", "hi"]
@@ -90,7 +91,12 @@ def get_easyocr_reader(langs: Optional[List[str]] = None) -> Any:
         ):
             return _EASYOCR_SINGLETON
 
-        logger.info("Initializing module-level singleton EasyOCR reader for languages: %s", target_langs)
+        _EASYOCR_INIT_COUNT += 1
+        logger.info(
+            "Initializing module-level singleton EasyOCR reader (init_count=%d) for languages: %s",
+            _EASYOCR_INIT_COUNT,
+            target_langs,
+        )
         _EASYOCR_SINGLETON = easyocr.Reader(target_langs, gpu=False)
         _EASYOCR_SINGLETON_KEY = key
         _EASYOCR_READERS[key] = _EASYOCR_SINGLETON

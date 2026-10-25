@@ -90,10 +90,12 @@ def parse_pdf(
 
     blocks: List[ParsedBlock] = []
     section_path: List[str] = []
+    ocr_engaged = False
 
     for pno, page in enumerate(doc, start=1):
         # Text-layer short-circuit: skip OCR if page has extractable text layer or no raster images
         if not page_has_text_layer(page):
+            ocr_engaged = True
             # Scanned / rasterized page with no text layer -> trigger OCR fallback
             ocr_text = _ocr_page(page, pno)
             for raw_para in ocr_text.split("\n\n"):
@@ -234,5 +236,7 @@ def parse_pdf(
                     )
                 )
 
+    page_count = doc.page_count
     doc.close()
+    logger.info("OCR engaged: %s (source=%s, pages=%d)", "yes" if ocr_engaged else "no", source_name, page_count)
     return blocks

@@ -213,6 +213,11 @@ def test_byok_switches_provider_midsession_without_leaks(monkeypatch):
 
     monkeypatch.setattr(BrainClient, "stream_generate", mock_stream_generate)
 
+    async def mock_generate(self, messages, provider=None, max_tokens=100, temperature=0.0):
+        return "voluntary resignation notice period"
+
+    monkeypatch.setattr(BrainClient, "generate", mock_generate)
+
     # 1. Query with stub provider
     resp1 = client.post(
         "/v1/query",

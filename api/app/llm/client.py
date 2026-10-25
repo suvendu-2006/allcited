@@ -296,7 +296,14 @@ class BrainClient:
                     if choices and "message" in choices[0]:
                         self.last_used_provider = provider.provider_type
                         self.last_used_model = provider.model
-                        return choices[0]["message"].get("content", "").strip()
+                        content = choices[0]["message"].get("content", "")
+                        if not content:
+                            content = (
+                                choices[0]["message"].get("reasoning_content")
+                                or choices[0]["message"].get("reasoning")
+                                or ""
+                            )
+                        return content.strip()
                     return ""
 
                 # Shift to next key immediately on 429 if multiple keys exist in pool
@@ -327,27 +334,35 @@ class BrainClient:
                     continue
                 break
 
-        # Fallback to faster/lighter model on Groq if 120b is saturated
+        # Fallback to faster/lighter models on Groq if 120b is saturated
         if provider.provider_type == "groq" and "120b" in str(payload.get("model", "")):
-            logger.warning("Groq 120b saturated; attempting non-streaming fallback to openai/gpt-oss-20b...")
-            fallback_payload = dict(payload)
-            fallback_payload["model"] = "openai/gpt-oss-20b"
-            fallback_headers = {
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {self.groq_pool.get_current_key() if is_groq else provider.api_key}",
-            }
-            try:
-                async with httpx.AsyncClient(timeout=self.timeout) as client:
-                    fb_resp = await client.post(url, headers=fallback_headers, json=fallback_payload)
-                    if fb_resp.status_code == 200:
-                        data = fb_resp.json()
-                        choices = data.get("choices", [])
-                        if choices and "message" in choices[0]:
-                            self.last_used_provider = provider.provider_type
-                            self.last_used_model = "openai/gpt-oss-20b"
-                            return choices[0]["message"].get("content", "").strip()
-            except Exception as fb_err:
-                logger.warning("Fallback model also encountered error: %s", fb_err)
+            for fb_model in ("qwen/qwen3.8-27b", "openai/gpt-oss-20b"):
+                logger.warning("Groq 120b saturated; attempting non-streaming fallback to %s...", fb_model)
+                fallback_payload = dict(payload)
+                fallback_payload["model"] = fb_model
+                fallback_headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {self.groq_pool.get_current_key() if is_groq else provider.api_key}",
+                }
+                try:
+                    async with httpx.AsyncClient(timeout=self.timeout) as client:
+                        fb_resp = await client.post(url, headers=fallback_headers, json=fallback_payload)
+                        if fb_resp.status_code == 200:
+                            data = fb_resp.json()
+                            choices = data.get("choices", [])
+                            if choices and "message" in choices[0]:
+                                self.last_used_provider = provider.provider_type
+                                self.last_used_model = fb_model
+                                content = choices[0]["message"].get("content", "")
+                                if not content:
+                                    content = (
+                                        choices[0]["message"].get("reasoning_content")
+                                        or choices[0]["message"].get("reasoning")
+                                        or ""
+                                    )
+                                return content.strip()
+                except Exception as fb_err:
+                    logger.warning("Fallback model %s also encountered error: %s", fb_model, fb_err)
 
         # Ultimate failover: If all Groq attempts fail, shift request to NVIDIA NIM
         settings = get_settings()
@@ -366,7 +381,7 @@ class BrainClient:
                 "stream": False,
             }
             try:
-                async with httpx.AsyncClient(timeout=httpx.Timeout(30.0)) as client:
+                async with httpx.AsyncClient(timeout=httpx.Timeout(5.0)) as client:
                     nv_resp = await client.post(nv_url, headers=nv_headers, json=nv_payload)
                     if nv_resp.status_code == 200:
                         data = nv_resp.json()
@@ -488,41 +503,45 @@ class BrainClient:
                     continue
                 break
 
-        # Fallback to faster/lighter model on Groq if 120b is saturated
+        # Fallback to faster/lighter models on Groq if 120b is saturated
         if provider.provider_type == "groq" and "120b" in str(payload.get("model", "")):
-            logger.warning("Groq 120b saturated (429); attempting automatic fallback to openai/gpt-oss-20b...")
-            fallback_payload = dict(payload)
-            fallback_payload["model"] = "openai/gpt-oss-20b"
-            fallback_headers = {
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {self.groq_pool.get_current_key() if is_groq else provider.api_key}",
-            }
-            try:
-                async with httpx.AsyncClient(timeout=self.timeout) as client:
-                    async with client.stream("POST", url, headers=fallback_headers, json=fallback_payload) as response:
-                        if response.status_code == 200:
-                            self.last_used_provider = provider.provider_type
-                            self.last_used_model = "openai/gpt-oss-20b"
-                            async for line in response.aiter_lines():
-                                line = line.strip()
-                                if not line or not line.startswith("data:"):
-                                    continue
-                                data_str = line[5:].strip()
-                                if data_str == "[DONE]":
-                                    break
-                                try:
-                                    chunk_json = json.loads(data_str)
-                                    choices = chunk_json.get("choices", [])
-                                    if choices:
-                                        delta = choices[0].get("delta", {})
-                                        content_piece = delta.get("content", "")
-                                        if content_piece:
-                                            yield content_piece
-                                except json.JSONDecodeError:
-                                    continue
-                            return
-            except Exception as fb_err:
-                logger.warning("Fallback model also encountered error: %s", fb_err)
+            for fb_model in ("qwen/qwen3.8-27b", "openai/gpt-oss-20b"):
+                logger.warning("Groq 120b saturated (429); attempting automatic fallback to %s...", fb_model)
+                fallback_payload = dict(payload)
+                fallback_payload["model"] = fb_model
+                fallback_headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {self.groq_pool.get_current_key() if is_groq else provider.api_key}",
+                }
+                try:
+                    async with httpx.AsyncClient(timeout=self.timeout) as client:
+                        async with client.stream("POST", url, headers=fallback_headers, json=fallback_payload) as response:
+                            if response.status_code == 200:
+                                self.last_used_provider = provider.provider_type
+                                self.last_used_model = fb_model
+                                tokens_yielded = 0
+                                async for line in response.aiter_lines():
+                                    line = line.strip()
+                                    if not line or not line.startswith("data:"):
+                                        continue
+                                    data_str = line[5:].strip()
+                                    if data_str == "[DONE]":
+                                        break
+                                    try:
+                                        chunk_json = json.loads(data_str)
+                                        choices = chunk_json.get("choices", [])
+                                        if choices:
+                                            delta = choices[0].get("delta", {})
+                                            content_piece = delta.get("content", "")
+                                            if content_piece:
+                                                tokens_yielded += 1
+                                                yield content_piece
+                                    except json.JSONDecodeError:
+                                        continue
+                                if tokens_yielded > 0:
+                                    return
+                except Exception as fb_err:
+                    logger.warning("Fallback model %s also encountered error: %s", fb_model, fb_err)
 
         # Ultimate failover: If all Groq attempts fail, shift request to NVIDIA NIM
         settings = get_settings()
@@ -542,7 +561,7 @@ class BrainClient:
             }
             try:
                 tokens_yielded = 0
-                async with httpx.AsyncClient(timeout=httpx.Timeout(30.0)) as client:
+                async with httpx.AsyncClient(timeout=httpx.Timeout(5.0)) as client:
                     async with client.stream("POST", nv_url, headers=nv_headers, json=nv_payload) as response:
                         if response.status_code == 200:
                             self.last_used_provider = "nvidia"
