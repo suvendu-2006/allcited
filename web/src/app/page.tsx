@@ -301,28 +301,6 @@ export default function Home() {
                   No account needed · Nothing is saved · We publish our test scores
                 </p>
               </div>
-
-              {/* Scroll Down Cue to reveal tech strip & stats on scroll */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.6, duration: 0.5 }}
-                className="relative z-10 flex flex-col items-center gap-1 text-gray-warm/70 hover:text-ink-primary transition-colors cursor-pointer pt-6 pb-2 select-none"
-                onClick={() => {
-                  document.getElementById("stats-band")?.scrollIntoView({ behavior: "smooth" });
-                }}
-              >
-                <span className="font-mono text-[9px] uppercase tracking-[0.2em] font-medium">
-                  Scroll to explore
-                </span>
-                <motion.span
-                  animate={{ y: [0, 4, 0] }}
-                  transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
-                  className="text-xs font-mono"
-                >
-                  ↓
-                </motion.span>
-              </motion.div>
             </section>
 
             {/* Tech Strip under Hero per text.md verbatim */}
