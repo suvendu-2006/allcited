@@ -93,6 +93,8 @@ def test_telegram_start_and_clear_commands():
     client = TestClient(app)
     mock_tg = MockTelegramClient()
     set_telegram_client(mock_tg)
+    settings = get_settings()
+    headers = {"X-Telegram-Bot-Api-Secret-Token": settings.TELEGRAM_WEBHOOK_SECRET} if settings.TELEGRAM_WEBHOOK_SECRET else {}
 
     chat_id = 778899
 
@@ -100,6 +102,7 @@ def test_telegram_start_and_clear_commands():
     res = client.post(
         "/v1/telegram/webhook",
         json={"message": {"chat": {"id": chat_id}, "text": "/start"}},
+        headers=headers,
     )
     assert res.status_code == 200
     assert any("Welcome to Allcited" in m["text"] for m in mock_tg.sent_messages)
@@ -109,6 +112,7 @@ def test_telegram_start_and_clear_commands():
     res_q = client.post(
         "/v1/telegram/webhook",
         json={"message": {"chat": {"id": chat_id}, "text": "What is our leave policy?"}},
+        headers=headers,
     )
     assert res_q.status_code == 200
     assert any("No document uploaded yet" in m["text"] for m in mock_tg.sent_messages)
@@ -118,6 +122,7 @@ def test_telegram_start_and_clear_commands():
     res_clear = client.post(
         "/v1/telegram/webhook",
         json={"message": {"chat": {"id": chat_id}, "text": "/clear"}},
+        headers=headers,
     )
     assert res_clear.status_code == 200
     assert chat_id not in chat_sessions
@@ -132,6 +137,8 @@ def test_telegram_document_ingest_and_qa_flow():
     4. Bot streams and edits answer with inline [S#] citations and source receipts
     """
     client = TestClient(app)
+    settings = get_settings()
+    headers = {"X-Telegram-Bot-Api-Secret-Token": settings.TELEGRAM_WEBHOOK_SECRET} if settings.TELEGRAM_WEBHOOK_SECRET else {}
 
     fixture_path = Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "handbook.pdf"
     assert fixture_path.exists()
@@ -157,7 +164,7 @@ def test_telegram_document_ingest_and_qa_flow():
         },
     }
 
-    res_upload = client.post("/v1/telegram/webhook", json=upload_update)
+    res_upload = client.post("/v1/telegram/webhook", json=upload_update, headers=headers)
     assert res_upload.status_code == 200
 
     # Verify session registered
@@ -168,6 +175,7 @@ def test_telegram_document_ingest_and_qa_flow():
     res_doc = client.post(
         "/v1/telegram/webhook",
         json={"message": {"chat": {"id": chat_id}, "text": "/doc"}},
+        headers=headers,
     )
     assert res_doc.status_code == 200
     assert any("Active Document" in m["text"] for m in mock_tg.sent_messages)
@@ -182,7 +190,13 @@ def test_telegram_document_ingest_and_qa_flow():
         },
     }
 
-    res_query = client.post("/v1/telegram/webhook", json=query_update)
+    async def mock_stream(session, query, **kwargs):
+        yield 'event: token\ndata: {"delta": "The notice period is 60 calendar days [S1]."}\n\n'
+        yield 'event: citations\ndata: {"citations": [{"label": "S1", "chunk_id": "c1", "page": 3, "section_path": ["3. Separation"], "text_preview": "60 calendar days"}]}\n\n'
+        yield 'event: done\ndata: {"answer": "The notice period is 60 calendar days [S1].", "refused": false}\n\n'
+
+    with patch("app.telegram.stream_answer_pipeline", side_effect=mock_stream):
+        res_query = client.post("/v1/telegram/webhook", json=query_update, headers=headers)
     assert res_query.status_code == 200
 
     # Verify bot answered
