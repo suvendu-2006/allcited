@@ -1,14 +1,14 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { executeWaterDropRipple } from "./waterRipple";
+import { executeThemeTransition } from "@/components/ThemeTransitionOverlay";
 
 type Theme = "light" | "dark";
 
 interface ThemeContextType {
   theme: Theme;
-  toggleTheme: (e?: React.MouseEvent) => void;
-  setTheme: (theme: Theme) => void;
+  toggleTheme: () => void;
+  setTheme: (theme: Theme, animate?: boolean) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType>({
@@ -36,7 +36,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setMounted(true);
   }, []);
 
-  const setTheme = (nextTheme: Theme) => {
+  const applyThemeClasses = (nextTheme: Theme) => {
     setThemeState(nextTheme);
     localStorage.setItem("allcited_theme", nextTheme);
     if (nextTheme === "dark") {
@@ -46,12 +46,21 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const toggleTheme = (e?: React.MouseEvent) => {
-    const nextTheme: Theme = theme === "dark" ? "light" : "dark";
-    const coords = e ? { x: e.clientX, y: e.clientY } : null;
+  const setTheme = (nextTheme: Theme, animate = true) => {
+    if (nextTheme === theme) return;
+    if (animate) {
+      executeThemeTransition(nextTheme === "dark", (isDark) => {
+        applyThemeClasses(isDark ? "dark" : "light");
+      });
+    } else {
+      applyThemeClasses(nextTheme);
+    }
+  };
 
-    executeWaterDropRipple(coords, nextTheme === "dark", () => {
-      setTheme(nextTheme);
+  const toggleTheme = () => {
+    const nextTheme: Theme = theme === "dark" ? "light" : "dark";
+    executeThemeTransition(nextTheme === "dark", (isDark) => {
+      applyThemeClasses(isDark ? "dark" : "light");
     });
   };
 

@@ -188,8 +188,12 @@ Upon voluntary resignation or formal separation, accrued annual leave encashment
   return (
     <div className="flex h-screen overflow-hidden bg-bg-base text-ink-primary font-sans">
       <div className="flex-1 flex flex-col h-full min-w-0 overflow-y-auto">
-        {/* Navigation Bar per §6.2 */}
-        <Navbar apiConnected={apiConnected} onOpenSettings={() => setIsSettingsOpen(true)} />
+        {/* Navigation Bar */}
+        <Navbar
+          apiConnected={apiConnected}
+          isInApp={inWorkspace}
+          onOpenSettings={() => setIsSettingsOpen(true)}
+        />
 
         {/* Dynamic View: Workspace Mode vs Full Award Landing Page */}
         {inWorkspace ? (

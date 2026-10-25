@@ -3,6 +3,7 @@ import { Inter, Bricolage_Grotesque, JetBrains_Mono, Caveat } from "next/font/go
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/lib/theme";
+import { ThemeTransitionOverlay } from "@/components/ThemeTransitionOverlay";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -51,7 +52,10 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="antialiased min-h-screen bg-bg-base text-ink-primary selection:bg-accent-primary/20 selection:text-ink-primary">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <ThemeTransitionOverlay />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
