@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     PORT: int = Field(default=8000, description="Server port")
     MODE: str = Field(default="cloud", description="Operating mode: cloud or private")
     CORS_ORIGINS: Union[str, List[str]] = Field(
-        default=["http://localhost:3000", "http://127.0.0.1:3000"],
+        default=["http://localhost:3000", "http://127.0.0.1:3000", "https://allcited.vercel.app"],
         description="Allowed CORS origins",
     )
 

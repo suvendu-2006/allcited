@@ -66,3 +66,7 @@ tmp/
 api/data/
 !web/src/data/
 *.jsonl
+.vercel
+.env*
+deploy/hf-space-staging/
+deploy/hf-gradio/

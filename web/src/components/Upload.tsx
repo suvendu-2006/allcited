@@ -120,6 +120,9 @@ export function Upload({
         if (code === "doc_unreadable") {
           throw new Error("Couldn't read this file — it may be corrupt or password-protected. Nothing was saved.");
         }
+        if (res.status === 404 || res.status >= 500) {
+          throw new Error(`Backend service is not running or unreachable (${res.status}). The API server at ${apiUrl} has not been deployed yet.`);
+        }
         throw new Error(errJson?.detail?.error?.message || "Couldn't read this file — it may be corrupt or password-protected. Nothing was saved.");
       }
 
@@ -172,6 +175,9 @@ export function Upload({
         const code = errJson?.detail?.error?.code;
         if (code === "url_blocked") {
           throw new Error("That link points somewhere private — we don't fetch those. Safety thing.");
+        }
+        if (res.status === 404 || res.status >= 500) {
+          throw new Error(`Backend service is not running or unreachable (${res.status}). The API server at ${apiUrl} has not been deployed yet.`);
         }
         throw new Error(errJson?.detail?.error?.message || "Couldn't read from that URL. Check the link and try again.");
       }
