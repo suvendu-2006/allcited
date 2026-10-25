@@ -4,6 +4,7 @@ Configured via OCR_PROVIDER ('tesseract' or 'easyocr') and OCR_LANGS ('eng+hin')
 """
 import logging
 import re
+import threading
 from io import BytesIO
 from typing import Any, Dict, List, Optional
 
@@ -32,6 +33,9 @@ TESS_TO_EASYOCR_LANG = {
     "kor": "ko",
 }
 
+_EASYOCR_SINGLETON: Optional[Any] = None
+_EASYOCR_SINGLETON_KEY: Optional[str] = None
+_EASYOCR_LOCK = threading.Lock()
 _EASYOCR_READERS: Dict[str, Any] = {}
 
 
@@ -51,17 +55,46 @@ def parse_easyocr_langs(langs_str: str) -> List[str]:
     return mapped or ["en"]
 
 
-def get_easyocr_reader(langs: List[str]) -> Any:
+def get_easyocr_reader(langs: Optional[List[str]] = None) -> Any:
     """
-    Get or create cached EasyOCR reader instance for the specified languages.
+    Get or create module-level singleton EasyOCR reader instance.
+    Cached at module level so initialization overhead (20-30s) occurs only once per process.
     """
+    global _EASYOCR_SINGLETON, _EASYOCR_SINGLETON_KEY
     import easyocr
 
-    key = "+".join(sorted(langs))
-    if key not in _EASYOCR_READERS:
-        logger.info("Initializing EasyOCR reader for languages: %s", langs)
-        _EASYOCR_READERS[key] = easyocr.Reader(langs, gpu=False)
-    return _EASYOCR_READERS[key]
+    target_langs = langs or ["en", "hi"]
+    key = "+".join(sorted(target_langs))
+
+    # Fast path if already initialized for matching or superset languages
+    if _EASYOCR_SINGLETON is not None and (
+        _EASYOCR_SINGLETON_KEY == key
+        or (
+            _EASYOCR_SINGLETON_KEY
+            and "en" in _EASYOCR_SINGLETON_KEY
+            and "hi" in _EASYOCR_SINGLETON_KEY
+            and all(lang_code in ["en", "hi"] for lang_code in target_langs)
+        )
+    ):
+        return _EASYOCR_SINGLETON
+
+    with _EASYOCR_LOCK:
+        if _EASYOCR_SINGLETON is not None and (
+            _EASYOCR_SINGLETON_KEY == key
+            or (
+                _EASYOCR_SINGLETON_KEY
+                and "en" in _EASYOCR_SINGLETON_KEY
+                and "hi" in _EASYOCR_SINGLETON_KEY
+                and all(lang_code in ["en", "hi"] for lang_code in target_langs)
+            )
+        ):
+            return _EASYOCR_SINGLETON
+
+        logger.info("Initializing module-level singleton EasyOCR reader for languages: %s", target_langs)
+        _EASYOCR_SINGLETON = easyocr.Reader(target_langs, gpu=False)
+        _EASYOCR_SINGLETON_KEY = key
+        _EASYOCR_READERS[key] = _EASYOCR_SINGLETON
+        return _EASYOCR_SINGLETON
 
 
 def run_ocr(

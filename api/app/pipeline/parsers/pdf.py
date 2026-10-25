@@ -22,6 +22,30 @@ def _ocr_page(page: fitz.Page, pno: int) -> str:
     return run_ocr(page, pno)
 
 
+def page_has_text_layer(page: fitz.Page) -> bool:
+    """
+    Check if a PDF page contains an extractable text layer to short-circuit OCR.
+
+    Short-circuits immediately if:
+    1. Page contains >= 20 characters of extractable text, OR
+    2. Page has extractable text and NO raster images to OCR, OR
+    3. Page is completely empty (no text and no images - blank page).
+
+    Returns True if digital text layer is present (skip OCR), False if scanned page needing OCR.
+    """
+    raw_text = page.get_text().strip()
+    if len(raw_text) >= 20:
+        return True
+
+    images = page.get_images()
+    if not images:
+        # No images on this page; OCR would only inspect blank white space
+        return True
+
+    # Page has images and virtually no text (<20 chars) -> scanned/raster image
+    return False
+
+
 def parse_pdf(
     file_input: Union[str, bytes, BytesIO],
     source_name: str = "document.pdf",
@@ -68,9 +92,9 @@ def parse_pdf(
     section_path: List[str] = []
 
     for pno, page in enumerate(doc, start=1):
-        raw_page_text = page.get_text().strip()
-        if len(raw_page_text) < 50:
-            # Scanned / rasterized page with <50 chars text -> trigger OCR fallback
+        # Text-layer short-circuit: skip OCR if page has extractable text layer or no raster images
+        if not page_has_text_layer(page):
+            # Scanned / rasterized page with no text layer -> trigger OCR fallback
             ocr_text = _ocr_page(page, pno)
             for raw_para in ocr_text.split("\n\n"):
                 clean_para = "".join(ch for ch in raw_para if ch == "\n" or ch == "\t" or ch >= " ").strip()
