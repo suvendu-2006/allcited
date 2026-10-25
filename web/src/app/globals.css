@@ -54,6 +54,8 @@
     --radius-chrome: 0px;
 
     --dot-color: rgba(26, 25, 24, 0.14);
+    --grid-line-color: rgba(26, 25, 24, 0.05);
+    --grid-dot-color: rgba(26, 25, 24, 0.12);
   }
 
   /* Dark Theme: "Warm Ink" (Ink & Ember: warm black base, lifted seal accent, amber citations) */
@@ -98,6 +100,8 @@
     --ring: var(--accent-primary);
 
     --dot-color: rgba(239, 234, 217, 0.15);
+    --grid-line-color: rgba(239, 234, 217, 0.055);
+    --grid-dot-color: rgba(239, 234, 217, 0.14);
   }
 
   * {
@@ -115,6 +119,15 @@
 .dot-grid {
   background-image: radial-gradient(var(--dot-color) 1.25px, transparent 1.25px);
   background-size: 24px 24px;
+}
+
+/* Screenpipe Precision Technical Grid Pattern */
+.screenpipe-pattern {
+  background-image:
+    linear-gradient(to right, var(--grid-line-color) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line-color) 1px, transparent 1px),
+    radial-gradient(circle, var(--grid-dot-color) 1px, transparent 1px);
+  background-size: 32px 32px, 32px 32px, 32px 32px;
 }
 
 /* View Transitions for Wave Theme Switch */
