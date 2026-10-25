@@ -141,6 +141,7 @@ def test_scanned_pdf_answers_3_questions_with_ocr_citations():
 def test_easyocr_provider_on_scanned_pdf():
     """Verify EasyOCR provider extracts text directly from scanned PDF fixture."""
     import fitz
+
     from app.pipeline.parsers.ocr import parse_easyocr_langs, run_ocr
 
     # Test language mapping

@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: Ping Allcited Production API
         env:
-          API_URL: ${{ secrets.PROD_API_URL || 'https://allcited-api.hf.space' }}
+          API_URL: ${{ secrets.PROD_API_URL || 'https://subh-007-allcited-api.hf.space' }}
         run: |
           echo "Pinging $API_URL/v1/readyz..."
           curl -f -s -S --max-time 15 "$API_URL/v1/readyz" || {

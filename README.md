@@ -15,7 +15,7 @@
 
 <br/>
 
-[**Live Web App**](https://allcited.vercel.app) • [**API Explorer**](https://allcited-api.hf.space/docs) • [**Health Endpoint**](https://allcited-api.hf.space/v1/health) • [**Telegram Bot**](https://t.me/AllcitedBot) • [**Docker Container**](#private-offline-edition-zero-cloud-egress)
+[**Live Web App**](https://allcited.vercel.app) • [**API Explorer**](https://subh-007-allcited-api.hf.space/docs) • [**Health Endpoint**](https://subh-007-allcited-api.hf.space/v1/health) • [**Telegram Bot**](https://t.me/AllcitedBot) • [**Docker Container**](#private-offline-edition-zero-cloud-egress)
 
 <br/>
 
@@ -214,8 +214,8 @@ docker compose up
 | Channel | URL / Handle | Description |
 | :--- | :--- | :--- |
 | **Web Interface** | [allcited.vercel.app](https://allcited.vercel.app) | Next.js 14 App Router workspace with Receipts Drawer, Wave theme toggle, and Clerk auth |
-| **API Backend** | [allcited-api.hf.space/v1/health](https://allcited-api.hf.space/v1/health) | FastAPI cloud runner on Hugging Face Spaces with automatic provider failover |
-| **Interactive Docs** | [allcited-api.hf.space/docs](https://allcited-api.hf.space/docs) | Swagger UI & OpenAPI 3.1 schema specification |
+| **API Backend** | [subh-007-allcited-api.hf.space/v1/health](https://subh-007-allcited-api.hf.space/v1/health) | FastAPI cloud runner on Hugging Face Spaces with automatic provider failover |
+| **Interactive Docs** | [subh-007-allcited-api.hf.space/docs](https://subh-007-allcited-api.hf.space/docs) | Swagger UI & OpenAPI 3.1 schema specification |
 | **Telegram Bot** | [@AllcitedBot](https://t.me/AllcitedBot) | Real-time message streaming, document upload, and cited answers in chat |
 | **Container Registry** | `ghcr.io/suvendu-2006/allcited-api:latest` | Pre-built air-gapped container image with OCR and local vector pipelines |
 

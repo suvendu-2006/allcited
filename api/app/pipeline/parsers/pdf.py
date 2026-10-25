@@ -5,9 +5,7 @@ from io import BytesIO
 from typing import List, Union
 
 import pymupdf as fitz
-from PIL import Image
 
-from app.config import get_settings
 from app.pipeline.parsers.base import ParsedBlock
 from app.pipeline.parsers.ocr import run_ocr
 
