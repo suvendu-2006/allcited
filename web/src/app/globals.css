@@ -53,7 +53,7 @@
     --radius-input: 4px;
     --radius-chrome: 0px;
 
-    --dot-color: rgba(26, 25, 24, 0.065);
+    --dot-color: rgba(26, 25, 24, 0.14);
   }
 
   /* Dark Theme: "Warm Ink" (Ink & Ember: warm black base, lifted seal accent, amber citations) */
@@ -97,7 +97,7 @@
     --destructive-foreground: #0D0C0B;
     --ring: var(--accent-primary);
 
-    --dot-color: rgba(239, 234, 217, 0.065);
+    --dot-color: rgba(239, 234, 217, 0.15);
   }
 
   * {
@@ -113,7 +113,7 @@
 
 /* Texture: Dot Grid (for hero and empty states) */
 .dot-grid {
-  background-image: radial-gradient(var(--dot-color) 0.75px, transparent 0.75px);
+  background-image: radial-gradient(var(--dot-color) 1.25px, transparent 1.25px);
   background-size: 24px 24px;
 }
 

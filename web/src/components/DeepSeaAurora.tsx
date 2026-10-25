@@ -25,6 +25,15 @@ export function EmberAurora() {
       {/* L1: Base Warm-Ink / Paper (#0D0C0B dark / #F5F2EA light) */}
       <div className="absolute inset-0 bg-[#F5F2EA] dark:bg-[#0D0C0B] transition-colors duration-500" />
 
+      {/* L1.5: Precision Editorial Dot Grid Background Pattern */}
+      <div
+        className="absolute inset-0 dot-grid pointer-events-none"
+        style={{
+          maskImage: "radial-gradient(ellipse 85% 75% at 50% 50%, black 35%, transparent 95%)",
+          WebkitMaskImage: "radial-gradient(ellipse 85% 75% at 50% 50%, black 35%, transparent 95%)",
+        }}
+      />
+
       {/* L2: Three Gently Drifting Ember Ambient Glows */}
       {/* Glow 1: Vermillion (#E8765A) Top-Left */}
       <motion.div

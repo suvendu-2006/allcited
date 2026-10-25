@@ -263,13 +263,12 @@ Upon voluntary resignation or formal separation, accrued annual leave encashment
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto">
-            {/* Hero Section with Deep-Sea Aurora Layers per §6.1 */}
-            <section className="relative min-h-[580px] sm:min-h-[640px] flex flex-col items-center justify-center text-center px-4 sm:px-6 py-20 overflow-hidden">
-              {/* Layer 1-4 Aurora Background */}
+            {/* Hero Section: Fills 100% of Viewport under Navbar */}
+            <section className="relative min-h-[calc(100vh-4rem)] flex flex-col items-center justify-between text-center px-4 sm:px-6 pt-16 sm:pt-20 pb-8 overflow-hidden">
+              {/* Layer 1-4 Aurora Background with Visible Dot-Grid Pattern */}
               <DeepSeaAurora />
 
-
-              <div className="relative z-10 max-w-4xl mx-auto space-y-6">
+              <div className="relative z-10 max-w-4xl mx-auto space-y-6 my-auto">
                 {/* Hero Headline with Staggered Entrance per §6.4 */}
                 <h1 className="font-editorial text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-ink-primary drop-shadow-xs">
                   {headlineWords.map((word, idx) => (
@@ -338,17 +337,52 @@ Upon voluntary resignation or formal separation, accrued annual leave encashment
                   No account needed · Sessions vanish when you leave · We publish our own test scores
                 </p>
               </div>
+
+              {/* Scroll Down Cue to reveal tech strip & stats on scroll */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.6, duration: 0.5 }}
+                className="relative z-10 flex flex-col items-center gap-1 text-gray-warm/70 hover:text-ink-primary transition-colors cursor-pointer pt-6 pb-2 select-none"
+                onClick={() => {
+                  document.getElementById("stats-band")?.scrollIntoView({ behavior: "smooth" });
+                }}
+              >
+                <span className="font-mono text-[9px] uppercase tracking-[0.2em] font-medium">
+                  Scroll to explore
+                </span>
+                <motion.span
+                  animate={{ y: [0, 4, 0] }}
+                  transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
+                  className="text-xs font-mono"
+                >
+                  ↓
+                </motion.span>
+              </motion.div>
             </section>
 
-            {/* Tech Strip under Hero per §6.3 v2.1 (mono, one line) */}
-            <div className="border-y border-border bg-bg-surface py-2.5 overflow-hidden">
+            {/* Tech Strip under Hero — revealed on scroll */}
+            <motion.div
+              id="stats-band"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-20px" }}
+              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+              className="border-y border-border bg-bg-surface py-2.5 overflow-hidden"
+            >
               <div className="whitespace-nowrap font-mono text-xs text-gray-warm flex items-center justify-center gap-2">
                 <span>React · Next.js · TypeScript · FastAPI · FAISS — open source, top to bottom.</span>
               </div>
-            </div>
+            </motion.div>
 
-            {/* Stats Band with Rolling Counters & Scorecard Chip per §4 & §6.6 */}
-            <section className="border-b border-border bg-bg-surface/50 py-10 px-4 sm:px-6">
+            {/* Stats Band with Rolling Counters & Scorecard Chip — revealed on scroll */}
+            <motion.section
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-30px" }}
+              transition={{ duration: 0.5, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+              className="border-b border-border bg-bg-surface/50 py-12 px-4 sm:px-6"
+            >
               <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-8 text-center sm:text-left">
                 <div className="space-y-1">
                   <div className="font-mono text-4xl sm:text-5xl font-bold text-ink-primary">
@@ -385,7 +419,7 @@ Upon voluntary resignation or formal separation, accrued annual leave encashment
                   </p>
                 </div>
               </div>
-            </section>
+            </motion.section>
 
             {/* Trust Layer: Live Inline Cited-Answer Mini-Demo per §6.6 */}
             <section className="py-16 px-4 sm:px-6 max-w-4xl mx-auto space-y-6">
