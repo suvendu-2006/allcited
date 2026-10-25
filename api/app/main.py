@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import uuid
 from contextlib import asynccontextmanager
@@ -53,7 +54,7 @@ from app.security.pii import setup_pii_logging
 from app.security.ssrf import SSRFBlockedError, safe_fetch_url
 from app.sessions import get_session_store
 from app.stats import get_platform_stats
-from app.telegram import router as telegram_router
+from app.telegram import router as telegram_router, run_telegram_polling
 from app.trace import TraceRecord, get_trace_manager
 
 logger = logging.getLogger(__name__)
@@ -67,7 +68,20 @@ async def lifespan(app: FastAPI):
     settings = get_settings()
     app.state.settings = settings
     setup_pii_logging()
+
+    polling_task = None
+    if settings.TELEGRAM_BOT_TOKEN:
+        logger.info("Initializing background Telegram long-polling worker...")
+        polling_task = asyncio.create_task(run_telegram_polling())
+
     yield
+
+    if polling_task:
+        polling_task.cancel()
+        try:
+            await polling_task
+        except asyncio.CancelledError:
+            pass
 
 
 settings = get_settings()
@@ -328,6 +342,24 @@ async def list_library_documents(user_id: str = Depends(get_current_user)):
         "count": len(docs),
         "documents": docs,
     }
+
+
+@app.get(
+    "/v1/library",
+    response_model=ListDocumentsResponse,
+    include_in_schema=False,
+)
+async def list_library_alias(user_id: str = Depends(get_current_user)):
+    return await list_library_documents(user_id=user_id)
+
+
+@app.delete(
+    "/v1/library/{doc_id}",
+    response_model=DeleteDocumentResponse,
+    include_in_schema=False,
+)
+async def delete_library_alias(doc_id: str, user_id: str = Depends(get_current_user)):
+    return await delete_library_document(doc_id=doc_id, user_id=user_id)
 
 
 @app.post(

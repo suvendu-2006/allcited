@@ -77,10 +77,13 @@ def chunk_blocks(
     target_tokens: int = 400,
     max_tokens: int = 600,
     overlap_ratio: float = 0.15,
+    section_aware: bool = False,
 ) -> List[Chunk]:
     """
     Group parsed document blocks into chunks targeting ~400 tokens with hard max 600,
     15% overlap, and strict sentence-boundary integrity (resolves P1 boundary cut-off trap).
+    When section_aware is True, major section boundaries flush the current chunk to prevent
+    semantic bleed across unrelated chapters.
     """
     chunks: List[Chunk] = []
     current_items: List[_SentenceItem] = []
@@ -114,6 +117,16 @@ def chunk_blocks(
     for block in blocks:
         if not block.text.strip():
             continue
+
+        # If section-aware chunking is enabled, flush when top-level section changes and chunk is substantive
+        if section_aware and current_items and block.section_path:
+            curr_top = block.section_path[0] if block.section_path else None
+            prev_top = current_items[-1].section_path[0] if current_items[-1].section_path else None
+            if curr_top and prev_top and curr_top != prev_top and current_tokens >= 150:
+                chunk = make_chunk(current_items)
+                chunks.append(chunk)
+                current_items = []
+                current_tokens = 0
 
         sentences = split_into_sentences(block.text)
 

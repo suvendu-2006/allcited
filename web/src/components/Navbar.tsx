@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import { InteractiveOrbitClock } from "./ui/InteractiveOrbitClock";
 import { Button } from "./ui/button";
 
@@ -93,6 +94,23 @@ export function Navbar({ onOpenSettings, isInApp }: NavbarProps) {
             </span>
           </button>
         )}
+
+        {/* Clerk Auth Integration */}
+        <SignedOut>
+          <SignInButton mode="modal">
+            <button
+              type="button"
+              className="text-xs font-mono text-gray-warm hover:text-ink-primary transition-colors px-2 py-1 cursor-pointer"
+            >
+              Sign in
+            </button>
+          </SignInButton>
+        </SignedOut>
+        <SignedIn>
+          <div className="flex items-center">
+            <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-7 h-7" } }} />
+          </div>
+        </SignedIn>
 
         {/* Open Allcited CTA per §4D verbatim */}
         <Link href="/?workspace=true" className="hidden sm:inline-block">

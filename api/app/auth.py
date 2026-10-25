@@ -21,11 +21,24 @@ def set_test_verification_key(key: Optional[str]) -> None:
 
 
 def get_jwks_client() -> Optional[jwt.PyJWKClient]:
-    """Retrieve or initialize PyJWKClient if CLERK_JWKS_URL is configured."""
+    """Retrieve or initialize PyJWKClient if CLERK_JWKS_URL or CLERK_PUBLISHABLE_KEY is configured."""
     global _jwks_client
     settings = get_settings()
-    if _jwks_client is None and settings.CLERK_JWKS_URL:
-        _jwks_client = jwt.PyJWKClient(settings.CLERK_JWKS_URL)
+    if _jwks_client is None:
+        jwks_url = settings.CLERK_JWKS_URL
+        if not jwks_url and settings.CLERK_PUBLISHABLE_KEY:
+            try:
+                import base64
+                raw = settings.CLERK_PUBLISHABLE_KEY
+                if "_" in raw:
+                    b64 = raw.split("_", 2)[-1]
+                    b64 += "=" * (-len(b64) % 4)
+                    host = base64.b64decode(b64).decode("utf-8").rstrip("$")
+                    jwks_url = f"https://{host}/.well-known/jwks.json"
+            except Exception:
+                pass
+        if jwks_url:
+            _jwks_client = jwt.PyJWKClient(jwks_url)
     return _jwks_client
 
 
@@ -35,7 +48,7 @@ def verify_clerk_token(token: str) -> Dict[str, Any]:
     Supports:
     1. Test verification key (set via set_test_verification_key for unit tests)
     2. CLERK_PEM_PUBLIC_KEY (from env/settings)
-    3. CLERK_JWKS_URL (via PyJWKClient)
+    3. CLERK_JWKS_URL or CLERK_PUBLISHABLE_KEY (via PyJWKClient)
     4. CLERK_SECRET_KEY fallback for symmetric HMAC development/test tokens
 
     Returns the decoded token claims dictionary.
@@ -52,22 +65,26 @@ def verify_clerk_token(token: str) -> Dict[str, Any]:
     elif settings.CLERK_PEM_PUBLIC_KEY:
         signing_key = settings.CLERK_PEM_PUBLIC_KEY
     # 3. Remote JWKS endpoint
-    elif settings.CLERK_JWKS_URL:
+    elif settings.CLERK_JWKS_URL or settings.CLERK_PUBLISHABLE_KEY:
         client = get_jwks_client()
         if client is not None:
             try:
                 signing_key = client.get_signing_key_from_jwt(token).key
             except Exception as e:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail={
-                        "error": {
-                            "code": "invalid_token",
-                            "message": f"Unable to find signing key: {str(e)}",
-                            "request_id": str(uuid.uuid4()),
-                        }
-                    },
-                )
+                # Fallback to symmetric secret key if token is HS256
+                if settings.CLERK_SECRET_KEY:
+                    signing_key = settings.CLERK_SECRET_KEY
+                else:
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail={
+                            "error": {
+                                "code": "invalid_token",
+                                "message": f"Unable to find signing key: {str(e)}",
+                                "request_id": str(uuid.uuid4()),
+                            }
+                        },
+                    )
     # 4. Secret key fallback (if using HS256 in test/local dev)
     elif settings.CLERK_SECRET_KEY:
         signing_key = settings.CLERK_SECRET_KEY

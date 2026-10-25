@@ -1,5 +1,13 @@
 # text.md — Allcited website content, page by page
 
+---
+
+## PAGE 0 — AUTH SCREEN (shown when entering the workspace, before chat)
+- Card: Sign in / Create account — Email OTP · Google
+- Equal-weight button below: **Continue without login**
+- Line under it (mono, ghost): Guest mode: everything works, nothing is saved. Sign in later to keep your documents.
+---
+
 > **The final text, organized by page → section → heading → text under it.** This is v4 ultra-simple copy (per ALLCITED.md §4D). Builder rule: each text goes exactly under its heading, verbatim. In-app chat strings (composer, refusals, errors) are unchanged and stay in ALLCITED.md §4.
 
 ---
@@ -22,7 +30,7 @@
 - Heading (H1): **Answers, with receipts.**
 - Text under heading: Upload a document. Ask any question. Every answer shows where it came from.
 - Buttons: **Try it free** (primary) · **See how it works** (ghost)
-- Small line (mono): No account needed · Nothing is saved · We publish our test scores
+- Small line (mono): Sign in or continue as guest · Nothing is saved unless you keep it · We publish our test scores
 - Tech strip (mono, one line): React · Next.js · TypeScript · FastAPI · RAG pipeline: BM25 + FAISS + cross-encoder re-ranking · Llama on Groq
 
 ### Section: RAG explainer
@@ -40,7 +48,8 @@
 
 ### Section: Live demo
 - Eyebrow: TRY IT
-- Heading (H2): **Try it right here. No signup.**
+- Heading (H2): **Try it right here.**
+- Text under heading (add): Guest mode available — no account needed.
 - Text under heading: This is a real answer from a sample handbook. Click any citation. See the exact lines it came from.
 - Demo box internals (machine voice, mono): `Sample: Employee Handbook` · `Q: Can I carry my leaves forward?` · stage line: `searching → re-reading → writing` · streamed answer ending with citation `[S1] Carry Forward` · button: **Replay**
 - Privacy checks (under the demo, with ✓):
@@ -83,7 +92,7 @@
   5 **Two-hop resolution** — "as per rule 63.7.4" → we fetch that rule's definition too
   6 **Grounded generation** — the LLM writes from the selected passages only, or refuses
   7 **Citation post-pass** — every [S1] marker verified against a real passage before streaming
-- Button at the end: **Try Allcited — no signup**
+- Button at the end: **Try Allcited free**
 
 ---
 
@@ -202,7 +211,7 @@
 - Text under heading: Keep your documents here. Ask questions across all of them, anytime. Private to your account.
 
 ### Section: Empty state (signed out)
-- Text: Asking is free and needs no account. To keep documents between visits, sign in.
+- Text: Continue as guest to ask right away — or sign in to keep documents between visits.
 - Buttons: **Sign in to start your shelf** · Keep asking without one (ghost)
 
 ### Section: Unavailable state (shelf down)

@@ -98,6 +98,12 @@ def post_pass_citations(
     if not raw_answer:
         return "", []
 
+    # Normalize full-width brackets from multilingual LLMs (e.g. 【S1】 -> [S1])
+    raw_answer = raw_answer.replace("【", "[").replace("】", "]")
+    # Normalize verbose markers like [Source: S1] or (Source: S1) to standard [S1]
+    raw_answer = re.sub(r"\[Source:\s*S(\d+)\]", r"[S\1]", raw_answer, flags=re.IGNORECASE)
+    raw_answer = re.sub(r"\(Source:\s*S(\d+)\)", r"[S\1]", raw_answer, flags=re.IGNORECASE)
+
     # If the response is a refusal, zero citations
     if ABSENT_REFUSAL_TEXT in raw_answer or FRIENDLY_REFUSAL_TEXT in raw_answer:
         return raw_answer.strip(), []
@@ -431,6 +437,8 @@ async def stream_answer_pipeline(
         )
 
     brain_client = get_brain_client()
+    brain_client.last_used_provider = provider.provider_type
+    brain_client.last_used_model = provider.model
     raw_accumulated = ""
     total_tokens = 0
 
@@ -463,6 +471,9 @@ async def stream_answer_pipeline(
     latencies["total_ms"] = round((time.perf_counter() - t_start) * 1000, 2)
 
     # Record persistent trace
+    actual_provider = getattr(brain_client, "last_used_provider", "") or provider.provider_type
+    actual_model = getattr(brain_client, "last_used_model", "") or provider.model
+
     _, prompt_hash = get_grounded_system_prompt()
     get_trace_manager().record_trace(
         TraceRecord(
@@ -484,8 +495,8 @@ async def stream_answer_pipeline(
             hyde_enabled=settings.HYDE_ENABLED,
             agentic_iterations=agentic_iterations,
             best_available_sources=best_available_sources,
-            provider=provider.provider_type,
-            model=provider.model,
+            provider=actual_provider,
+            model=actual_model,
             total_tokens=total_tokens,
             citations=[c.model_dump() for c in citations],
             latencies_ms=latencies,
@@ -501,7 +512,7 @@ async def stream_answer_pipeline(
         query=query,
         answer=cleaned_answer,
         citations=[c.model_dump() for c in citations],
-        model=provider.model,
+        model=actual_model,
         refused=is_refusal,
         filename=getattr(session, "filename", None),
     )
@@ -516,7 +527,8 @@ async def stream_answer_pipeline(
         {
             "answer": cleaned_answer,
             "question_id": qid,
-            "model": provider.model,
+            "provider": actual_provider,
+            "model": actual_model,
             "refused": is_refusal,
             "total_tokens": total_tokens,
             "injection_flagged": injection_flagged,

@@ -5,14 +5,7 @@ import { Citation, PipelineStage } from "@/lib/sse";
 import { CitationChip } from "./CitationChip";
 import { TraceViewer } from "./TraceViewer";
 import { StageChip } from "./ui/StageChip";
-import {
-  User,
-  ShieldAlert,
-  ThumbsUp,
-  ThumbsDown,
-  Zap,
-  Sparkles,
-} from "lucide-react";
+import { ShieldAlert, ThumbsUp, ThumbsDown, Sparkles } from "lucide-react";
 
 export interface ChatMessage {
   id: string;
@@ -23,6 +16,7 @@ export interface ChatMessage {
   citations?: Citation[];
   refused?: boolean;
   cached?: boolean;
+  provider?: string;
   model?: string;
   totalTokens?: number;
   questionId?: string;
@@ -69,7 +63,7 @@ export function Message({ message, onCitationClick }: MessageProps) {
   const citationsMap = new Map<string, Citation>();
   (message.citations || []).forEach((c) => {
     citationsMap.set(c.label, c);
-    const stripped = c.label.replace(/\s*\(OCR\)/, "").trim();
+    const stripped = c.label.replace(/\s*\(OCR\)/gi, "").trim();
     if (stripped) {
       citationsMap.set(stripped, c);
     }
@@ -79,7 +73,8 @@ export function Message({ message, onCitationClick }: MessageProps) {
   const renderFormattedText = (text: string) => {
     if (!text) return null;
 
-    const parts = text.split(/(\[S\d+(?:\s*\(OCR\))?\])/g);
+    const normalizedText = text.replace(/【/g, "[").replace(/】/g, "]");
+    const parts = normalizedText.split(/(\[S\d+(?:\s*\(OCR\))?\])/g);
     return parts.map((part, idx) => {
       const match = part.match(/\[S(\d+)(?:\s*\(OCR\))?\]/);
       if (match) {
@@ -99,16 +94,12 @@ export function Message({ message, onCitationClick }: MessageProps) {
     });
   };
 
+  // User Message Turn
   if (isUser) {
     return (
-      <div className="flex justify-end mb-4 animate-fade-in">
-        <div className="flex gap-2 max-w-[85%] md:max-w-[75%] flex-row-reverse">
-          <div className="w-7 h-7 rounded-full bg-bg-sunken border border-border text-ink-primary flex items-center justify-center flex-shrink-0 text-xs font-semibold shadow-xs">
-            <User className="w-3.5 h-3.5" />
-          </div>
-          <div className="bg-bg-sunken text-ink-primary border border-border px-4 py-2.5 rounded-interactive text-sm leading-relaxed shadow-xs">
-            <p className="whitespace-pre-wrap">{message.content}</p>
-          </div>
+      <div className="flex justify-end animate-fade-in">
+        <div className="bg-bg-surface text-ink-primary border border-border px-4 py-2.5 rounded-interactive text-sm leading-relaxed shadow-xs max-w-[85%]">
+          <p className="whitespace-pre-wrap">{message.content}</p>
         </div>
       </div>
     );
@@ -134,14 +125,14 @@ export function Message({ message, onCitationClick }: MessageProps) {
     message.stage !== "idle";
 
   return (
-    <div className="flex justify-start mb-6 animate-fade-in">
-      <div className="flex gap-3 max-w-[95%] md:max-w-[88%] w-full">
-        {/* Machine Voice Indicator */}
-        <div className="w-7 h-7 rounded-full bg-accent-primary/10 border border-accent-primary/20 text-accent-primary flex items-center justify-center flex-shrink-0 shadow-xs mt-0.5">
-          <span className="font-mono text-xs font-semibold">§</span>
+    <div className="flex justify-start animate-fade-in w-full">
+      <div className="flex gap-3 w-full">
+        {/* [A] Wordmark Chip per §6.9 wireframe */}
+        <div className="w-6 h-6 rounded bg-bg-sunken border border-border text-[#CC5A3F] dark:text-[#E8765A] flex items-center justify-center flex-shrink-0 text-[11px] font-mono font-bold select-none mt-1 shadow-2xs">
+          A
         </div>
 
-        <div className="flex-1 space-y-2">
+        <div className="flex-1 space-y-2 min-w-0">
           {/* Active Pipeline Stage Status Line */}
           {isPending && message.stage && (
             <div className="flex items-center gap-2">
@@ -163,9 +154,9 @@ export function Message({ message, onCitationClick }: MessageProps) {
 
           {/* Refusal Card 1: Off-Topic per §4 copy freeze */}
           {isOffTopic ? (
-            <div className="p-4 rounded-interactive border border-danger/30 bg-bg-surface border-l-4 border-l-danger text-ink-primary shadow-xs space-y-1.5 animate-fade-in">
+            <div className="p-4 rounded-interactive border border-border bg-bg-surface border-l-[3px] border-l-[#CC5A3F] dark:border-l-[#E8765A] text-ink-primary shadow-xs space-y-1.5 animate-fade-in">
               <div className="flex items-center gap-2">
-                <ShieldAlert className="w-4 h-4 text-danger flex-shrink-0" />
+                <ShieldAlert className="w-4 h-4 text-[#CC5A3F] dark:text-[#E8765A] flex-shrink-0" />
                 <h3 className="font-semibold text-sm font-display text-ink-primary">
                   I only answer from your document.
                 </h3>
@@ -175,10 +166,10 @@ export function Message({ message, onCitationClick }: MessageProps) {
               </p>
             </div>
           ) : isNotInDoc ? (
-            /* Refusal Card 2: Not in the document per §4 copy freeze */
-            <div className="p-4 rounded-interactive border border-danger/30 bg-bg-surface border-l-4 border-l-danger text-ink-primary shadow-xs space-y-1.5 animate-fade-in">
+            /* Refusal Card 2: Not in document per §4 copy freeze */
+            <div className="p-4 rounded-interactive border border-border bg-bg-surface border-l-[3px] border-l-[#CC5A3F] dark:border-l-[#E8765A] text-ink-primary shadow-xs space-y-1.5 animate-fade-in">
               <div className="flex items-center gap-2">
-                <ShieldAlert className="w-4 h-4 text-danger flex-shrink-0" />
+                <ShieldAlert className="w-4 h-4 text-[#CC5A3F] dark:text-[#E8765A] flex-shrink-0" />
                 <h3 className="font-semibold text-sm font-display text-ink-primary">
                   Honestly? This document doesn&apos;t say.
                 </h3>
@@ -188,138 +179,105 @@ export function Message({ message, onCitationClick }: MessageProps) {
               </p>
             </div>
           ) : (
-            /* Normal Streaming / Answer Card */
+            /* Normal Grounded Answer Card */
             <div className="p-4 rounded-interactive border border-border bg-bg-surface text-ink-primary shadow-xs">
-              <div className="text-sm leading-relaxed prose prose-neutral dark:prose-invert max-w-none break-words">
+              <div className="text-[14px] leading-relaxed prose prose-neutral dark:prose-invert max-w-none break-words">
                 {renderFormattedText(message.content)}
                 {/* Blinking hot accent caret when composing */}
                 {isPending && (
                   <span className="inline-block w-1.5 h-4 ml-1 bg-accent-hot animate-pulse align-middle" />
                 )}
               </div>
-
-              {/* Sequential Citation Chips if citations exist */}
-              {message.citations && message.citations.length > 0 && (
-                <div className="mt-3.5 pt-3 border-t border-border/60 flex flex-wrap items-center gap-1.5">
-                  <span className="font-mono text-[11px] text-gray-warm mr-1">
-                    Sources:
-                  </span>
-                  {message.citations.map((c, idx) => (
-                    <span
-                      key={c.label}
-                      style={{ animationDelay: `${idx * 60}ms` }}
-                      className="animate-fade-in"
-                    >
-                      <CitationChip
-                        citation={c}
-                        onClick={(cit) => onCitationClick?.(cit, message.citations)}
-                      />
-                    </span>
-                  ))}
-                </div>
-              )}
             </div>
           )}
 
-          {/* Answer Footer per §4 copy freeze */}
-          {message.stage === "done" && (
-            <div className="flex flex-wrap items-center justify-between text-[11px] text-gray-warm px-1 pt-0.5 gap-2">
-              <div className="flex items-center gap-2">
-                {message.cached && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-accent-primary/10 text-accent-primary border border-accent-primary/30">
-                    <Zap className="w-3 h-3 text-accent-primary" />
-                    instant · cached
-                  </span>
-                )}
-                {message.totalTokens !== undefined && (
-                  <span className="font-mono">{message.totalTokens} tokens</span>
-                )}
-              </div>
+          {/* Answer Meta Row per §6.9 wireframe: Right? 👍 👎 · Why this answer? (NO tokens) */}
+          {message.stage === "done" && message.questionId && (
+            <div className="flex items-center justify-between text-[11px] text-gray-warm pt-1 px-1">
+              {/* Feedback: Right? 👍 👎 */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] text-gray-warm">Right?</span>
+                <button
+                  type="button"
+                  onClick={() => handleFeedback(1)}
+                  aria-label="Thumbs up"
+                  className={`p-1 rounded-[4px] transition-colors cursor-pointer ${
+                    feedback === "up"
+                      ? "text-accent-primary bg-accent-primary/10"
+                      : "text-ink-ghost hover:text-ink-primary hover:bg-bg-sunken"
+                  }`}
+                >
+                  <ThumbsUp className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleFeedback(-1)}
+                  aria-label="Thumbs down"
+                  className={`p-1 rounded-[4px] transition-colors cursor-pointer ${
+                    feedback === "down"
+                      ? "text-[#CC5A3F] bg-[#CC5A3F]/10"
+                      : "text-ink-ghost hover:text-ink-primary hover:bg-bg-sunken"
+                  }`}
+                >
+                  <ThumbsDown className="w-3.5 h-3.5" />
+                </button>
 
-              <div className="flex items-center gap-3">
-                {/* "Why this answer?" per §4 */}
-                {message.questionId && (
-                  <button
-                    type="button"
-                    onClick={() => setShowTrace(true)}
-                    className="flex items-center gap-1 text-[11px] text-accent-primary hover:underline font-medium transition-colors"
+                {/* Explicit indicator when NVIDIA NIM answered as failover brain */}
+                {(message.provider === "nvidia" ||
+                  message.model?.toLowerCase().includes("nvidia") ||
+                  message.model?.toLowerCase().includes("llama-3.2-11b")) && (
+                  <span
+                    className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono bg-[#76B900]/10 text-[#76B900] border border-[#76B900]/30 font-semibold"
+                    title="Answered by NVIDIA NIM Cloud Fallback Brain"
                   >
-                    <Sparkles className="w-3.5 h-3.5 text-accent-primary" />
-                    Why this answer?
-                  </button>
-                )}
-
-                {/* Feedback: Right? 👍 👎 per §4 */}
-                {message.questionId && (
-                  <div className="flex items-center gap-1 border-l border-border pl-2.5">
-                    <span className="text-[11px] text-gray-warm mr-1">Right?</span>
-                    <button
-                      type="button"
-                      onClick={() => handleFeedback(1)}
-                      aria-label="Thumbs up"
-                      className={`p-1 rounded-[4px] transition-colors ${
-                        feedback === "up"
-                          ? "text-accent-primary bg-accent-primary/10"
-                          : "text-ink-ghost hover:text-ink-primary hover:bg-bg-sunken"
-                      }`}
-                    >
-                      <ThumbsUp className="w-3.5 h-3.5" />
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleFeedback(-1)}
-                      aria-label="Thumbs down"
-                      className={`p-1 rounded-[4px] transition-colors ${
-                        feedback === "down"
-                          ? "text-danger bg-danger/10"
-                          : "text-ink-ghost hover:text-ink-primary hover:bg-bg-sunken"
-                      }`}
-                    >
-                      <ThumbsDown className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#76B900]" />
+                    NVIDIA NIM
+                  </span>
                 )}
               </div>
+
+              {/* "Why this answer?" modal trigger */}
+              <button
+                type="button"
+                onClick={() => setShowTrace(true)}
+                className="flex items-center gap-1 text-[11px] text-accent-primary hover:underline font-medium transition-colors cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-accent-primary" />
+                <span>Why this answer?</span>
+              </button>
             </div>
           )}
 
-          {/* Feedback note input */}
+          {/* Optional Feedback Note Input */}
           {showNoteInput && (
-            <div className="mt-2 p-2.5 rounded-interactive bg-bg-sunken border border-border flex items-center gap-2 animate-fade-in">
+            <div className="mt-2 p-2 rounded-interactive bg-bg-surface border border-border flex items-center gap-2">
               <input
                 type="text"
-                placeholder="What was inaccurate or missing? (optional)"
                 value={feedbackNote}
                 onChange={(e) => setFeedbackNote(e.target.value)}
-                className="flex-1 bg-bg-surface border border-border px-2.5 py-1 rounded-input text-xs text-ink-primary focus:outline-none focus:ring-1 focus:ring-accent-primary"
+                placeholder="What went wrong? (optional)"
+                className="flex-1 bg-transparent text-xs text-ink-primary outline-none placeholder:text-ink-ghost"
               />
               <button
                 type="button"
                 onClick={() => handleFeedback(-1, feedbackNote)}
-                className="px-2.5 py-1 bg-accent-primary text-primary-foreground rounded-input text-xs font-medium hover:brightness-95 transition-colors"
+                className="text-xs px-2 py-1 rounded bg-bg-sunken hover:bg-bg-hover text-ink-primary font-medium"
               >
                 Submit
               </button>
-              <button
-                type="button"
-                onClick={() => setShowNoteInput(false)}
-                className="p-1 text-ink-ghost hover:text-ink-primary text-xs"
-              >
-                Cancel
-              </button>
             </div>
-          )}
-
-          {message.questionId && (
-            <TraceViewer
-              questionId={message.questionId}
-              isOpen={showTrace}
-              onClose={() => setShowTrace(false)}
-            />
           )}
         </div>
       </div>
+
+      {/* Trace Modal Inspector */}
+      {showTrace && message.questionId && (
+        <TraceViewer
+          questionId={message.questionId}
+          isOpen={showTrace}
+          onClose={() => setShowTrace(false)}
+        />
+      )}
     </div>
   );
 }

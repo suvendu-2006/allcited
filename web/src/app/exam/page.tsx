@@ -14,84 +14,46 @@ import {
   TableCell,
 } from "@/components/ui/Table";
 import { motion } from "framer-motion";
+import evalData from "@/data/eval_results.json";
 
-const SCOREBOARD_ROWS = [
-  {
-    measure: "Finding the right passage",
-    means: "we find it in our top 5 picks",
-    target: "≥85%",
-    measured: "87.2%",
-    status: "Pass",
-  },
-  {
-    measure: "No made-up answers",
-    means: "zero unsupported claims across all 46 questions",
-    target: "≥90%",
-    measured: "94.1%",
-    status: "Pass",
-  },
-  {
-    measure: "Correct refusals",
-    means: "says \"not in this document\" when true",
-    target: "≥95%",
-    measured: "98.0%",
-    status: "Pass",
-  },
-  {
-    measure: "Rule lookups resolved",
-    means: "cited rules fetched automatically",
-    target: "≥85%",
-    measured: "91.3%",
-    status: "Pass",
-  },
-  {
-    measure: "Table accuracy",
-    means: "numbers read from tables correctly",
-    target: "≥80%",
-    measured: "89.4%",
-    status: "Pass",
-  },
-  {
-    measure: "Scanned-file reading (OCR)",
-    means: "answers from photographed documents",
-    target: "≥80%",
-    measured: "85.6%",
-    status: "Pass",
-  },
-];
+interface ScoreboardRow {
+  measure: string;
+  means: string;
+  target: string;
+  measured: string;
+  status: string;
+}
 
-const WHAT_WE_TEST_CATEGORIES = [
-  {
-    name: "Answers split across two pages",
-    score: "9/10",
-    meaning: "the answer starts on one page, ends on the next",
-  },
-  {
-    name: "Answers that need a second lookup",
-    score: "8/8",
-    meaning: "the answer cites a rule, so we fetch that rule too",
-  },
-  {
-    name: "Questions the document can't answer",
-    score: "8/8",
-    meaning: "refusing correctly counts as passing",
-  },
-  {
-    name: "Tables and numbers",
-    score: "7/8",
-    meaning: "leave balances and financial tables",
-  },
-  {
-    name: "Trick phrasings",
-    score: "6/7",
-    meaning: "casual words that mean strict legal terms",
-  },
-  {
-    name: "Files that try to trick the AI",
-    score: "5/5",
-    meaning: "documents containing hidden instructions",
-  },
-];
+interface CategoryCard {
+  name: string;
+  score: string;
+  meaning: string;
+}
+
+interface PipelineRow {
+  config: string;
+  retrieval_hit_rate: number;
+  category_hit_rates: Record<string, number | undefined>;
+  refusal_accuracy: number;
+  answer_correctness: number;
+  latency_p50_ms: number;
+  latency_p95_ms: number;
+}
+
+interface ChunkingRow {
+  strategy: string;
+  chunk_count: number;
+  avg_tokens: number;
+  retrieval_hit_rate: number;
+  category_hit_rates: Record<string, number | undefined>;
+  answer_correctness: number;
+  notes: string;
+}
+
+const SCOREBOARD_ROWS = evalData.scoreboard as ScoreboardRow[];
+const WHAT_WE_TEST_CATEGORIES = evalData.what_we_test as CategoryCard[];
+const PIPELINE_ROWS = evalData.pipeline_ablation as unknown as PipelineRow[];
+const CHUNKING_ROWS = evalData.chunking_comparison as unknown as ChunkingRow[];
 
 export default function ExamPage() {
   return (
@@ -229,6 +191,128 @@ export default function ExamPage() {
             </TableBody>
           </Table>
         </section>
+
+        {/* Section: Pipeline Ablation Matrix */}
+        {PIPELINE_ROWS && PIPELINE_ROWS.length > 0 && (
+          <section className="space-y-4">
+            <div className="space-y-1">
+              <h2 className="text-2xl font-semibold text-ink-primary font-display">
+                Pipeline Ablation Matrix
+              </h2>
+              <p className="text-xs text-gray-warm">
+                Empirical hit-rates across all 11 pipeline layers on the 46-question benchmark.
+              </p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Config</TableHead>
+                    <TableHead>Hit Rate</TableHead>
+                    <TableHead>Normal</TableHead>
+                    <TableHead>Boundary (P1)</TableHead>
+                    <TableHead>Distractor (P2)</TableHead>
+                    <TableHead>Two-Hop (P3)</TableHead>
+                    <TableHead>Paraphrase</TableHead>
+                    <TableHead>Refusal</TableHead>
+                    <TableHead>p50 (ms)</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {PIPELINE_ROWS.map((row) => (
+                    <TableRow key={row.config}>
+                      <TableCell className="font-mono text-xs font-semibold text-ink-primary">
+                        {row.config}
+                      </TableCell>
+                      <TableCell className="font-mono text-xs font-bold text-accent-primary">
+                        {row.retrieval_hit_rate}%
+                      </TableCell>
+                      <TableCell className="font-mono text-xs text-gray-warm">
+                        {row.category_hit_rates?.normal ?? 0}%
+                      </TableCell>
+                      <TableCell className="font-mono text-xs text-gray-warm">
+                        {row.category_hit_rates?.P1 ?? 0}%
+                      </TableCell>
+                      <TableCell className="font-mono text-xs text-gray-warm">
+                        {row.category_hit_rates?.P2 ?? 0}%
+                      </TableCell>
+                      <TableCell className="font-mono text-xs text-gray-warm">
+                        {row.category_hit_rates?.P3 ?? 0}%
+                      </TableCell>
+                      <TableCell className="font-mono text-xs text-gray-warm">
+                        {row.category_hit_rates?.paraphrase ?? 0}%
+                      </TableCell>
+                      <TableCell className="font-mono text-xs text-gray-warm">
+                        {row.refusal_accuracy}%
+                      </TableCell>
+                      <TableCell className="font-mono text-xs text-gray-warm">
+                        {row.latency_p50_ms}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </section>
+        )}
+
+        {/* Section: Chunking Strategy A/B Comparison */}
+        {CHUNKING_ROWS && CHUNKING_ROWS.length > 0 && (
+          <section className="space-y-4">
+            <div className="space-y-1">
+              <h2 className="text-2xl font-semibold text-ink-primary font-display">
+                Chunking Strategy Comparison (A/B)
+              </h2>
+              <p className="text-xs text-gray-warm">
+                Comparing chunk size (300 vs 500 tokens), overlap (0% vs 15%), and section-aware semantic chunking.
+              </p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Strategy</TableHead>
+                    <TableHead>Chunks</TableHead>
+                    <TableHead>Avg Tokens</TableHead>
+                    <TableHead>Retrieval Hit</TableHead>
+                    <TableHead>Boundary (P1)</TableHead>
+                    <TableHead>Paraphrase</TableHead>
+                    <TableHead>Key Trade-Off</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {CHUNKING_ROWS.map((row) => (
+                    <TableRow key={row.strategy}>
+                      <TableCell className="font-medium text-xs text-ink-primary">
+                        {row.strategy}
+                      </TableCell>
+                      <TableCell className="font-mono text-xs text-gray-warm">
+                        {row.chunk_count}
+                      </TableCell>
+                      <TableCell className="font-mono text-xs text-gray-warm">
+                        {row.avg_tokens}
+                      </TableCell>
+                      <TableCell className="font-mono text-xs font-bold text-accent-primary">
+                        {row.retrieval_hit_rate}%
+                      </TableCell>
+                      <TableCell className="font-mono text-xs text-gray-warm">
+                        {row.category_hit_rates?.P1 ?? 0}%
+                      </TableCell>
+                      <TableCell className="font-mono text-xs text-gray-warm">
+                        {row.category_hit_rates?.paraphrase ?? 0}%
+                      </TableCell>
+                      <TableCell className="text-xs text-gray-warm">
+                        {row.notes}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </section>
+        )}
 
         {/* Footer CTA */}
         <div className="text-center py-4">

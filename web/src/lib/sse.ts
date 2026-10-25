@@ -39,6 +39,7 @@ export interface StreamQueryOptions {
   onDone?: (data: {
     answer: string;
     question_id: string;
+    provider?: string;
     model?: string;
     refused?: boolean;
     cached?: boolean;
@@ -202,6 +203,7 @@ export async function streamQuery(options: StreamQueryOptions): Promise<void> {
             onDone?.({
               answer: typeof parsedData.answer === "string" ? parsedData.answer : "",
               question_id: typeof parsedData.question_id === "string" ? parsedData.question_id : "",
+              provider: typeof parsedData.provider === "string" ? parsedData.provider : undefined,
               model: typeof parsedData.model === "string" ? parsedData.model : undefined,
               refused: typeof parsedData.refused === "boolean" ? parsedData.refused : undefined,
               cached: typeof parsedData.cached === "boolean" ? parsedData.cached : undefined,

@@ -134,6 +134,8 @@ def chunk_telegram_text(text: str, max_chars: int = 4000) -> List[str]:
 
 def format_telegram_answer(answer: str, citations: List[CitationItem]) -> str:
     """Format answer with structured, readable citation receipts for Telegram."""
+    # Normalize full-width brackets from multilingual LLMs
+    answer = answer.replace("【", "[").replace("】", "]")
     if not citations:
         return answer
 
@@ -292,6 +294,133 @@ async def handle_question_query(
             await tg.send_message(chat_id=chat_id, text=error_text)
 
 
+async def process_telegram_update(body: Dict[str, Any]) -> None:
+    """Process an incoming Telegram update (from webhook or long-poller)."""
+    message = body.get("message") or body.get("edited_message")
+    if not message:
+        return
+
+    chat = message.get("chat", {})
+    chat_id = chat.get("id")
+    if not chat_id:
+        return
+
+    tg = get_telegram_client()
+
+    # Acquire per-chat lock for flood-safe queueing
+    if chat_id not in chat_locks:
+        chat_locks[chat_id] = asyncio.Lock()
+    lock = chat_locks[chat_id]
+
+    async with lock:
+        # 1. Document upload
+        document = message.get("document")
+        if document:
+            file_id = document.get("file_id")
+            file_name = document.get("file_name", "document.pdf")
+            await handle_document_upload(
+                tg=tg,
+                chat_id=chat_id,
+                file_id=file_id,
+                file_name=file_name,
+            )
+            return
+
+        # 2. Text command or question
+        text = message.get("text", "").strip()
+        if not text:
+            return
+
+        if text.startswith("/start"):
+            welcome_text = (
+                "👋 *Welcome to Allcited!*\n\n"
+                "I answer questions grounded *strictly* in your documents with verifiable inline citations.\n\n"
+                "📌 *How to use:*\n"
+                "1. Send me a document (PDF, DOCX, PPTX, XLSX, TXT).\n"
+                "2. Ask any question.\n"
+                "3. Receive accurate answers with inline `[S#]` citations and source receipts.\n\n"
+                "Commands:\n"
+                "/doc — View current active document info\n"
+                "/clear — Clear current document session"
+            )
+            await tg.send_message(chat_id=chat_id, text=welcome_text)
+            return
+
+        if text.startswith("/clear"):
+            chat_sessions.pop(chat_id, None)
+            await tg.send_message(chat_id=chat_id, text="🧹 Active document session cleared.")
+            return
+
+        if text.startswith("/doc"):
+            session_id = chat_sessions.get(chat_id)
+            if not session_id:
+                await tg.send_message(chat_id=chat_id, text="No active document. Send a document to index.")
+            else:
+                store = get_session_store()
+                sess = store.get_session(session_id)
+                if sess:
+                    await tg.send_message(
+                        chat_id=chat_id,
+                        text=(
+                            f"📄 *Active Document:* `{sess.filename}`\n"
+                            f"• Pages: {sess.page_count}\n"
+                            f"• Passages: {len(sess.chunks)}\n"
+                            f"• Session ID: `{sess.session_id}`"
+                        ),
+                    )
+                else:
+                    await tg.send_message(chat_id=chat_id, text="Document session has expired.")
+            return
+
+        # 3. Question query
+        await handle_question_query(
+            tg=tg,
+            chat_id=chat_id,
+            query=text,
+        )
+
+
+async def run_telegram_polling() -> None:
+    """Long-polling background worker for immediate local testing without webhooks or ngrok."""
+    settings = get_settings()
+    token = settings.TELEGRAM_BOT_TOKEN
+    if not token:
+        logger.info("No TELEGRAM_BOT_TOKEN configured; telegram poller is idle.")
+        return
+
+    logger.info("Starting Allcited Telegram long-polling worker...")
+    offset = 0
+
+    # Ensure any previous webhook registration is cleared so getUpdates works
+    async with httpx.AsyncClient(timeout=20.0) as client:
+        try:
+            await client.post(f"https://api.telegram.org/bot{token}/deleteWebhook")
+        except Exception as e:
+            logger.warning("Could not delete webhook for polling: %s", e)
+
+    async with httpx.AsyncClient(timeout=35.0) as client:
+        while True:
+            try:
+                url = f"https://api.telegram.org/bot{token}/getUpdates"
+                params = {"offset": offset, "timeout": 20}
+                resp = await client.get(url, params=params)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    for update in data.get("result", []):
+                        offset = update["update_id"] + 1
+                        asyncio.create_task(process_telegram_update(update))
+                elif resp.status_code == 409:
+                    await asyncio.sleep(2)
+                else:
+                    await asyncio.sleep(1)
+            except asyncio.CancelledError:
+                logger.info("Telegram long-polling worker cancelled.")
+                break
+            except Exception as e:
+                logger.warning("Telegram polling error: %s", e)
+                await asyncio.sleep(3)
+
+
 @router.post(
     "/webhook",
     response_model=TelegramWebhookResponse,
@@ -316,87 +445,5 @@ async def telegram_webhook(
             )
 
     body = await request.json()
-    message = body.get("message") or body.get("edited_message")
-    if not message:
-        return {"ok": True}
-
-    chat = message.get("chat", {})
-    chat_id = chat.get("id")
-    if not chat_id:
-        return {"ok": True}
-
-    tg = get_telegram_client()
-
-    # Acquire per-chat lock for flood-safe queueing
-    if chat_id not in chat_locks:
-        chat_locks[chat_id] = asyncio.Lock()
-    lock = chat_locks[chat_id]
-
-    async with lock:
-        # 1. Document upload
-        document = message.get("document")
-        if document:
-            file_id = document.get("file_id")
-            file_name = document.get("file_name", "document.pdf")
-            await handle_document_upload(
-                tg=tg,
-                chat_id=chat_id,
-                file_id=file_id,
-                file_name=file_name,
-            )
-            return {"ok": True}
-
-        # 2. Text command or question
-        text = message.get("text", "").strip()
-        if not text:
-            return {"ok": True}
-
-        if text.startswith("/start"):
-            welcome_text = (
-                "👋 *Welcome to Allcited!*\n\n"
-                "I answer questions grounded *strictly* in your documents with verifiable inline citations.\n\n"
-                "📌 *How to use:*\n"
-                "1. Send me a document (PDF, DOCX, PPTX, XLSX, TXT).\n"
-                "2. Ask any question.\n"
-                "3. Receive accurate answers with inline `[S#]` citations and source receipts.\n\n"
-                "Commands:\n"
-                "/doc — View current active document info\n"
-                "/clear — Clear current document session"
-            )
-            await tg.send_message(chat_id=chat_id, text=welcome_text)
-            return {"ok": True}
-
-        if text.startswith("/clear"):
-            chat_sessions.pop(chat_id, None)
-            await tg.send_message(chat_id=chat_id, text="🧹 Active document session cleared.")
-            return {"ok": True}
-
-        if text.startswith("/doc"):
-            session_id = chat_sessions.get(chat_id)
-            if not session_id:
-                await tg.send_message(chat_id=chat_id, text="No active document. Send a document to index.")
-            else:
-                store = get_session_store()
-                sess = store.get_session(session_id)
-                if sess:
-                    await tg.send_message(
-                        chat_id=chat_id,
-                        text=(
-                            f"📄 *Active Document:* `{sess.filename}`\n"
-                            f"• Pages: {sess.page_count}\n"
-                            f"• Passages: {len(sess.chunks)}\n"
-                            f"• Session ID: `{sess.session_id}`"
-                        ),
-                    )
-                else:
-                    await tg.send_message(chat_id=chat_id, text="Document session has expired.")
-            return {"ok": True}
-
-        # 3. Question query
-        await handle_question_query(
-            tg=tg,
-            chat_id=chat_id,
-            query=text,
-        )
-
+    await process_telegram_update(body)
     return {"ok": True}

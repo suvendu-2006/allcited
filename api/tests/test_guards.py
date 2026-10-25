@@ -159,4 +159,5 @@ def test_e2e_fixture_doc_with_injection_neutralized_and_cited():
     assert len(citations_event["citations"]) >= 1
     assert done_event["refused"] is False
     assert "[S1]" in done_event["answer"]
-    assert "[NEUTRALIZED INSTRUCTION: IGNORE PREVIOUS INSTRUCTIONS]" in done_event["answer"]
+    normalized_answer = done_event["answer"].replace("\u202f", " ")
+    assert "[NEUTRALIZED INSTRUCTION: IGNORE PREVIOUS INSTRUCTIONS]" in normalized_answer

@@ -100,6 +100,10 @@ class SessionStore:
         self,
         filename: str,
         content: bytes,
+        target_tokens: int = 400,
+        overlap_ratio: float = 0.15,
+        section_aware: bool = False,
+        enable_headers: bool = True,
     ) -> DocumentSession:
         # 1. Enforce 20 MB cap
         file_size = len(content)
@@ -191,16 +195,29 @@ class SessionStore:
             chunks = []
             chunk_idx = 0
             for b in blocks:
-                slide_chunks = chunk_blocks([b], doc_id=session_id)
+                slide_chunks = chunk_blocks(
+                    [b],
+                    doc_id=session_id,
+                    target_tokens=target_tokens,
+                    overlap_ratio=overlap_ratio,
+                    section_aware=section_aware,
+                )
                 for sc in slide_chunks:
                     chunk_idx += 1
                     sc.id = f"{session_id}_chunk_{chunk_idx:04d}"
                     chunks.append(sc)
         else:
-            chunks = chunk_blocks(blocks, doc_id=session_id)
+            chunks = chunk_blocks(
+                blocks,
+                doc_id=session_id,
+                target_tokens=target_tokens,
+                overlap_ratio=overlap_ratio,
+                section_aware=section_aware,
+            )
 
         # 3b. Generate contextual headers (situating chunks in document hierarchy)
-        chunks = generate_structural_headers(chunks, doc_title=filename)
+        if enable_headers:
+            chunks = generate_structural_headers(chunks, doc_title=filename)
 
         # 4. Build Reference Map
         ref_map = build_reference_map(chunks)

@@ -47,7 +47,10 @@ def test_library_save_two_docs_and_query_with_doc_citations():
     Done when: a test saves 2 docs, queries library, gets citations identifying the doc of origin.
     """
     set_test_verification_key(_public_pem)
-    alice_id = "user_alice_library_test"
+    from app.library import get_library_store
+    get_library_store().reset_for_tests()
+    import uuid
+    alice_id = f"user_alice_library_test_{uuid.uuid4().hex[:8]}"
     alice_token = make_test_token(alice_id)
     headers = {"Authorization": f"Bearer {alice_token}"}
 

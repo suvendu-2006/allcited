@@ -276,7 +276,7 @@ export default function ProductPage() {
           <div className="text-center sm:text-left pt-4">
             <Link href="/?workspace=true">
               <Button variant="primary" size="lg" className="text-sm">
-                Try Allcited — no signup
+                Try Allcited free
               </Button>
             </Link>
           </div>

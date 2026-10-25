@@ -1337,3 +1337,100 @@ Add `framer-motion` to deps (the gap behind "no micro-animations"). Then impleme
 
 ## §4E addendum — Landing marquee → "proof ticker"
 The formats marquee (same line repeating) is replaced by a 10-item proof ticker: claims, real citation stamps in mono, and measured numbers — items listed verbatim in `text.md` § Landing / Proof ticker. Same motion spec (§6.4 marquee: 40s linear, pause on hover, ◆ separators in seal red). The formats line survives as one item in the rotation, not the whole strip.
+
+---
+
+# §6.9 — CHAT WORKSPACE v3 (owner verdict: layout "trash" — component-level redesign)
+
+> Triggered by the owner's screenshot review (2026-10-25, chat session with receipts panel). Theme palette stays (§6.1 Ink & Ember); the failures are **layout, hierarchy, and discipline**. Six defects → six fixes, plus a component redesign. Overrides §3/§4 where they touch the chat screen.
+
+## Defects → fixes
+
+| # | Seen in screenshot | Fix |
+|---|---|---|
+| 1 | Receipts panel permanently open, eating 25% of screen | Panel is **closed by default**; opens as a 360px drawer when a citation is clicked; closes via ×/Esc; chat stays centered underneath (drawer overlays with subtle shadow — content never reflows) |
+| 2 | Box-in-box-in-box borders (card > box > panel) | Kill all inner boxes. Receipt card = one surface: `bg/sunken`, 3px seal-red left border, no other borders |
+| 3 | Excerpts cut mid-word ("Traditi…") | 6-line clamp with **fade-out mask** + `Read the full passage →` link that expands in place |
+| 4 | Document title repeated in every receipt card | Doc title appears **once**, in the panel header: `From: OSFIC_2026_Problem_Statements_Directory.pdf`. Cards show only `section · page` |
+| 5 | Citations inline AND a "Sources:" row | Inline `[S#]` chips only — delete the Sources row (the panel IS the sources list) |
+| 6 | Off-palette blue active border · "$" avatar · stray left-edge pill · "6 tokens" · "TIME TRAVELLER 20.44" widget | Active receipt border = seal red · avatar = "A" wordmark chip (or none) · delete stray element · tokens/latency live in the trace viewer only · TIME TRAVELLER widget: **owner must define it or it ships hidden** (flag in DECISIONS.md) |
+
+## Receipt card v3 (the one component that matters here)
+
+```
+┃ [S1]   2.1 Leave Policy · p.23                    ⧉ copy
+┃
+┃ "A maximum of 8 unused annual leave days may be carried
+┃  forward into the subsequent calendar year…"
+┃  ▓▓▓▓▓▓ (6-line fade mask)          Read the full passage →
+```
+- Left border 3px seal red · bg `bg/sunken` · [S1] in mono seal red · title/page in mono ghost · excerpt in `ink/primary` at full contrast (not dimmed — v2's low-contrast gray-on-dark was unreadable)
+- Active (clicked) state: left border brightens to `#E8765A`, card lifts 1px
+- Two-hop receipts: amber left border + the existing "pulled in because…" line
+
+## Chat layout v3 (wireframe)
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│ nav left · Allcited. center · ☾  Sign in  [Open Allcited] right│  48px, one hairline
+├──────────────────────────────────────────────────────────────┤
+│ ← Back · OSFIC_2026…pdf · Engine: groq                         │  40px session bar
+│                                                                │
+│                    [ user message — right, bg/surface ]        │  max-width 640
+│                                                                │
+│   [A] ─ answer card — centered, max 640px                      │
+│         body · inline [S#] chips (seal red, hover-lift)        │
+│         Right? 👍 👎   ·   Why this answer?                    │  ← one meta row, no tokens
+│                                                                │
+├──────────────────────────────────────────────────────────────┤
+│ Ask your document anything…                          [Send]   │  composer fixed bottom
+└──────────────────────────────────────────────────────────────┘
+        + receipts drawer (360px) slides over from the right on [S#] click
+```
+
+- Chat column: centered `max-width: 640px` always — with or without the drawer. No left squeeze.
+- Vertical rhythm: 24px between turns (v2 had uneven 40–80px gaps); user bubble and answer card share the same column, answer card carries the avatar chip.
+- Composer: single surface, one hairline, focus ring teal→seal. No nested box.
+
+## Color discipline on this screen (already-lawful palette, wrongly applied)
+- Seal red `#A6362F`/`#E8765A`: action + active states ONLY (buttons, active borders, [S#] chips)
+- Amber `#E8B04B`: citation text + two-hop accents ONLY
+- Blue: **banned** on this screen (v2 leaked it into the active border)
+- Contrast: excerpt text `ink/primary` — no more dim-gray-on-dark reading surfaces
+
+## Gate
+Screenshot test after rebuild must show: panel closed on load · no inner borders in receipts · no mid-word truncation · doc title once · no Sources row · no blue pixels · no tokens in UI · chat column centered at 640px with panel open AND closed.
+
+---
+
+# §6.10 — AUTH FLOW v2: login-first with guest bypass (supersedes D-10's "gate on save only")
+
+> Owner decision (2026-10-25): the **login screen appears when entering the workspace**, before chat — with a clearly visible **"Continue without login"** option. Landing page stays public (marketing/SEO). The old claims ("no account needed", "no signup") are retired because the journey changed.
+
+## The new journey
+```
+Landing (public) ──▶ "Try it free / Open Allcited" ──▶ AUTH SCREEN
+                                                        ├─ Email OTP ┐
+                                                        ├─ Google    ┼─▶ workspace (persistent, shelf available)
+                                                        └─ "Continue without login" ─▶ workspace (guest: ephemeral, no shelf)
+```
+
+## Auth screen spec (Clerk `<SignIn/>` + custom guest path)
+- Card: sign in / create account — Email OTP + Google (per Clerk setup)
+- Below the card, visually equal-weight button: **Continue without login**
+- One line under it (mono, ghost): `Guest mode: everything works, nothing is saved. Sign in later to keep your documents.`
+- Header "Sign in" button unchanged (leads here anytime); guest session upgrade path: clicking "Save to shelf" inside guest mode prompts sign-in and carries the session across.
+
+## Copy changes (supersede earlier strings)
+| Location | Old | New |
+|---|---|---|
+| Landing trust line | Ask without an account · Sign in only to keep documents · … | **Sign in or continue as guest · Nothing is saved unless you keep it · We publish our test scores** |
+| Landing demo H2 | Try it right here. No signup. | **Try it right here.** |
+| Landing demo sub (add) | — | Guest mode available — no account needed. |
+| Product pipeline button | Try Allcited — no signup | **Try Allcited free** |
+| Nav CTA | Try it — no signup | **Open Allcited** |
+| Library empty state | Asking is free and needs no account. To keep documents between visits, sign in. | **Continue as guest to ask right away — or sign in to keep documents between visits.** |
+| Chat empty state (guest, new line) | — | Guest mode: nothing is saved. Sign in anytime to keep documents. |
+
+## Gate
+Entering the workspace always shows the auth screen first · "Continue without login" reaches chat in one click, no dead ends · no "no signup"/"no account needed" strings remain anywhere · guest upgrade path (guest → sign-in → shelf) works without losing the loaded document.

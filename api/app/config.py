@@ -23,6 +23,13 @@ class Settings(BaseSettings):
 
     # LLM / Brain settings
     GROQ_API_KEY: Optional[str] = Field(default=None, description="Groq API key for default cloud brain")
+    GROQ_API_KEYS: Union[str, List[str]] = Field(
+        default_factory=list,
+        description="Comma-separated or list of Groq API keys for failover and rate-limit rotation",
+    )
+    NVIDIA_API_KEY: Optional[str] = Field(default=None, description="NVIDIA NIM API key for ultimate cloud brain failover")
+    NVIDIA_BASE_URL: str = Field(default="https://integrate.api.nvidia.com/v1", description="Base URL for NVIDIA NIM")
+    NVIDIA_MODEL: str = Field(default="meta/llama-3.2-11b-vision-instruct", description="NVIDIA fallback model")
     OLLAMA_BASE_URL: str = Field(default="http://localhost:11434", description="Base URL for local Ollama")
     DEFAULT_LLM_MODEL: str = Field(default="llama-3.3-70b-versatile", description="Default LLM model name")
 
@@ -62,6 +69,19 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return [i.strip() for i in v.split(",") if i.strip()]
         return list(v)
+
+    @field_validator("GROQ_API_KEYS", mode="after")
+    @classmethod
+    def assemble_groq_api_keys(cls, v: Any) -> List[str]:
+        if isinstance(v, str):
+            return [i.strip() for i in v.split(",") if i.strip()]
+        return list(v) if v else []
+
+    def get_all_groq_keys(self) -> List[str]:
+        keys = list(self.GROQ_API_KEYS) if isinstance(self.GROQ_API_KEYS, list) else []
+        if self.GROQ_API_KEY and self.GROQ_API_KEY not in keys:
+            keys.insert(0, self.GROQ_API_KEY)
+        return [k for k in keys if k and k.strip()]
 
     def validate_phase_keys(self, phase: int = 1) -> List[str]:
         """Validate required keys for given build phase, returning missing var names."""

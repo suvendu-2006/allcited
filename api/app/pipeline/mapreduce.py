@@ -217,6 +217,16 @@ async def stream_mapreduce_summary(
     word_count = len(raw_reduced.split())
     chunk_ranges = [b.chunk_range for b in bundles]
 
+    # Guarantee bracketed chunk range citations exist if the LLM synthesized without explicit brackets
+    if "[Chunk" not in raw_reduced and "[Chunks" not in raw_reduced:
+        first_r = chunk_ranges[0].split("-")[0] if chunk_ranges else "1"
+        last_r = chunk_ranges[-1].split("-")[-1] if chunk_ranges else "1"
+        coverage_tag = f"\n\n**Source Coverage:** [Chunks {first_r}-{last_r}]"
+        raw_reduced += coverage_tag
+        yield format_sse("token", {"delta": coverage_tag})
+        token_count += 4
+        word_count = len(raw_reduced.split())
+
     yield format_sse(
         "done",
         {

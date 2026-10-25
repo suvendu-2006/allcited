@@ -135,6 +135,289 @@ def create_handbook_pdf(output_path: str):
                 False,
             ),
         ],
+        # Page 5: Working Hours and Overtime Matrix
+        [
+            ("6. Employee Working Hours and Scheduling", 16, True),
+            (
+                "Standard operational work hours for full-time personnel comprise 40 hours per week, typically scheduled "
+                "from 09:00 to 18:00 local business time with one hour for lunch.",
+                11,
+                False,
+            ),
+            ("6.1 Core Collaboration Windows", 13, True),
+            (
+                "All team members, regardless of approved flexible arrangements, must remain available during the mandatory "
+                "core coordination window between 10:00 and 16:00 daily.",
+                11,
+                False,
+            ),
+            ("6.2 Overtime Calculation Rates", 13, True),
+            (
+                "Overtime performed by non-exempt staff upon supervisor sign-off is reimbursed at 1.5 times the standard "
+                "hourly base rate. Weekend and national holiday shifts accrue compensation at 2.0 times the hourly base rate.",
+                11,
+                False,
+            ),
+        ],
+        # Page 6: Compensation, Payroll and Bonuses
+        [
+            ("7. Compensation Structures and Payroll Administration", 16, True),
+            (
+                "Corporate compensation reflects merit, operational accountability, and market peer benchmarks across each job family.",
+                11,
+                False,
+            ),
+            ("7.1 Monthly Remittance Schedule", 13, True),
+            (
+                "Salary disbursements are remitted via electronic funds transfer on the 25th calendar day of each operating month. "
+                "If the 25th coincides with a bank holiday, payment is disbursed on the immediately preceding business day.",
+                11,
+                False,
+            ),
+            ("7.2 Annual Merit Incentive Bonuses", 13, True),
+            (
+                "Discretionary annual bonuses are determined in accordance with organizational EBITDA objectives and individual "
+                "performance rating classifications ranging across tiers A (exceptional) through E (unsatisfactory).",
+                11,
+                False,
+            ),
+        ],
+        # Page 7: Parental, Family Care and Adoption Leave
+        [
+            ("8. Parental and Family Leave Provisions", 16, True),
+            (
+                "Allcited supports growing families with paid leave allocations for biological, adoptive, and surrogate parents.",
+                11,
+                False,
+            ),
+            ("8.1 Maternity and Primary Caregiver Leave", 13, True),
+            (
+                "Eligible primary caregivers receive up to 26 consecutive weeks of fully paid maternity leave following birth. "
+                "An additional 6 weeks of unpaid leave may be requested subject to department head concurrence.",
+                11,
+                False,
+            ),
+            ("8.2 Paternity and Secondary Caregiver Leave", 13, True),
+            (
+                "Secondary caregivers are eligible for 4 consecutive weeks of fully paid parental leave to be utilized within "
+                "the initial 12 months following birth or lawful placement.",
+                11,
+                False,
+            ),
+        ],
+        # Page 8: Travel, Expenses and Sustenance Ceilings
+        [
+            ("9. Business Travel and Entertainment Policy", 16, True),
+            (
+                "All corporate travel must be pre-approved by the cost center vice president prior to commercial booking.",
+                11,
+                False,
+            ),
+            ("9.1 Domestic Per Diem Allowances", 13, True),
+            (
+                "Employees traveling on domestic assignments are entitled to an un-receipted per diem sustenance ceiling of "
+                "$75 daily. Hotel lodging allowances are capped at $180 per night before taxes.",
+                11,
+                False,
+            ),
+            ("9.2 Private Vehicle Mileage Reimbursement", 13, True),
+            (
+                "Authorized business transit in personal vehicles is reimbursed at 58 cents per statute mile. Regular commuting "
+                "between home and assigned primary office locations is strictly non-reimbursable.",
+                11,
+                False,
+            ),
+        ],
+        # Page 9: Learning, Tuition and Professional Development
+        [
+            ("10. Professional Development and Continuing Education", 16, True),
+            (
+                "The company actively sponsors formal accreditation, engineering licenses, and graduate degree coursework.",
+                11,
+                False,
+            ),
+            ("10.1 Tuition Assistance Grants", 13, True),
+            (
+                "Full-time staff with at least one year of tenure may apply for up to $5,000 per academic year in approved "
+                "tuition grants directly relevant to corporate strategic capabilities.",
+                11,
+                False,
+            ),
+            ("10.2 Retention Clawback Commitments", 13, True),
+            (
+                "Tuition grants carry a 12-month retention agreement. Employees leaving voluntarily within 12 months must repay "
+                "100% of received funds; those departing between 12 and 24 months repay 50%.",
+                11,
+                False,
+            ),
+        ],
+        # Page 10: Hardware, Ergonomics and Asset Stewardship
+        [
+            ("11. Corporate Hardware and Asset Allocations", 16, True),
+            (
+                "Computing hardware and peripheral equipment are provisioned to meet technical job role specifications.",
+                11,
+                False,
+            ),
+            ("11.1 Laptop Provisioning Budgets", 13, True),
+            (
+                "Engineers and researchers are allocated high-performance workstations with a hardware baseline budget of $2,500. "
+                "Equipment refreshes occur on a 36-month standard lifecycle.",
+                11,
+                False,
+            ),
+            ("11.2 Home Office Ergonomic Allowance", 13, True),
+            (
+                "Full-time remote personnel are eligible for a one-time ergonomic stipend of $500 toward certified desk and seating equipment.",
+                11,
+                False,
+            ),
+        ],
+        # Page 11: Workplace Civility, Equal Opportunity and Anti-Harassment
+        [
+            ("12. Workplace Civility and Equal Opportunity", 16, True),
+            (
+                "Allcited enforces strict zero-tolerance policies regarding discrimination, intimidation, and unlawful harassment.",
+                11,
+                False,
+            ),
+            ("12.1 Equal Employment Opportunity Mandate", 13, True),
+            (
+                "Recruitment, compensation, and promotion decisions are conducted purely on qualification, competence, and merit.",
+                11,
+                False,
+            ),
+            ("12.2 Grievance Escalation Procedures", 13, True),
+            (
+                "Personnel experiencing or observing inappropriate conduct may escalate concerns through designated department leads, "
+                "the People Operations desk, or the confidential 24/7 ombudsperson channel.",
+                11,
+                False,
+            ),
+        ],
+        # Page 12: Whistleblower Protection and Compliance Audits
+        [
+            ("13. Whistleblower Protection and Integrity Oversight", 16, True),
+            (
+                "Employees are required to promptly report accounting irregularities, safety violations, or regulatory breaches.",
+                11,
+                False,
+            ),
+            ("13.1 Non-Retaliation Guarantee", 13, True),
+            (
+                "The organization strictly guarantees immunity from administrative, disciplinary, or compensation retaliation "
+                "for all good-faith whistleblower disclosures.",
+                11,
+                False,
+            ),
+            ("13.2 Independent Compliance Helpline", 13, True),
+            (
+                "Whistleblower complaints can be submitted anonymously through the third-party compliance hotline at 1-800-555-CITE "
+                "available 24 hours a day, 365 days a year.",
+                11,
+                False,
+            ),
+        ],
+        # Page 13: Contractor and Consultant Governance [DISTRACTOR SECTION]
+        [
+            ("14. External Contractor and Consultant Governance", 16, True),
+            (
+                "This section outlines terms specifically applicable to third-party consultants and fixed-term contractors.",
+                11,
+                False,
+            ),
+            ("14.1 Contractor Notice Requirements (Non-Permanent)", 13, True),
+            (
+                "Independent contractors and contingent personnel may terminate client engagements with 14 calendar days "
+                "written notice (distinguished from permanent staff obligations).",
+                11,
+                False,
+            ),
+            ("14.2 Contractor Leave and Payout Ineligibility", 13, True),
+            (
+                "Contingent workers accrue 10 service credits per contractual quarter but are strictly ineligible for annual leave "
+                "encashment, sick leave compensation, or severance settlements.",
+                11,
+                False,
+            ),
+            ("14.3 Temporary Credential Lifecycles", 13, True),
+            (
+                "Contractor accounts and guest network keys expire every 14 days and require bi-weekly project manager re-authorization.",
+                11,
+                False,
+            ),
+        ],
+        # Page 14: Regional Subsidiary Addendum: UK Operations [DISTRACTOR SECTION]
+        [
+            ("15. Regional Subsidiary Addendum: United Kingdom", 16, True),
+            (
+                "Addendum governing personnel engaged by Allcited UK Limited subject to HM Government statutory employment regulations.",
+                11,
+                False,
+            ),
+            ("15.1 UK Statutory Annual Leave", 13, True),
+            (
+                "UK-based personnel are entitled to 28 days of statutory annual holiday including recognized English public holidays.",
+                11,
+                False,
+            ),
+            ("15.2 UK Resignation and Probation Notice", 13, True),
+            (
+                "During probationary engagement, UK personnel may tender notice of 1 calendar month. Following confirmation, "
+                "the standard separation notice period of 60 calendar days applies.",
+                11,
+                False,
+            ),
+            ("15.3 Sickness Self-Certification", 13, True),
+            (
+                "UK employees may self-certify illness for up to 7 consecutive days before requiring a doctor fit-note from the NHS.",
+                11,
+                False,
+            ),
+        ],
+        # Page 15: Corporate Communications and Social Media
+        [
+            ("16. Corporate Communications and Public Engagements", 16, True),
+            (
+                "Public statements regarding corporate operations, financial trajectory, or product roadmap require executive sign-off.",
+                11,
+                False,
+            ),
+            ("16.1 Media Outreach and Interview Authorizations", 13, True),
+            (
+                "Only designated executive spokespersons may speak on behalf of Allcited during press or media interviews.",
+                11,
+                False,
+            ),
+            ("16.2 Personal Social Media Disclaimers", 13, True),
+            (
+                "Personnel publishing opinions regarding industry developments must display prominent disclaimers stating that "
+                "views expressed are personal and not endorsed by the company.",
+                11,
+                False,
+            ),
+        ],
+        # Page 16: Comprehensive Procedural and Regulatory Index
+        [
+            ("17. Regulatory and Procedural Reference Index", 16, True),
+            (
+                "Master directory cross-referencing internal governance rules and statutory forms cited across handbook chapters:",
+                11,
+                False,
+            ),
+            ("Schedule R-1: Rule Cross-References", 13, True),
+            (
+                "Rule 2.1.4: Carry-forward cap of 8 annual leave days with March 31 expiration date.\n"
+                "Rule 2.2.9: Extended critical illness disability pay as stipulated in Medical Schedule MS-4.\n"
+                "Rule 63.7.4: Separation leave settlement formula (basic monthly pay / 22 days, 30-day cap).\n"
+                "Clause 4.2: Enterprise ISO-27001 password complexity standard and 90-day cycle.\n"
+                "Clause 5.1: Private telecommuting workspace and mandatory VPN encapsulation.\n"
+                "Procedure EC-101: Conflict of interest declaration protocol to ethics committee.\n"
+                "Form HR-702: Medical practitioner certificate for sickness absences exceeding 2 days.",
+                10,
+                False,
+            ),
+        ],
     ]
 
     for page_items in pages_data:
@@ -419,7 +702,8 @@ def create_scanned_pdf(input_pdf_path: str, output_pdf_path: str):
     doc = fitz.open(input_pdf_path)
     out_doc = fitz.open()
 
-    for page in doc:
+    # Rasterize first 4 pages to keep OCR evaluation and unit tests fast and focused (covering leave, separation, security)
+    for page in list(doc)[:4]:
         pix = page.get_pixmap(dpi=150)
         out_page = out_doc.new_page(width=page.rect.width, height=page.rect.height)
         out_page.insert_image(out_page.rect, stream=pix.tobytes("jpeg"))
@@ -432,8 +716,9 @@ def create_scanned_pdf(input_pdf_path: str, output_pdf_path: str):
 
 
 if __name__ == "__main__":
-    create_handbook_pdf("eval/fixtures/handbook.pdf")
-    create_handbook_docx("eval/fixtures/handbook.docx")
-    create_sample_deck("eval/fixtures/presentation.pptx")
-    create_sample_spreadsheet("eval/fixtures/financials.xlsx")
-    create_scanned_pdf("eval/fixtures/handbook.pdf", "eval/fixtures/scanned_handbook.pdf")
+    fixtures_dir = Path(__file__).resolve().parent
+    create_handbook_pdf(str(fixtures_dir / "handbook.pdf"))
+    create_handbook_docx(str(fixtures_dir / "handbook.docx"))
+    create_sample_deck(str(fixtures_dir / "presentation.pptx"))
+    create_sample_spreadsheet(str(fixtures_dir / "financials.xlsx"))
+    create_scanned_pdf(str(fixtures_dir / "handbook.pdf"), str(fixtures_dir / "scanned_handbook.pdf"))

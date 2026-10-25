@@ -1,15 +1,70 @@
 import asyncio
 import json
+import logging
 from typing import AsyncIterator, Dict, List, Optional
 
 import httpx
 
+from app.config import get_settings
 from app.llm.provider import ResolvedProvider, resolve_provider
+
+logger = logging.getLogger(__name__)
 
 MAX_RETRIES = 3
 INITIAL_BACKOFF_SECONDS = 1.0
 TOTAL_TIMEOUT_SECONDS = 60.0
 READ_TIMEOUT_SECONDS = 30.0
+
+
+class GroqKeyPool:
+    """
+    Thread-safe rotation pool for Groq API keys.
+    Shifts requests across available keys immediately when 429 (rate-limit) occurs.
+    """
+
+    def __init__(self):
+        self._keys: List[str] = []
+        self._current_index: int = 0
+        self.refresh()
+
+    def refresh(self) -> None:
+        try:
+            settings = get_settings()
+            self._keys = settings.get_all_groq_keys()
+        except Exception:
+            self._keys = []
+
+    def get_current_key(self) -> str:
+        if not self._keys:
+            self.refresh()
+        if not self._keys:
+            return ""
+        return self._keys[self._current_index % len(self._keys)]
+
+    def shift_to_next_key(self, failed_key: Optional[str] = None) -> str:
+        """Advance to the next Groq API key when 429 hits."""
+        if not self._keys:
+            self.refresh()
+        if not self._keys:
+            return ""
+        if failed_key and self.get_current_key() != failed_key:
+            return self.get_current_key()
+        self._current_index = (self._current_index + 1) % len(self._keys)
+        new_key = self.get_current_key()
+        masked = f"...{new_key[-6:]}" if len(new_key) > 6 else "key"
+        slot = (self._current_index % len(self._keys)) + 1
+        logger.warning(
+            "Groq rate limit (429) reached on active key. Shifting request to key slot %d/%d (%s)",
+            slot,
+            len(self._keys),
+            masked,
+        )
+        return new_key
+
+    def pool_size(self) -> int:
+        if not self._keys:
+            self.refresh()
+        return len(self._keys)
 
 
 class LLMClientError(Exception):
@@ -170,7 +225,8 @@ class BrainClient:
     """
     Unified OpenAI-compatible asynchronous LLM client.
     Handles Groq, BYOK, and local Ollama through an identical protocol,
-    with 3x retries on 429/5xx, exponential backoff, and 60s timeout / 30s idle-read.
+    with automatic API key rotation on 429 rate limit across multi-key pools,
+    retries on 5xx, exponential backoff, and 60s timeout / 30s idle-read.
     """
 
     def __init__(self):
@@ -179,6 +235,9 @@ class BrainClient:
             read=READ_TIMEOUT_SECONDS,
             connect=10.0,
         )
+        self.groq_pool = GroqKeyPool()
+        self.last_used_provider: str = ""
+        self.last_used_model: str = ""
 
     def _get_headers(self, provider: ResolvedProvider) -> Dict[str, str]:
         headers = {
@@ -195,10 +254,14 @@ class BrainClient:
         max_tokens: int = 700,
     ) -> str:
         """
-        Non-streaming completion with retries on 429 and 5xx.
+        Non-streaming completion with retries on 429 and 5xx, shifting to next Groq key on 429,
+        and failing over to NVIDIA NIM when all Groq attempts are exhausted.
         """
         if provider is None:
             provider = resolve_provider()
+
+        self.last_used_provider = provider.provider_type
+        self.last_used_model = provider.model
 
         if provider.provider_type == "stub":
             return _generate_stub_response(messages)
@@ -211,10 +274,18 @@ class BrainClient:
             "max_tokens": max_tokens,
             "stream": False,
         }
-        headers = self._get_headers(provider)
+
+        is_groq = provider.provider_type == "groq" and not provider.is_byok
+        active_key = self.groq_pool.get_current_key() if is_groq else provider.api_key
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {active_key}",
+        }
+
+        max_attempts = max(MAX_RETRIES, self.groq_pool.pool_size()) if is_groq else MAX_RETRIES
 
         last_error: Exception | None = None
-        for attempt in range(1, MAX_RETRIES + 1):
+        for attempt in range(1, max_attempts + 1):
             try:
                 async with httpx.AsyncClient(timeout=self.timeout) as client:
                     response = await client.post(url, headers=headers, json=payload)
@@ -223,32 +294,95 @@ class BrainClient:
                     data = response.json()
                     choices = data.get("choices", [])
                     if choices and "message" in choices[0]:
+                        self.last_used_provider = provider.provider_type
+                        self.last_used_model = provider.model
                         return choices[0]["message"].get("content", "").strip()
                     return ""
 
-                # Retry only on 429 (rate limit) or 5xx (server error)
+                # Shift to next key immediately on 429 if multiple keys exist in pool
+                if response.status_code == 429 and is_groq and self.groq_pool.pool_size() > 1 and attempt < max_attempts:
+                    last_error = LLMClientError(response.status_code, response.text[:200], provider.provider_type)
+                    active_key = self.groq_pool.shift_to_next_key(failed_key=active_key)
+                    headers["Authorization"] = f"Bearer {active_key}"
+                    await asyncio.sleep(0.1)
+                    continue
+
+                # Retry on 429 (single key / all keys tried) or 5xx (server error)
                 if response.status_code in (429, 500, 502, 503, 504):
                     err_text = response.text[:200]
                     last_error = LLMClientError(response.status_code, err_text, provider.provider_type)
-                    if attempt < MAX_RETRIES:
-                        backoff = INITIAL_BACKOFF_SECONDS * (2 ** (attempt - 1))
+                    if attempt < max_attempts:
+                        backoff = 1.0 * attempt
                         await asyncio.sleep(backoff)
                         continue
-                    raise last_error
+                    break
 
                 # Client error (400, 401, 403, 404): fail fast without retrying
                 raise LLMClientError(response.status_code, response.text[:200], provider.provider_type)
 
             except (httpx.TimeoutException, httpx.NetworkError) as e:
                 last_error = e
-                if attempt < MAX_RETRIES:
-                    backoff = INITIAL_BACKOFF_SECONDS * (2 ** (attempt - 1))
-                    await asyncio.sleep(backoff)
+                if attempt < max_attempts:
+                    await asyncio.sleep(1.0 * attempt)
                     continue
-                raise LLMClientError(504, f"Network/Timeout error: {str(e)}", provider.provider_type) from e
+                break
+
+        # Fallback to faster/lighter model on Groq if 120b is saturated
+        if provider.provider_type == "groq" and "120b" in str(payload.get("model", "")):
+            logger.warning("Groq 120b saturated; attempting non-streaming fallback to openai/gpt-oss-20b...")
+            fallback_payload = dict(payload)
+            fallback_payload["model"] = "openai/gpt-oss-20b"
+            fallback_headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.groq_pool.get_current_key() if is_groq else provider.api_key}",
+            }
+            try:
+                async with httpx.AsyncClient(timeout=self.timeout) as client:
+                    fb_resp = await client.post(url, headers=fallback_headers, json=fallback_payload)
+                    if fb_resp.status_code == 200:
+                        data = fb_resp.json()
+                        choices = data.get("choices", [])
+                        if choices and "message" in choices[0]:
+                            self.last_used_provider = provider.provider_type
+                            self.last_used_model = "openai/gpt-oss-20b"
+                            return choices[0]["message"].get("content", "").strip()
+            except Exception as fb_err:
+                logger.warning("Fallback model also encountered error: %s", fb_err)
+
+        # Ultimate failover: If all Groq attempts fail, shift request to NVIDIA NIM
+        settings = get_settings()
+        if settings.NVIDIA_API_KEY and (provider.provider_type == "groq" or not provider.is_byok):
+            logger.warning("All Groq attempts failed; shifting request to NVIDIA fallback brain (%s)...", settings.NVIDIA_MODEL)
+            nv_headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {settings.NVIDIA_API_KEY}",
+            }
+            nv_url = f"{settings.NVIDIA_BASE_URL.rstrip('/')}/chat/completions"
+            nv_payload = {
+                "model": settings.NVIDIA_MODEL,
+                "messages": messages,
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+                "stream": False,
+            }
+            try:
+                async with httpx.AsyncClient(timeout=httpx.Timeout(30.0)) as client:
+                    nv_resp = await client.post(nv_url, headers=nv_headers, json=nv_payload)
+                    if nv_resp.status_code == 200:
+                        data = nv_resp.json()
+                        choices = data.get("choices", [])
+                        if choices and "message" in choices[0]:
+                            self.last_used_provider = "nvidia"
+                            self.last_used_model = settings.NVIDIA_MODEL
+                            logger.info("NVIDIA NIM successfully answered non-streaming failover!")
+                            return choices[0]["message"].get("content", "").strip()
+            except Exception as nv_err:
+                logger.error("NVIDIA fallback brain encountered error: %s", nv_err)
 
         if last_error:
-            raise last_error
+            if isinstance(last_error, LLMClientError):
+                raise last_error
+            raise LLMClientError(504, f"Network/Timeout error: {str(last_error)}", provider.provider_type) from last_error
         raise LLMClientError(500, "Unknown LLM completion error", provider.provider_type)
 
     async def stream_generate(
@@ -259,10 +393,14 @@ class BrainClient:
         max_tokens: int = 700,
     ) -> AsyncIterator[str]:
         """
-        Streaming completion yielding tokens as they arrive via Server-Sent Events.
+        Streaming completion yielding tokens as they arrive via Server-Sent Events,
+        shifting to next Groq key automatically when rate limited (429), and failing over to NVIDIA NIM.
         """
         if provider is None:
             provider = resolve_provider()
+
+        self.last_used_provider = provider.provider_type
+        self.last_used_model = provider.model
 
         if provider.provider_type == "stub":
             stub_text = _generate_stub_response(messages)
@@ -279,35 +417,165 @@ class BrainClient:
             "max_tokens": max_tokens,
             "stream": True,
         }
-        headers = self._get_headers(provider)
 
-        async with httpx.AsyncClient(timeout=self.timeout) as client:
-            async with client.stream("POST", url, headers=headers, json=payload) as response:
-                if response.status_code != 200:
-                    err_bytes = await response.aread()
-                    raise LLMClientError(
-                        response.status_code,
-                        err_bytes.decode("utf-8", errors="replace")[:200],
-                        provider.provider_type,
-                    )
+        is_groq = provider.provider_type == "groq" and not provider.is_byok
+        active_key = self.groq_pool.get_current_key() if is_groq else provider.api_key
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {active_key}",
+        }
 
-                async for line in response.aiter_lines():
-                    line = line.strip()
-                    if not line or not line.startswith("data:"):
-                        continue
-                    data_str = line[5:].strip()
-                    if data_str == "[DONE]":
-                        break
-                    try:
-                        chunk_json = json.loads(data_str)
-                        choices = chunk_json.get("choices", [])
-                        if choices:
-                            delta = choices[0].get("delta", {})
-                            content_piece = delta.get("content", "")
-                            if content_piece:
-                                yield content_piece
-                    except json.JSONDecodeError:
-                        continue
+        max_attempts = max(MAX_RETRIES, self.groq_pool.pool_size()) if is_groq else MAX_RETRIES
+
+        last_error = None
+        for attempt in range(1, max_attempts + 1):
+            try:
+                async with httpx.AsyncClient(timeout=self.timeout) as client:
+                    async with client.stream("POST", url, headers=headers, json=payload) as response:
+                        if response.status_code == 200:
+                            self.last_used_provider = provider.provider_type
+                            self.last_used_model = provider.model
+                            async for line in response.aiter_lines():
+                                line = line.strip()
+                                if not line or not line.startswith("data:"):
+                                    continue
+                                data_str = line[5:].strip()
+                                if data_str == "[DONE]":
+                                    break
+                                try:
+                                    chunk_json = json.loads(data_str)
+                                    choices = chunk_json.get("choices", [])
+                                    if choices:
+                                        delta = choices[0].get("delta", {})
+                                        content_piece = delta.get("content", "")
+                                        if content_piece:
+                                            yield content_piece
+                                except json.JSONDecodeError:
+                                    continue
+                            return
+
+                        # Shift to next key immediately on 429 if multiple keys exist in pool
+                        if response.status_code == 429 and is_groq and self.groq_pool.pool_size() > 1 and attempt < max_attempts:
+                            err_bytes = await response.aread()
+                            err_msg = err_bytes.decode("utf-8", errors="replace")[:200]
+                            last_error = LLMClientError(response.status_code, err_msg, provider.provider_type)
+                            active_key = self.groq_pool.shift_to_next_key(failed_key=active_key)
+                            headers["Authorization"] = f"Bearer {active_key}"
+                            await asyncio.sleep(0.1)
+                            continue
+
+                        # Retry on 429 (rate limit) or 5xx (transient server error)
+                        if response.status_code in (429, 500, 502, 503, 504):
+                            err_bytes = await response.aread()
+                            err_msg = err_bytes.decode("utf-8", errors="replace")[:200]
+                            last_error = LLMClientError(response.status_code, err_msg, provider.provider_type)
+                            if attempt < max_attempts:
+                                backoff = 1.0 * attempt
+                                await asyncio.sleep(backoff)
+                                continue
+                            break
+
+                        err_bytes = await response.aread()
+                        raise LLMClientError(
+                            response.status_code,
+                            err_bytes.decode("utf-8", errors="replace")[:200],
+                            provider.provider_type,
+                        )
+            except (httpx.TimeoutException, httpx.NetworkError) as e:
+                last_error = e
+                if attempt < max_attempts:
+                    await asyncio.sleep(1.0 * attempt)
+                    continue
+                break
+
+        # Fallback to faster/lighter model on Groq if 120b is saturated
+        if provider.provider_type == "groq" and "120b" in str(payload.get("model", "")):
+            logger.warning("Groq 120b saturated (429); attempting automatic fallback to openai/gpt-oss-20b...")
+            fallback_payload = dict(payload)
+            fallback_payload["model"] = "openai/gpt-oss-20b"
+            fallback_headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.groq_pool.get_current_key() if is_groq else provider.api_key}",
+            }
+            try:
+                async with httpx.AsyncClient(timeout=self.timeout) as client:
+                    async with client.stream("POST", url, headers=fallback_headers, json=fallback_payload) as response:
+                        if response.status_code == 200:
+                            self.last_used_provider = provider.provider_type
+                            self.last_used_model = "openai/gpt-oss-20b"
+                            async for line in response.aiter_lines():
+                                line = line.strip()
+                                if not line or not line.startswith("data:"):
+                                    continue
+                                data_str = line[5:].strip()
+                                if data_str == "[DONE]":
+                                    break
+                                try:
+                                    chunk_json = json.loads(data_str)
+                                    choices = chunk_json.get("choices", [])
+                                    if choices:
+                                        delta = choices[0].get("delta", {})
+                                        content_piece = delta.get("content", "")
+                                        if content_piece:
+                                            yield content_piece
+                                except json.JSONDecodeError:
+                                    continue
+                            return
+            except Exception as fb_err:
+                logger.warning("Fallback model also encountered error: %s", fb_err)
+
+        # Ultimate failover: If all Groq attempts fail, shift request to NVIDIA NIM
+        settings = get_settings()
+        if settings.NVIDIA_API_KEY and (provider.provider_type == "groq" or not provider.is_byok):
+            logger.warning("All Groq attempts failed; shifting streaming request to NVIDIA fallback brain (%s)...", settings.NVIDIA_MODEL)
+            nv_headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {settings.NVIDIA_API_KEY}",
+            }
+            nv_url = f"{settings.NVIDIA_BASE_URL.rstrip('/')}/chat/completions"
+            nv_payload = {
+                "model": settings.NVIDIA_MODEL,
+                "messages": messages,
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+                "stream": True,
+            }
+            try:
+                tokens_yielded = 0
+                async with httpx.AsyncClient(timeout=httpx.Timeout(30.0)) as client:
+                    async with client.stream("POST", nv_url, headers=nv_headers, json=nv_payload) as response:
+                        if response.status_code == 200:
+                            self.last_used_provider = "nvidia"
+                            self.last_used_model = settings.NVIDIA_MODEL
+                            async for line in response.aiter_lines():
+                                line = line.strip()
+                                if not line or not line.startswith("data:"):
+                                    continue
+                                data_str = line[5:].strip()
+                                if data_str == "[DONE]":
+                                    break
+                                try:
+                                    chunk_json = json.loads(data_str)
+                                    choices = chunk_json.get("choices", [])
+                                    if choices:
+                                        delta = choices[0].get("delta", {})
+                                        content_piece = delta.get("content", "")
+                                        if content_piece:
+                                            tokens_yielded += 1
+                                            yield content_piece
+                                except json.JSONDecodeError:
+                                    continue
+                            if tokens_yielded > 0:
+                                logger.info("NVIDIA NIM successfully streamed %d tokens after Groq failover!", tokens_yielded)
+                                return
+            except Exception as nv_err:
+                logger.error("NVIDIA fallback brain streaming error: %s", nv_err)
+
+        if last_error:
+            if isinstance(last_error, LLMClientError):
+                raise last_error
+            raise LLMClientError(504, f"Network/Timeout error: {str(last_error)}", provider.provider_type) from last_error
+        raise LLMClientError(500, "Unknown LLM streaming error", provider.provider_type)
 
 
 # Global singleton brain client

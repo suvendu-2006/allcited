@@ -183,3 +183,244 @@ def test_get_models_endpoint():
     assert "groq" in providers
     assert "byok" in providers
     assert "ollama" in providers
+
+
+def test_groq_key_pool_failover_on_429(monkeypatch):
+    """Verify that when 429 hits, BrainClient shifts to the next key in the pool."""
+    async def run_test():
+        brain = BrainClient()
+        brain.groq_pool._keys = ["key_1_aaa", "key_2_bbb", "key_3_ccc"]
+        brain.groq_pool._current_index = 0
+
+        keys_attempted = []
+
+        def mock_handler(request: httpx.Request):
+            auth = request.headers.get("Authorization", "")
+            keys_attempted.append(auth)
+            # Fail first key with 429, succeed on second key
+            if "key_1_aaa" in auth:
+                return httpx.Response(429, text="Rate limit reached on TPM")
+            return httpx.Response(200, json={"choices": [{"message": {"content": "Answer with key 2"}}]})
+
+        transport = httpx.MockTransport(mock_handler)
+        original_init = httpx.AsyncClient.__init__
+
+        def mock_init(self, *a, **k):
+            k["transport"] = transport
+            original_init(self, *a, **k)
+
+        monkeypatch.setattr(httpx.AsyncClient, "__init__", mock_init)
+
+        res = await brain.generate([{"role": "user", "content": "test query"}])
+        assert res == "Answer with key 2"
+        assert len(keys_attempted) == 2
+        assert "key_1_aaa" in keys_attempted[0]
+        assert "key_2_bbb" in keys_attempted[1]
+
+    asyncio.run(run_test())
+
+
+def test_groq_key_pool_streaming_failover_on_429(monkeypatch):
+    """Verify that when 429 hits during stream_generate, BrainClient shifts to the next key."""
+    async def run_test():
+        brain = BrainClient()
+        brain.groq_pool._keys = ["key_1_aaa", "key_2_bbb"]
+        brain.groq_pool._current_index = 0
+
+        keys_attempted = []
+
+        def mock_handler(request: httpx.Request):
+            auth = request.headers.get("Authorization", "")
+            keys_attempted.append(auth)
+            if "key_1_aaa" in auth:
+                return httpx.Response(429, text="Rate limit reached on TPM")
+            # Stream SSE response on key 2
+            content = "data: {\"choices\": [{\"delta\": {\"content\": \"Streamed \"}}]}\n\ndata: {\"choices\": [{\"delta\": {\"content\": \"answer\"}}]}\n\ndata: [DONE]\n\n"
+            return httpx.Response(200, text=content)
+
+        transport = httpx.MockTransport(mock_handler)
+        original_init = httpx.AsyncClient.__init__
+
+        def mock_init(self, *a, **k):
+            k["transport"] = transport
+            original_init(self, *a, **k)
+
+        monkeypatch.setattr(httpx.AsyncClient, "__init__", mock_init)
+
+        tokens = []
+        async for chunk in brain.stream_generate([{"role": "user", "content": "stream query"}]):
+            tokens.append(chunk)
+
+        assert "".join(tokens) == "Streamed answer"
+        assert len(keys_attempted) == 2
+        assert "key_1_aaa" in keys_attempted[0]
+        assert "key_2_bbb" in keys_attempted[1]
+
+    asyncio.run(run_test())
+
+
+def test_nvidia_fallback_when_all_groq_fail(monkeypatch):
+    """Verify that when all Groq attempts fail, request fails over to NVIDIA NIM."""
+    async def run_test():
+        brain = BrainClient()
+        brain.groq_pool._keys = ["key_1_aaa", "key_2_bbb", "key_3_ccc"]
+        brain.groq_pool._current_index = 0
+
+        async def instant_sleep(*args, **kwargs):
+            return
+
+        monkeypatch.setattr(asyncio, "sleep", instant_sleep)
+
+        urls_called = []
+        keys_attempted = []
+
+        def mock_handler(request: httpx.Request):
+            url_str = str(request.url)
+            urls_called.append(url_str)
+            auth = request.headers.get("Authorization", "")
+            keys_attempted.append(auth)
+            if "groq.com" in url_str:
+                return httpx.Response(429, text="Groq rate limit 429")
+            if "nvidia.com" in url_str:
+                return httpx.Response(200, json={"choices": [{"message": {"content": "Answer from NVIDIA NIM"}}]})
+            return httpx.Response(400, text="Unknown")
+
+        transport = httpx.MockTransport(mock_handler)
+        original_init = httpx.AsyncClient.__init__
+
+        def mock_init(self, *a, **k):
+            k["transport"] = transport
+            original_init(self, *a, **k)
+
+        monkeypatch.setattr(httpx.AsyncClient, "__init__", mock_init)
+
+        res = await brain.generate([{"role": "user", "content": "test failover"}])
+        assert res == "Answer from NVIDIA NIM"
+        assert any("nvidia.com" in u for u in urls_called)
+        assert brain.last_used_provider == "nvidia"
+        assert "llama-3.2-11b" in brain.last_used_model
+
+    asyncio.run(run_test())
+
+
+def test_nvidia_streaming_fallback_when_all_groq_fail(monkeypatch):
+    """Verify that when all Groq attempts fail during streaming, request streams from NVIDIA NIM."""
+    async def run_test():
+        brain = BrainClient()
+        brain.groq_pool._keys = ["key_1_aaa", "key_2_bbb", "key_3_ccc"]
+        brain.groq_pool._current_index = 0
+
+        async def instant_sleep(*args, **kwargs):
+            return
+
+        monkeypatch.setattr(asyncio, "sleep", instant_sleep)
+
+        urls_called = []
+
+        def mock_handler(request: httpx.Request):
+            url_str = str(request.url)
+            urls_called.append(url_str)
+            if "groq.com" in url_str:
+                return httpx.Response(429, text="Rate limited on all keys")
+            if "nvidia.com" in url_str:
+                content = (
+                    "data: {\"choices\": [{\"delta\": {\"content\": \"NVIDIA \"}}]}\n\n"
+                    "data: {\"choices\": [{\"delta\": {\"content\": \"streamed response\"}}]}\n\n"
+                    "data: [DONE]\n\n"
+                )
+                return httpx.Response(200, text=content)
+            return httpx.Response(400, text="Unknown")
+
+        transport = httpx.MockTransport(mock_handler)
+        original_init = httpx.AsyncClient.__init__
+
+        def mock_init(self, *a, **k):
+            k["transport"] = transport
+            original_init(self, *a, **k)
+
+        monkeypatch.setattr(httpx.AsyncClient, "__init__", mock_init)
+
+        chunks = []
+        async for chunk in brain.stream_generate([{"role": "user", "content": "stream failover"}]):
+            chunks.append(chunk)
+
+        assert "".join(chunks) == "NVIDIA streamed response"
+        assert any("nvidia.com" in u for u in urls_called)
+        assert brain.last_used_provider == "nvidia"
+        assert "llama-3.2-11b" in brain.last_used_model
+
+    asyncio.run(run_test())
+
+
+def test_pipeline_e2e_groq_failover_to_nvidia(monkeypatch):
+    """
+    End-to-end verification: when all Groq requests fail with 429,
+    the pipeline streams from NVIDIA NIM and delivers done event with provider='nvidia'.
+    """
+    async def run_test():
+        from app.pipeline.chunker import Chunk
+        from app.pipeline.twohop import TwoHopChunk
+        from app.sessions import DocumentSession
+        from app.pipeline.answer import stream_answer_pipeline
+
+        async def instant_sleep(*args, **kwargs):
+            return
+        monkeypatch.setattr(asyncio, "sleep", instant_sleep)
+
+        # Mock HTTP transport
+        def mock_handler(request: httpx.Request):
+            url_str = str(request.url)
+            if "groq.com" in url_str:
+                return httpx.Response(429, text="Groq rate limit 429")
+            if "nvidia.com" in url_str:
+                content = (
+                    "data: {\"choices\": [{\"delta\": {\"content\": \"Notice period is 60 calendar days [S1].\"}}]}\n\n"
+                    "data: [DONE]\n\n"
+                )
+                return httpx.Response(200, text=content)
+            return httpx.Response(400, text="Unknown")
+
+        transport = httpx.MockTransport(mock_handler)
+        original_init = httpx.AsyncClient.__init__
+
+        def mock_init(self, *a, **k):
+            k["transport"] = transport
+            original_init(self, *a, **k)
+
+        monkeypatch.setattr(httpx.AsyncClient, "__init__", mock_init)
+
+        from app.pipeline.refmap import ReferenceMap
+        from app.pipeline.indexes import DocumentIndex
+
+        # Create session with 1 chunk
+        c = Chunk(id="c1", doc_id="d1", content_hash="h1", text="Notice period is 60 calendar days.", section_path=["Separation"], token_count=10, page=1)
+        doc_index = DocumentIndex()
+        doc_index.build([c])
+        sess = DocumentSession(
+            session_id="test_sess_nv",
+            filename="doc.pdf",
+            file_size_bytes=100,
+            page_count=1,
+            blocks=[],
+            chunks=[c],
+            ref_map=ReferenceMap(),
+            doc_index=doc_index,
+        )
+
+        events = []
+        async for sse in stream_answer_pipeline(sess, "What is the notice period?"):
+            for line in sse.splitlines():
+                if line.startswith("data:"):
+                    try:
+                        data = json.loads(line[5:].strip())
+                        if "done" in sse:
+                            events.append(data)
+                    except Exception:
+                        pass
+
+        done_event = events[-1] if events else {}
+        assert done_event.get("provider") == "nvidia"
+        assert "llama-3.2-11b" in done_event.get("model", "")
+        assert "60 calendar days" in done_event.get("answer", "")
+
+    asyncio.run(run_test())

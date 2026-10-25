@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useAuth, SignInButton } from "@clerk/nextjs";
 import { LibraryDocCard, LibraryDocument } from "./LibraryDocCard";
 import { Skeleton } from "./ui/Skeleton";
 import { Button } from "./ui/button";
@@ -18,53 +19,76 @@ export function LibraryGrid({
   onSelectDocForChat,
   onAskAcrossShelf,
 }: LibraryGridProps) {
+  const { isLoaded, isSignedIn: clerkSignedIn, getToken } = useAuth();
   const [docs, setDocs] = useState<LibraryDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDegraded, setIsDegraded] = useState(false);
-  const [isSignedIn, setIsSignedIn] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [shelfQuery, setShelfQuery] = useState("");
 
+  const hasLocalMockToken =
+    typeof window !== "undefined" && Boolean(localStorage.getItem("allcited_auth_token"));
+  const isSignedIn = Boolean(clerkSignedIn || hasLocalMockToken);
+
   useEffect(() => {
-    // Check if user is authenticated via local token or mock session
-    const token = typeof window !== "undefined" ? localStorage.getItem("allcited_auth_token") : null;
-    if (!token) {
-      setIsSignedIn(false);
+    if (!isLoaded) return;
+
+    if (!isSignedIn) {
       setLoading(false);
       return;
     }
 
-    setIsSignedIn(true);
-    setLoading(true);
-    setIsDegraded(false);
+    const fetchDocs = async () => {
+      setLoading(true);
+      setIsDegraded(false);
+      try {
+        let token: string | null = null;
+        if (clerkSignedIn) {
+          token = await getToken();
+        } else if (typeof window !== "undefined") {
+          token = localStorage.getItem("allcited_auth_token");
+        }
 
-    fetch(`${apiUrl}/v1/library`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(async (res) => {
+        if (!token) {
+          setLoading(false);
+          return;
+        }
+
+        const res = await fetch(`${apiUrl}/v1/library`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
         if (!res.ok) {
           if (res.status === 503 || res.status === 500) {
             setIsDegraded(true);
-            return [];
+            return;
           }
           throw new Error("Failed to load shelf");
         }
-        return res.json();
-      })
-      .then((data) => {
+
+        const data = await res.json();
         setDocs(data?.documents || []);
-        setLoading(false);
-      })
-      .catch(() => {
+      } catch {
         setIsDegraded(true);
+      } finally {
         setLoading(false);
-      });
-  }, [apiUrl]);
+      }
+    };
+
+    fetchDocs();
+  }, [apiUrl, isLoaded, isSignedIn, clerkSignedIn, getToken]);
 
   const handleRemove = async (doc: LibraryDocument) => {
     setRemovingId(doc.id);
-    const token = localStorage.getItem("allcited_auth_token") || "mock_clerk_token";
     try {
+      let token: string | null = null;
+      if (clerkSignedIn) {
+        token = await getToken();
+      } else if (typeof window !== "undefined") {
+        token = localStorage.getItem("allcited_auth_token");
+      }
+      if (!token) token = "mock_clerk_token";
+
       const res = await fetch(`${apiUrl}/v1/library/${doc.id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
@@ -77,30 +101,6 @@ export function LibraryGrid({
     } finally {
       setRemovingId(null);
     }
-  };
-
-  const handleSignInMock = () => {
-    localStorage.setItem("allcited_auth_token", "mock_clerk_token_active");
-    setIsSignedIn(true);
-    setLoading(true);
-    // Refresh with demo mock documents
-    setTimeout(() => {
-      setDocs([
-        {
-          id: "doc_handbook_01",
-          filename: "Acme_Employee_Handbook_2026.pdf",
-          chunk_count: 214,
-          created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
-        },
-        {
-          id: "doc_policy_02",
-          filename: "Travel_and_Expense_Policy_v3.docx",
-          chunk_count: 86,
-          created_at: new Date(Date.now() - 86400000 * 5).toISOString(),
-        },
-      ]);
-      setLoading(false);
-    }, 500);
   };
 
   // State 1: Degradation Notice per text.md
@@ -120,7 +120,7 @@ export function LibraryGrid({
   }
 
   // State 2: Loading Skeletons
-  if (loading) {
+  if (!isLoaded || loading) {
     return (
       <div className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -141,16 +141,18 @@ export function LibraryGrid({
         </div>
 
         <p className="text-sm text-ink-secondary max-w-md mx-auto mb-6 leading-relaxed">
-          Asking is free and needs no account. To keep documents between visits, sign in.
+          Continue as guest to ask right away — or sign in to keep documents between visits.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-          <Button variant="primary" onClick={handleSignInMock} className="text-xs h-9">
-            Sign in to start your shelf
-          </Button>
-          <Link href="/">
+          <SignInButton mode="modal">
+            <Button variant="primary" className="text-xs h-9">
+              Sign in to start your shelf
+            </Button>
+          </SignInButton>
+          <Link href="/?workspace=true">
             <Button variant="ghost" className="text-xs h-9">
-              Keep asking without one
+              Continue as guest
             </Button>
           </Link>
         </div>

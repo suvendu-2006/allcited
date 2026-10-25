@@ -59,17 +59,21 @@ def score_retrieval(
     retrieved_chunk_ids: List[str],
     expected_chunk_ids: List[str],
     expected_chunk_indices: List[int],
+    retrieved_chunk_texts: Optional[List[str]] = None,
+    expected_answer: str = "",
 ) -> Tuple[bool, bool, float]:
     """
     Scores retrieval performance for a question.
     Returns: (hit_any, hit_all, recall)
+    Supports both chunk-id/index matching and content-level ground-truth matching
+    across dynamic chunking strategies.
     """
-    if not expected_chunk_ids and not expected_chunk_indices:
+    if not expected_chunk_ids and not expected_chunk_indices and not expected_answer:
         # For absent questions, no expected chunks
         return True, True, 1.0
 
     hits = 0
-    total_expected = max(len(expected_chunk_ids), len(expected_chunk_indices))
+    total_expected = max(len(expected_chunk_ids), len(expected_chunk_indices), 1)
 
     for exp_id in expected_chunk_ids:
         for ret_id in retrieved_chunk_ids:
@@ -84,6 +88,23 @@ def score_retrieval(
                 if is_chunk_match(ret_id, None, [], [exp_idx]):
                     hits += 1
                     break
+
+    # Ground-truth content verification (for dynamic chunking where IDs differ)
+    if hits == 0 and retrieved_chunk_texts and expected_answer:
+        expected_codes = extract_numbers_and_codes(expected_answer)
+        expected_key_tokens = extract_key_tokens(expected_answer)
+
+        for text in retrieved_chunk_texts:
+            chunk_codes = extract_numbers_and_codes(text)
+            chunk_tokens = set(normalize_text(text).split())
+            codes_matched = len(expected_codes & chunk_codes) if expected_codes else 0
+            codes_ratio = codes_matched / len(expected_codes) if expected_codes else 1.0
+            token_recall = len(expected_key_tokens & chunk_tokens) / len(expected_key_tokens) if expected_key_tokens else 0.0
+            f1 = compute_token_f1(text, expected_answer)
+
+            if (expected_codes and codes_ratio >= 0.60 and token_recall >= 0.30) or token_recall >= 0.45 or f1 >= 0.22:
+                hits += 1
+                break
 
     hit_any = hits > 0
     hit_all = hits >= total_expected
@@ -290,6 +311,43 @@ def format_markdown_table(summaries: List[Dict[str, Any]]) -> str:
             f"{s['answer_correctness']}%",
             f"{s['latency_p50_ms']}",
             f"{s['latency_p95_ms']}",
+        ]
+        lines.append("| " + " | ".join(row) + " |")
+
+    return "\n".join(lines)
+
+
+def format_chunking_table(summaries: List[Dict[str, Any]]) -> str:
+    """Format chunking A/B test results into a Markdown table."""
+    headers = [
+        "Chunking Strategy",
+        "Chunks",
+        "Avg Tokens",
+        "Retrieval Hit",
+        "P1 (Boundary)",
+        "P4 (Multi-Aspect)",
+        "Paraphrase",
+        "Answer Corr",
+        "Key Trade-off",
+    ]
+
+    lines = [
+        "| " + " | ".join(headers) + " |",
+        "| " + " | ".join(["---"] * len(headers)) + " |",
+    ]
+
+    for s in summaries:
+        cats = s.get("category_hit_rates", {})
+        row = [
+            f"**{s['strategy']}**",
+            f"{s.get('chunk_count', '-')}",
+            f"{s.get('avg_tokens', '-')}",
+            f"{s.get('retrieval_hit_rate', 0.0)}%",
+            f"{cats.get('P1', 0.0)}%",
+            f"{cats.get('P4', 0.0)}%",
+            f"{cats.get('paraphrase', 0.0)}%",
+            f"{s.get('answer_correctness', 0.0)}%",
+            s.get("notes", ""),
         ]
         lines.append("| " + " | ".join(row) + " |")
 

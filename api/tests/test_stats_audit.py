@@ -113,7 +113,8 @@ def test_audit_log_writes_for_saves_deletes_and_payments():
     sub_store = get_subscription_store()
     sub_store.reset_for_tests()
 
-    user_id = "user_audit_tester_001"
+    import uuid
+    user_id = f"user_audit_tester_{uuid.uuid4().hex[:8]}"
     token = make_test_token(user_id)
     headers = {"Authorization": f"Bearer {token}"}
 

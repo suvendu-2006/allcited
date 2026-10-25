@@ -200,7 +200,7 @@
   {
     "id": "q_23",
     "type": "paraphrase",
-    "question": "Can I roll over more than eight vacation days into the following year?",
+    "question": "Can I bank unspent holiday allowance to use next spring instead of forfeiting it?",
     "expected_answer": "No, surplus beyond 8 days automatically lapses on March 31 unless granted an executive waiver under Rule 2.1.4.",
     "expected_chunk_ids": ["doc_chunk_0001", "doc_chunk_0002"],
     "expected_chunk_indices": [0, 1],
@@ -209,7 +209,7 @@
   {
     "id": "q_24",
     "type": "paraphrase",
-    "question": "How many vacation days do team members earn each year?",
+    "question": "What is the total annual quota of paid rest days allocated to staff over twelve months?",
     "expected_answer": "Full-time employees accrue 24 days of paid annual leave per calendar year.",
     "expected_chunk_ids": ["doc_chunk_0001"],
     "expected_chunk_indices": [0],
@@ -218,7 +218,7 @@
   {
     "id": "q_25",
     "type": "paraphrase",
-    "question": "Is two-factor authentication required for corporate logins?",
+    "question": "Is an authenticator app prompt or SMS token required to log into company tools?",
     "expected_answer": "Yes, multi-factor authentication (MFA) is strictly mandatory on all internal systems under Clause 4.2.",
     "expected_chunk_ids": ["doc_chunk_0003"],
     "expected_chunk_indices": [2],
@@ -227,7 +227,7 @@
   {
     "id": "q_26",
     "type": "paraphrase",
-    "question": "Where should employees report outside conflicts of interest?",
+    "question": "What is the protocol for moonlighting on side projects during off-hours?",
     "expected_answer": "Conflicts of interest must be formally declared to the ethics committee under procedure EC-101.",
     "expected_chunk_ids": ["doc_chunk_0001"],
     "expected_chunk_indices": [0],
@@ -245,7 +245,7 @@
   {
     "id": "q_28",
     "type": "absent",
-    "question": "How many weeks of paid maternity or parental leave are provided for new parents?",
+    "question": "What is the corporate policy regarding stock options, equity grants, and vesting schedules?",
     "expected_answer": "Not covered in this document.",
     "expected_chunk_ids": [],
     "expected_chunk_indices": [],

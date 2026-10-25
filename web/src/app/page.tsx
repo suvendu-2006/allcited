@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
+import { useAuth, useClerk } from "@clerk/nextjs";
 import { Chat } from "@/components/Chat";
 import { SourcePanel } from "@/components/SourcePanel";
 import { ModelSettings, ProviderConfig } from "@/components/ModelSettings";
 import { Citation } from "@/lib/sse";
 import { Navbar } from "@/components/Navbar";
+import { AuthScreen } from "@/components/AuthScreen";
 import { DeepSeaAurora } from "@/components/DeepSeaAurora";
 import { MagneticButton } from "@/components/MagneticButton";
 import { LiveMiniDemo } from "@/components/LiveMiniDemo";
@@ -29,12 +31,18 @@ const PROOF_TICKER_ITEMS = [
 ];
 
 export default function Home() {
+  const { isSignedIn, getToken } = useAuth();
+  const clerk = useClerk();
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [documentName, setDocumentName] = useState<string | null>(null);
   const [activeCitations, setActiveCitations] = useState<Citation[]>([]);
   const [selectedCitationLabel, setSelectedCitationLabel] = useState<string | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [apiConnected, setApiConnected] = useState<boolean>(false);
   const [inWorkspace, setInWorkspace] = useState<boolean>(false);
+  const [isGuest, setIsGuest] = useState<boolean>(false);
+  const [isSaved, setIsSaved] = useState<boolean>(false);
+  const [saveToast, setSaveToast] = useState<string | null>(null);
 
   // Provider configuration state (loaded from localStorage browser-only)
   const [providerConfig, setProviderConfig] = useState<ProviderConfig>({
@@ -111,6 +119,11 @@ export default function Home() {
       const urlSessionId = params.get("session_id");
       const urlFilename = params.get("filename");
       const urlWorkspace = params.get("workspace");
+      const savedGuest = sessionStorage.getItem("allcited_is_guest") === "true";
+      if (savedGuest) {
+        setIsGuest(true);
+      }
+
       if (urlSessionId) {
         setSessionId(urlSessionId);
         if (urlFilename) setDocumentName(decodeURIComponent(urlFilename));
@@ -121,6 +134,56 @@ export default function Home() {
     }
   }, [apiUrl]);
 
+  const handleSaveToShelf = useCallback(async () => {
+    if (!sessionId) return;
+
+    if (!isSignedIn) {
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("allcited_pending_save_session", sessionId);
+        sessionStorage.setItem("allcited_pending_save_doc", documentName || "");
+      }
+      clerk.openSignIn();
+      return;
+    }
+
+    try {
+      const token = await getToken();
+      const res = await fetch(`${apiUrl}/v1/library/save`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ session_id: sessionId }),
+      });
+
+      if (res.ok) {
+        setIsSaved(true);
+        setSaveToast("Document saved to your shelf!");
+        setTimeout(() => setSaveToast(null), 3500);
+      } else {
+        const err = await res.json();
+        setSaveToast(err?.detail?.error?.message || "Failed to save to shelf");
+        setTimeout(() => setSaveToast(null), 3500);
+      }
+    } catch {
+      setSaveToast("Could not connect to shelf service");
+      setTimeout(() => setSaveToast(null), 3500);
+    }
+  }, [sessionId, isSignedIn, documentName, clerk, getToken, apiUrl]);
+
+  // Carry across active document when upgrading from guest to signed-in per §6.10
+  useEffect(() => {
+    if (isSignedIn && typeof window !== "undefined" && sessionId) {
+      const pendingSession = sessionStorage.getItem("allcited_pending_save_session");
+      if (pendingSession && pendingSession === sessionId) {
+        sessionStorage.removeItem("allcited_pending_save_session");
+        sessionStorage.removeItem("allcited_pending_save_doc");
+        handleSaveToShelf();
+      }
+    }
+  }, [isSignedIn, sessionId, handleSaveToShelf]);
+
   const handleUploadSuccess = (data: {
     sessionId: string;
     filename: string;
@@ -129,6 +192,7 @@ export default function Home() {
   }) => {
     setSessionId(data.sessionId);
     setDocumentName(data.filename);
+    setIsSaved(false);
     setInWorkspace(true);
   };
 
@@ -147,70 +211,109 @@ export default function Home() {
 
         {/* Dynamic View: Workspace Mode vs Full Award Landing Page */}
         {inWorkspace ? (
-          <div className="flex-1 min-h-0 relative flex flex-col" ref={workspaceRef}>
-            {/* Top Workspace Bar */}
-            <div className="px-4 py-2 border-b border-border bg-bg-surface flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setInWorkspace(false)}
-                  className="text-xs h-7 gap-1"
-                >
-                  ← Back to Overview
-                </Button>
-                {documentName && (
-                  <span className="font-mono text-[11px] text-gray-warm border-l border-border pl-2">
-                    {documentName}
-                  </span>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsSettingsOpen(true)}
-                  className="font-mono text-[11px] text-gray-warm hover:text-ink-primary flex items-center gap-1.5 px-2 py-1 rounded border border-border/60 hover:bg-bg-sunken"
-                >
-                  <span>Engine: {providerConfig.mode}</span>
-                  <span className="text-accent-primary">⚙</span>
-                </button>
-              </div>
-            </div>
-
-            <Chat
-              sessionId={sessionId}
-              documentName={documentName}
-              byokKey={providerConfig.mode === "byok" ? providerConfig.byokKey : null}
-              byokBaseUrl={
-                providerConfig.mode === "byok"
-                  ? providerConfig.byokBaseUrl
-                  : providerConfig.mode === "ollama"
-                  ? providerConfig.ollamaBaseUrl
-                  : null
-              }
-              byokModel={
-                providerConfig.mode === "byok"
-                  ? providerConfig.byokModel
-                  : providerConfig.mode === "ollama"
-                  ? providerConfig.ollamaModel
-                  : null
-              }
-              preferredProvider={
-                providerConfig.mode === "ollama"
-                  ? "ollama"
-                  : providerConfig.mode === "byok"
-                  ? "byok"
-                  : "groq"
-              }
-              onCitationClick={(cit, allCits) => {
-                setActiveCitations(allCits && allCits.length > 0 ? allCits : [cit]);
-                setSelectedCitationLabel(cit.label);
+          !isSignedIn && !isGuest ? (
+            <AuthScreen
+              onContinueAsGuest={() => {
+                setIsGuest(true);
+                if (typeof window !== "undefined") {
+                  sessionStorage.setItem("allcited_is_guest", "true");
+                }
               }}
-              onUploadSuccess={handleUploadSuccess}
-              onOpenSettings={() => setIsSettingsOpen(true)}
+              onBackToHome={() => setInWorkspace(false)}
             />
-          </div>
+          ) : (
+            <div className="flex-1 min-h-0 relative flex flex-col" ref={workspaceRef}>
+              {/* Top Workspace Bar per §6.9 wireframe: 40px session bar */}
+              <div className="px-4 h-10 border-b border-border bg-bg-surface flex items-center justify-between text-xs flex-shrink-0">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setInWorkspace(false)}
+                    className="text-xs h-7 gap-1"
+                  >
+                    ← Back
+                  </Button>
+                  {documentName && (
+                    <span className="font-mono text-[11px] text-gray-warm border-l border-border pl-2 truncate max-w-xs sm:max-w-md">
+                      {documentName}
+                    </span>
+                  )}
+                  {!isSignedIn && isGuest && (
+                    <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider bg-bg-sunken border border-border text-ink-ghost">
+                      Guest mode
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {sessionId && (
+                    <button
+                      type="button"
+                      onClick={handleSaveToShelf}
+                      className={`font-mono text-[11px] flex items-center gap-1 px-2.5 py-1 rounded border transition-colors cursor-pointer ${
+                        isSaved
+                          ? "border-accent-primary/40 bg-accent-primary/10 text-accent-primary font-semibold"
+                          : "border-border/80 hover:border-accent-primary hover:bg-bg-sunken text-ink-primary"
+                      }`}
+                    >
+                      <span>{isSaved ? "Saved to shelf ✓" : "Save to shelf"}</span>
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => setIsSettingsOpen(true)}
+                    className="font-mono text-[11px] text-gray-warm hover:text-ink-primary flex items-center gap-1.5 px-2 py-1 rounded border border-border/60 hover:bg-bg-sunken cursor-pointer"
+                  >
+                    <span>Engine: {providerConfig.mode}</span>
+                    <span className="text-accent-primary">⚙</span>
+                  </button>
+                </div>
+              </div>
+
+              {saveToast && (
+                <div className="absolute top-12 right-4 z-50 bg-bg-surface border border-accent-primary/50 text-ink-primary text-xs font-mono px-3 py-1.5 rounded shadow-md animate-fade-in">
+                  {saveToast}
+                </div>
+              )}
+
+              <Chat
+                sessionId={sessionId}
+                documentName={documentName}
+                isGuest={!isSignedIn}
+                byokKey={providerConfig.mode === "byok" ? providerConfig.byokKey : null}
+                byokBaseUrl={
+                  providerConfig.mode === "byok"
+                    ? providerConfig.byokBaseUrl
+                    : providerConfig.mode === "ollama"
+                    ? providerConfig.ollamaBaseUrl
+                    : null
+                }
+                byokModel={
+                  providerConfig.mode === "byok"
+                    ? providerConfig.byokModel
+                    : providerConfig.mode === "ollama"
+                    ? providerConfig.ollamaModel
+                    : null
+                }
+                preferredProvider={
+                  providerConfig.mode === "ollama"
+                    ? "ollama"
+                    : providerConfig.mode === "byok"
+                    ? "byok"
+                    : "groq"
+                }
+                onCitationClick={(cit, allCits) => {
+                  setActiveCitations(allCits && allCits.length > 0 ? allCits : [cit]);
+                  setSelectedCitationLabel(cit.label);
+                  setIsDrawerOpen(true);
+                }}
+                onUploadSuccess={handleUploadSuccess}
+                onOpenSettings={() => setIsSettingsOpen(true)}
+              />
+            </div>
+          )
         ) : (
           <div className="flex-1 overflow-y-auto">
             {/* Hero Section: Fills 100% of Viewport under Navbar */}
@@ -311,7 +414,7 @@ export default function Home() {
 
                 {/* Small line (mono) per text.md verbatim */}
                 <p className="font-mono text-xs text-ink-ghost tracking-wide pt-2">
-                  No account needed · Nothing is saved · We publish our test scores
+                  Sign in or continue as guest · Nothing is saved unless you keep it · We publish our test scores
                 </p>
               </div>
             </section>
@@ -398,8 +501,11 @@ export default function Home() {
                   TRY IT
                 </span>
                 <h2 className="text-2xl sm:text-3xl font-semibold text-ink-primary font-display">
-                  Try it right here. No signup.
+                  Try it right here.
                 </h2>
+                <p className="font-mono text-xs text-accent-primary font-medium max-w-md mx-auto">
+                  Guest mode available — continue without login.
+                </p>
                 <p className="text-xs sm:text-sm text-gray-warm max-w-md mx-auto">
                   This is a real answer from a sample handbook. Click any citation. See the exact lines it came from.
                 </p>
@@ -434,18 +540,15 @@ export default function Home() {
         )}
       </div>
 
-      {/* Side Source Detail Panel */}
-      {activeCitations.length > 0 && (
-        <SourcePanel
-          citations={activeCitations}
-          activeLabel={selectedCitationLabel}
-          onClose={() => {
-            setActiveCitations([]);
-            setSelectedCitationLabel(null);
-          }}
-          onSelectCitation={(label) => setSelectedCitationLabel(label)}
-        />
-      )}
+      {/* Side Source Receipts Drawer (360px per §6.9 verbatim) */}
+      <SourcePanel
+        citations={activeCitations}
+        documentName={documentName}
+        activeLabel={selectedCitationLabel}
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        onSelectCitation={(label) => setSelectedCitationLabel(label)}
+      />
 
       {/* Model & BYOK Settings Modal */}
       <ModelSettings

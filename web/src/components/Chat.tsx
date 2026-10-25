@@ -23,6 +23,7 @@ interface ChatProps {
     pageCount: number;
   }) => void;
   onOpenSettings?: () => void;
+  isGuest?: boolean;
 }
 
 // Dry-wit rotating copy per §4 copy freeze
@@ -42,6 +43,7 @@ export function Chat({
   onCitationClick,
   onUploadSuccess,
   onOpenSettings,
+  isGuest,
 }: ChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -160,6 +162,7 @@ export function Chat({
                     stage: "done",
                     refused: doneData.refused,
                     cached: doneData.cached,
+                    provider: doneData.provider,
                     model: doneData.model,
                     totalTokens: doneData.total_tokens,
                     questionId: doneData.question_id,
@@ -208,29 +211,32 @@ export function Chat({
   return (
     <div className="flex flex-col h-full bg-bg-base">
       {/* Messages Viewport */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 md:px-8">
-        <div className="max-w-3xl mx-auto">
+      <div className="flex-1 overflow-y-auto px-4 py-6">
+        <div className="max-w-[640px] w-full mx-auto">
           {messages.length === 0 ? (
             <div className="my-auto">
               {!sessionId && onUploadSuccess && (
-                <div className="max-w-xl mx-auto mb-6">
+                <div className="max-w-[640px] w-full mx-auto mb-6">
                   <Upload onUploadSuccess={onUploadSuccess} />
                 </div>
               )}
               {/* Empty state per §4 copy freeze */}
-              <EmptyState onSelectSampleQuestion={(q) => handleSend(q)} />
+              <EmptyState
+                onSelectSampleQuestion={(q) => handleSend(q)}
+                isGuest={isGuest}
+              />
             </div>
           ) : (
-            <>
+            <div className="space-y-6">
               {documentName && (
-                <div className="mb-6 flex items-center justify-between pb-3 border-b border-border/60 text-xs text-gray-warm">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-accent-primary" />
+                <div className="flex items-center justify-between pb-3 border-b border-border/60 text-xs text-gray-warm">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="w-2 h-2 rounded-full bg-accent-primary flex-shrink-0" />
                     <span className="font-medium text-ink-primary truncate max-w-sm">
                       {documentName}
                     </span>
                   </div>
-                  <span className="font-mono text-[11px] text-ink-ghost">
+                  <span className="font-mono text-[11px] text-ink-ghost flex-shrink-0">
                     grounded Q&A session
                   </span>
                 </div>
@@ -256,15 +262,15 @@ export function Chat({
                   onOpenSettings={onOpenSettings}
                 />
               )}
-            </>
+            </div>
           )}
           <div ref={scrollEndRef} />
         </div>
       </div>
 
       {/* Composer Dock */}
-      <div className="p-4 bg-bg-surface/80 backdrop-blur-md border-t border-border">
-        <div className="max-w-3xl mx-auto">
+      <div className="p-4 bg-bg-surface/90 backdrop-blur-md border-t border-border">
+        <div className="max-w-[640px] w-full mx-auto">
           <Composer
             onSend={handleSend}
             onAbort={handleAbort}

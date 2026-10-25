@@ -274,6 +274,9 @@ export function TraceViewer({
                     </span>
                     <span className="text-gray-warm text-[11px] block mt-0.5">
                       provider: {trace.provider || "groq"} / {trace.model || "llama-3.3-70b"}
+                      {trace.provider === "nvidia" && (
+                        <span className="ml-2 text-[10px] text-[#76B900] font-semibold">[NVIDIA NIM Failover]</span>
+                      )}
                     </span>
                   </div>
                 </div>

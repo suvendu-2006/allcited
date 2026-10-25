@@ -51,8 +51,11 @@ def test_plan_gates_and_live_upgrade_flip():
     store.reset_for_tests()
     stats = get_platform_stats()
     stats.reset_for_tests()
+    from app.library import get_library_store
+    get_library_store().reset_for_tests()
 
-    user_id = "user_free_plan_tester"
+    import uuid
+    user_id = f"user_free_plan_tester_{uuid.uuid4().hex[:8]}"
     token = make_test_token(user_id)
     headers = {"Authorization": f"Bearer {token}"}
 
