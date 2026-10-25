@@ -23,14 +23,14 @@
 - Text under heading: Upload a document. Ask any question. Every answer shows where it came from.
 - Buttons: **Try it free** (primary) · **See how it works** (ghost)
 - Small line (mono): No account needed · Nothing is saved · We publish our test scores
-- Tech strip (mono, one line): React · Next.js · TypeScript · FastAPI · FAISS — open source, top to bottom.
+- Tech strip (mono, one line): React · Next.js · TypeScript · FastAPI · RAG pipeline: BM25 + FAISS + cross-encoder re-ranking · Llama on Groq
 
 ### Section: RAG explainer
 - Heading (H2): **How is this different from ChatGPT?**
 - Text under heading:
-  ChatGPT answers from memory. It sometimes makes things up.
-  Allcited answers from your document only. First it finds the right lines. Then it writes the answer from those lines.
-  This method is called **RAG — Retrieval-Augmented Generation**. And it always shows you the lines it used.
+  Allcited is a **RAG system — Retrieval-Augmented Generation**. When you ask a question, a real retrieval pipeline runs first: **BM25** (keyword search) and **FAISS** (semantic vector search) find candidate passages, and a **cross-encoder re-ranker** picks the best ones. Then the LLM writes its answer using *only those passages*.
+  Chatbots answer from memory and sometimes invent facts. Allcited answers from retrieved text — and cites it.
+- Tech strip (mono, one line): React · Next.js · TypeScript · FastAPI · RAG pipeline: BM25 + FAISS + cross-encoder re-ranking · Llama on Groq
 
 ### Section: Stats
 - (no heading)
@@ -74,9 +74,15 @@
 
 ### Section: Pipeline
 - Heading (H2): **What happens to your question**
-- Text under heading: Seven steps. You can watch them all.
-- Steps (chips/captions):
-  1 Read the file — scanned pages too · 2 Split it into passages · 3 Search by words · 4 Search by meaning · 5 Keep the best passages · 6 Follow rule references · 7 Write the answer, with citations.
+- Text under heading: Seven stages. Real engineering, all of it inspectable in the trace viewer.
+- Stages (technical name + one-line plain meaning):
+  1 **Ingest & OCR** — PyMuPDF reads the file; Tesseract reads scanned pages
+  2 **Chunking** — ~400-word passages, 15% overlap, so no sentence is cut
+  3 **Hybrid retrieval** — BM25 (your words) + FAISS (your meaning), merged by Reciprocal Rank Fusion
+  4 **Re-ranking** — a cross-encoder reads the top 25 with your question, keeps the best 4
+  5 **Two-hop resolution** — "as per rule 63.7.4" → we fetch that rule's definition too
+  6 **Grounded generation** — the LLM writes from the selected passages only, or refuses
+  7 **Citation post-pass** — every [S1] marker verified against a real passage before streaming
 - Button at the end: **Try Allcited — no signup**
 
 ---
@@ -84,27 +90,43 @@
 # PAGE 3 — HOW IT WORKS (/how-it-works)
 
 ### Section: Intro
-- Eyebrow: HOW IT WORKS
-- Heading (H1): **Three steps. That's it.**
+- Eyebrow: THE PIPELINE
+- Heading (H1): **Every step, under the hood.**
+- Text under heading: From your file to a cited answer — the exact path, stage by stage. Nothing hidden.
 
-### Section: The three steps (numbered cards)
-- **Step 1 — Drop it in.**
-  Drag any file in. We read it, split it into small passages, and learn how it's organized.
-  ⚡ A 200-page file is ready in seconds.
-- **Step 2 — Ask like a human.**
-  No special words needed. Ask like you'd ask a friend. If your question is vague, we sharpen it first.
-  ⚡ Vague questions get rewritten for you.
-- **Step 3 — Follow the trail.**
-  Every claim shows a marker like [S1] 4.2, p.23. Click it. Read the original lines.
-  ⚡ The original text, always one click away.
+### Section: The seven stages (numbered cards — technical name as heading, plain gloss under it)
+- **Stage 1 — Ingest & OCR.**
+  PyMuPDF reads your file's text layer. Scanned pages go through Tesseract OCR (English + Hindi).
+  In plain words: we read normal PDFs and photographed ones.
+- **Stage 2 — Chunking.**
+  The document is split into ~400-word passages with 15% overlap between neighbors.
+  In plain words: small pieces, and no sentence is ever cut in half.
+- **Stage 3 — Hybrid retrieval — BM25 + FAISS.**
+  BM25 matches your exact words. FAISS vector search (MiniLM embeddings) matches meaning. Both result lists merge by Reciprocal Rank Fusion.
+  In plain words: two searches run at once — one for your words, one for your intent — and both vote.
+- **Stage 4 — Cross-encoder re-ranking.**
+  A re-ranking model reads the top 25 passages *together with* your question and keeps the 4 best.
+  In plain words: a careful second reader checks the shortlist.
+- **Stage 5 — Two-hop reference resolution.**
+  If a retrieved passage says "as per rule 63.7.4", we automatically fetch what rule 63.7.4 says and add it to the context.
+  In plain words: when the answer needs another rule, we go get it.
+- **Stage 6 — Grounded generation.**
+  The LLM (Llama on Groq, your own key, or local Ollama) writes using only the selected passages. Temperature 0.1. If the passages don't contain the answer, it must refuse.
+  In plain words: the AI writes from your pages only — or not at all.
+- **Stage 7 — Citation post-pass.**
+  Every [S1] marker is verified against a real passage; markers without a source are stripped. The answer streams with citations attached.
+  In plain words: we check our own receipts before showing them.
 
-### Section: RAG callout (small highlighted block)
-- Text: **Find first. Answer second.** That's RAG — Retrieval-Augmented Generation.
+### Section: RAG callout (highlighted block)
+- Heading (H2): **Under the hood: RAG**
+- Text under heading:
+  This whole loop is **RAG — Retrieval-Augmented Generation**: retrieval (BM25 + FAISS + cross-encoder re-ranking) finds the passages; generation (a grounded LLM call) writes from those passages and nothing else.
+  Every stage above is one part of that loop — and every stage is inspectable in the trace viewer.
 
 ### Section: Citation anatomy
-- Heading (H2): **What a citation shows you**
-- Text under heading: The section. The page. The original text. Enough to check any answer — without reading the whole document.
-- Example block (machine voice, mono):
+- Heading (H2): **What a citation contains**
+- Text under heading: Section name. Page number. The exact original text. Enough to verify any answer without re-reading the document.
+- Example block (mono):
   Answer: "Unused leave is capped at 8 days for carry-forward into the next year [S1]."
   Receipt: `[S1] 2.1 Leave Policy · p.23 — "A maximum of 8 unused annual leave days may be carried forward into the subsequent calendar year."`
 

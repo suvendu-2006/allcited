@@ -1293,3 +1293,44 @@ Add `framer-motion` to deps (the gap behind "no micro-animations"). Then impleme
 
 ## Global replacements (find → replace, all pages)
 "dual-engine receipt system" → gone · "Dense embeddings … sparse BM25" → "We search your words and your meaning" · "Ephemeral RAM only — vanishes on exit" → "Your file is deleted when you leave" · "BYOK kept strictly in client browser" → "Your own key stays in your browser" · "Zero telemetry on file contents" → "We never look at your files" · "atomic chunk receipt" → "citation" · "verbatim" → "exact" · "citation stamp" → "citation" · "receipt drawer" → "source panel" · "Ingest Gateways" → "Works with" · "Adversarial Jailbreaks" → "Files that try to trick the AI" · "Cross-Page Spanning" → "Answers split across two pages" · "Absent / Out-of-Scope" → "Questions the document can't answer"
+
+---
+
+# §4E — TECHNICAL COPY LAYER (supersedes §4C/§4D in the affected sections)
+
+> Owner verdict (2026-10-25): v4D went too simple — "RAG" alone isn't credible, and /how-it-works hid the machinery. New rule: **name the real technology, gloss it in one plain line.** Technical terms are credibility markers, not jargon. The "Find first. Answer second." slogan is retired.
+> Applied to: landing tech strip + RAG block, /product pipeline, and the full /how-it-works rewrite. Full content map = `text.md` (kept in sync).
+
+## Landing — RAG block (replaces §4D version)
+- H2: How is this different from ChatGPT?
+- Body: Allcited is a **RAG system — Retrieval-Augmented Generation**. When you ask a question, a real retrieval pipeline runs first: **BM25** (keyword search) and **FAISS** (semantic vector search) find candidate passages, and a **cross-encoder re-ranker** picks the best ones. Then the LLM writes its answer using *only those passages*. Chatbots answer from memory and sometimes invent facts. Allcited answers from retrieved text — and cites it.
+- Tech strip: React · Next.js · TypeScript · FastAPI · RAG pipeline: BM25 + FAISS + cross-encoder re-ranking · Llama on Groq
+
+## /product — Pipeline section (replaces §4D seven steps)
+- H2: What happens to your question
+- Sub: Seven stages. Real engineering, all of it inspectable in the trace viewer.
+- Stages (technical name + plain gloss):
+  1 **Ingest & OCR** — PyMuPDF reads the file; Tesseract reads scanned pages
+  2 **Chunking** — ~400-word passages, 15% overlap, so no sentence is cut
+  3 **Hybrid retrieval** — BM25 (your words) + FAISS (your meaning), merged by Reciprocal Rank Fusion
+  4 **Re-ranking** — a cross-encoder reads the top 25 with your question, keeps the best 4
+  5 **Two-hop resolution** — "as per rule 63.7.4" → we fetch that rule's definition too
+  6 **Grounded generation** — the LLM writes from the selected passages only, or refuses
+  7 **Citation post-pass** — every [S1] marker verified against a real passage before streaming
+
+## /how-it-works — FULL REWRITE (replaces the 3-step page)
+- Eyebrow: THE PIPELINE · H1: **Every step, under the hood.** · Sub: From your file to a cited answer — the exact path, stage by stage. Nothing hidden.
+- Seven stage cards (technical heading + plain gloss, verbatim in text.md § PAGE 3):
+  1 Ingest & OCR (PyMuPDF; Tesseract eng+hin) — "we read normal PDFs and photographed ones"
+  2 Chunking (~400 words, 15% overlap) — "no sentence is ever cut in half"
+  3 Hybrid retrieval (BM25 + FAISS/MiniLM, Reciprocal Rank Fusion) — "two searches run at once — one for your words, one for your intent — and both vote"
+  4 Cross-encoder re-ranking (top 25 → best 4) — "a careful second reader checks the shortlist"
+  5 Two-hop reference resolution (rule refs auto-fetched) — "when the answer needs another rule, we go get it"
+  6 Grounded generation (Groq/BYOK/Ollama, temperature 0.1, refuse-if-absent) — "the AI writes from your pages only — or not at all"
+  7 Citation post-pass ([S1] verified, unsourced stripped) — "we check our own receipts before showing them"
+- RAG callout: H2 **Under the hood: RAG** — "This whole loop is RAG — Retrieval-Augmented Generation: retrieval (BM25 + FAISS + cross-encoder re-ranking) finds the passages; generation (a grounded LLM call) writes from those passages and nothing else. Every stage above is one part of that loop — and every stage is inspectable in the trace viewer."
+
+## Feature card tech sub-labels (/product, mono, under each card title)
+01 `citation post-pass` · 02 `BM25 + FAISS + RRF` · 03 `two-hop resolution` · 04 `trace viewer` · 05 `BYOK / Ollama` · 06 `in-memory index`
+
+**Supersession:** §4C/§4D stand everywhere EXCEPT the sections named above (landing RAG+strip, /product pipeline+card labels, /how-it-works full). `text.md` is the verbatim content map and must be kept in sync.
