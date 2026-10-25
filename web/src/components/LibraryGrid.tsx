@@ -103,16 +103,15 @@ export function LibraryGrid({
     }, 500);
   };
 
-  // State 1: Degradation Notice per §4 copy freeze
+  // State 1: Degradation Notice per text.md
   if (isDegraded) {
     return (
       <div className="space-y-6">
         <div className="p-4 rounded-interactive border border-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-950/20 text-ink-primary flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
-            <h4 className="font-semibold text-sm">Shelf temporarily unavailable</h4>
-            <p className="text-xs text-gray-warm mt-0.5">
-              The shelf is briefly unreachable — but chat still works fine. We&apos;re on it.
+            <p className="text-xs text-ink-secondary">
+              The shelf is briefly unreachable. Chat still works fine. We&apos;re on it.
             </p>
           </div>
         </div>
@@ -120,7 +119,7 @@ export function LibraryGrid({
     );
   }
 
-  // State 2: Loading Skeletons per §7
+  // State 2: Loading Skeletons
   if (loading) {
     return (
       <div className="space-y-4">
@@ -133,7 +132,7 @@ export function LibraryGrid({
     );
   }
 
-  // State 3: Empty (signed out) per §4 copy freeze
+  // State 3: Empty (signed out) per text.md
   if (!isSignedIn) {
     return (
       <div className="dot-grid rounded-interactive border border-border p-8 sm:p-12 text-center bg-bg-surface/40">
@@ -141,11 +140,8 @@ export function LibraryGrid({
           <BookOpen className="w-6 h-6" />
         </div>
 
-        <h3 className="text-xl sm:text-2xl font-semibold text-ink-primary font-display mb-2">
-          Your shelf is empty.
-        </h3>
-        <p className="text-xs sm:text-sm text-gray-warm max-w-md mx-auto mb-6 leading-relaxed">
-          Asking is free and needs no account. But if you want documents that stay — your handbook, your contracts, your manuals — that&apos;s the shelf.
+        <p className="text-sm text-ink-secondary max-w-md mx-auto mb-6 leading-relaxed">
+          Asking is free and needs no account. To keep documents between visits, sign in.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">

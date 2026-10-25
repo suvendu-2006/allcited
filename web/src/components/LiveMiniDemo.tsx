@@ -11,7 +11,7 @@ export function LiveMiniDemo() {
   const [activeReceipt, setActiveReceipt] = useState<string | null>(null);
 
   const fullText =
-    "Full-time personnel accrue 24 annual paid leave days. You may carry forward a maximum of 8 unused annual leave days into the following calendar year. Any surplus beyond 8 days lapses automatically on March 31. Upon voluntary departure, remaining leave is settled as per rule 63.7.4.";
+    "You can carry forward a maximum of 8 unused annual leave days into the next calendar year. Any surplus beyond 8 days automatically lapses on March 31.";
 
   const runDemoStream = () => {
     setIsStreaming(true);
@@ -34,21 +34,18 @@ export function LiveMiniDemo() {
     }, 45);
   };
 
-  // Trigger demo once on mount
   useEffect(() => {
     runDemoStream();
   }, []);
 
   return (
     <div className="rounded-interactive border border-border bg-bg-surface p-6 sm:p-8 shadow-md relative overflow-hidden space-y-5">
+      {/* Demo box header */}
       <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border/70">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-[#28C840] dark:bg-[#5AD46F] animate-pulse" />
           <span className="font-mono text-xs font-semibold text-ink-primary">
-            Live Inline Demo: &ldquo;Acme Employee Handbook.md&rdquo;
-          </span>
-          <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-accent-primary/10 text-accent-primary border border-accent-primary/20">
-            Zero signup · No API key needed
+            Sample: Employee Handbook
           </span>
         </div>
 
@@ -59,18 +56,20 @@ export function LiveMiniDemo() {
           className="inline-flex items-center gap-1.5 font-mono text-xs text-accent-primary hover:underline disabled:opacity-50"
         >
           <span className={isStreaming ? "animate-spin inline-block" : ""}>↻</span>
-          <span>Replay stream</span>
+          <span>Replay</span>
         </button>
       </div>
 
       {/* Query */}
       <div className="p-3 rounded-[6px] bg-bg-sunken border border-border/60 text-xs font-mono text-ink-primary flex items-center justify-between">
-        <span>Q: &ldquo;Can I carry my leaves forward?&rdquo;</span>
-        <span className="text-gray-warm text-[10px]">route: lookup (42ms)</span>
+        <span>Q: Can I carry my leaves forward?</span>
+        <span className="text-gray-warm text-[10px] tracking-wide">
+          searching → re-reading → writing
+        </span>
       </div>
 
       {/* Streamed Answer with Stamped Citations */}
-      <div className="text-xs sm:text-sm leading-relaxed text-ink-primary min-h-[72px]">
+      <div className="text-xs sm:text-sm leading-relaxed text-ink-primary min-h-[56px]">
         <span>{displayedText}</span>
         {isStreaming && (
           <span className="inline-block w-1.5 h-4 ml-1 bg-accent-hot animate-pulse align-middle" />
@@ -82,21 +81,12 @@ export function LiveMiniDemo() {
               citation={{
                 label: "S1",
                 chunk_id: "demo_c1",
-                text_preview: "Section 2.1: A maximum of 8 unused annual leave days may be carried forward into the subsequent calendar year.",
+                text_preview:
+                  "Section 2.1: A maximum of 8 unused annual leave days may be carried forward into the subsequent calendar year.",
                 page: 23,
                 section_path: ["Leave Policy", "Carry Forward"],
               }}
               onClick={() => setActiveReceipt("S1")}
-            />
-            <CitationChip
-              citation={{
-                label: "S2",
-                chunk_id: "demo_c2",
-                text_preview: "Rule 63.7.4: Leave settlement on resignation is capped at a monetary reimbursement equivalent to 15 gross working days.",
-                is_two_hop: true,
-                section_path: ["Rule 63.7.4", "Encashment"],
-              }}
-              onClick={() => setActiveReceipt("S2")}
             />
           </span>
         )}
@@ -113,7 +103,7 @@ export function LiveMiniDemo() {
           >
             <div className="flex items-center justify-between">
               <span className="font-semibold text-accent-primary">
-                [{activeReceipt}] Verified Source Excerpt:
+                [{activeReceipt}] Carry Forward · 2.1 Leave Policy · p.23
               </span>
               <button
                 type="button"
@@ -124,27 +114,25 @@ export function LiveMiniDemo() {
               </button>
             </div>
             <p className="font-sans text-xs text-ink-primary leading-relaxed">
-              {activeReceipt === "S1"
-                ? "2.1 Leave Entitlements · p.23: 'A maximum of 8 unused annual leave days may be carried forward into the subsequent calendar year. Any surplus beyond 8 days will automatically lapse on March 31.'"
-                : "Rule 63.7.4 Leave Encashment on Resignation · p.45: 'Upon voluntary resignation or formal separation, accrued annual leave encashment is strictly capped at a monetary reimbursement equivalent to 15 gross working days.'"}
+              &ldquo;A maximum of 8 unused annual leave days may be carried forward into the subsequent calendar year. Any surplus beyond 8 days will automatically lapse on March 31.&rdquo;
             </p>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* "Nothing Stored" Pledge under demo per §6.6 */}
+      {/* Privacy checks per §4D verbatim */}
       <div className="pt-3 border-t border-border/70 grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-[10.5px] text-gray-warm text-center sm:text-left">
         <div className="flex items-center gap-1.5">
           <span className="text-accent-primary font-bold">✓</span>
-          <span>Ephemeral RAM only — vanishes on exit</span>
+          <span>Your file is deleted when you leave</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="text-accent-primary font-bold">✓</span>
-          <span>BYOK kept strictly in client browser</span>
+          <span>Your own key stays in your browser</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="text-accent-primary font-bold">✓</span>
-          <span>Zero telemetry on file contents</span>
+          <span>We never look at your files</span>
         </div>
       </div>
     </div>

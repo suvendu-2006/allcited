@@ -11,6 +11,7 @@ import { DeepSeaAurora } from "@/components/DeepSeaAurora";
 import { MagneticButton } from "@/components/MagneticButton";
 import { LiveMiniDemo } from "@/components/LiveMiniDemo";
 import { Button } from "@/components/ui/button";
+import { Footer } from "@/components/Footer";
 import { motion } from "framer-motion";
 
 export default function Home() {
@@ -32,41 +33,8 @@ export default function Home() {
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  // Rolling counter stats per §4 (900ms count-up)
-  const [statRecall, setStatRecall] = useState(0);
-  const [statQuestions, setStatQuestions] = useState(0);
-
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
   const workspaceRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    let start = 0;
-    const timer = setInterval(() => {
-      start += 3;
-      if (start >= 87) {
-        setStatRecall(87);
-        clearInterval(timer);
-      } else {
-        setStatRecall(start);
-      }
-    }, 30);
-
-    let startQ = 0;
-    const timerQ = setInterval(() => {
-      startQ += 2;
-      if (startQ >= 46) {
-        setStatQuestions(46);
-        clearInterval(timerQ);
-      } else {
-        setStatQuestions(startQ);
-      }
-    }, 38);
-
-    return () => {
-      clearInterval(timer);
-      clearInterval(timerQ);
-    };
-  }, []);
 
   // Check health and load saved localStorage configs on mount
   useEffect(() => {
@@ -117,59 +85,6 @@ export default function Home() {
       }
     }
   }, [apiUrl]);
-
-  // Load sample handbook fixture for instant testing
-  const loadHandbookFixture = async () => {
-    try {
-      const sampleText = `# Allcited Corporate Employee Handbook
-1. General Employment Framework
-Welcome to Allcited. This employee handbook sets out the official terms, rules, and conditions governing all personnel. Compliance with company directives is mandatory.
-1.2 Code of Business Conduct
-Every team member must act with absolute integrity. Conflicts of interest must be formally declared to the ethics committee under procedure EC-101.
-
-2. Leave and Time-Off Entitlements
-2.1 Annual Paid Leave
-Full-time employees accrue 24 days of paid annual leave per calendar year (2.0 working days per month). A maximum of 8 unused annual leave days may be carried forward into the subsequent calendar year. Any surplus beyond 8 days will automatically lapse on March 31.
-2.2 Sick and Medical Leave
-Staff members are eligible for 12 days of paid sick leave annually. Absences exceeding two consecutive working days require a medical practitioner certificate submitted via Form HR-702.
-
-3. Separation, Resignation and Exit Terms
-3.1 Voluntary Resignation and Notice Period
-Permanent employees who wish to terminate their employment agreement must tender formal written notice at least 60 calendar days in advance to their designated reporting officer.
-3.2 Leave Settlement on Departure
-All accrued but unutilized annual leave will be settled in the final paycheck as per rule 63.7.4. Employees under active notice may not take paid leave without the written authorization of the Vice President of HR.
-
-4. Information Technology and Security
-Clause 4.2 Security Credential Protocols
-Multi-factor authentication (MFA) is strictly mandatory on all internal systems. Passwords must be at least 16 characters in length and refreshed every 90 days as mandated by standard ISO-27001.
-Clause 5.1 Remote Work Policy
-Employees authorized for remote work must maintain a private secure workspace; public unsecured Wi-Fi connections without VPN encapsulation are strictly prohibited.
-
-5. Statutory Schedules and Specialized Rules
-Rule 63.7.4 Leave Encashment on Resignation
-Upon voluntary resignation or formal separation, accrued annual leave encashment is strictly capped at a monetary reimbursement equivalent to 15 gross working days at current basic wage rate.`;
-
-      const blob = new Blob([sampleText], { type: "text/markdown" });
-      const formData = new FormData();
-      formData.append("file", blob, "employee_handbook.md");
-
-      const res = await fetch(`${apiUrl}/v1/ingest`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setSessionId(data.session_id);
-        setDocumentName("employee_handbook.md");
-        setInWorkspace(true);
-      }
-    } catch {
-      setSessionId("sess_demo_handbook");
-      setDocumentName("employee_handbook.md");
-      setInWorkspace(true);
-    }
-  };
 
   const handleUploadSuccess = (data: {
     sessionId: string;
@@ -288,17 +203,17 @@ Upon voluntary resignation or formal separation, accrued annual leave encashment
                   ))}
                 </h1>
 
-                {/* Subtext per §6.3 v2.1 stripped copy */}
+                {/* Subtext per text.md verbatim */}
                 <motion.p
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.42, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
                   className="text-base sm:text-lg text-gray-warm max-w-xl mx-auto leading-relaxed font-sans"
                 >
-                  Drop in any document. Ask anything. Every answer shows its source.
+                  Upload a document. Ask any question. Every answer shows where it came from.
                 </motion.p>
 
-                {/* Magnetic CTAs per §6.4 */}
+                {/* CTAs per text.md verbatim: Try it free (primary) · See how it works (ghost) */}
                 <motion.div
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -312,29 +227,20 @@ Upon voluntary resignation or formal separation, accrued annual leave encashment
                       onClick={() => setInWorkspace(true)}
                       className="w-full sm:w-auto text-sm shadow-md"
                     >
-                      Open Allcited
+                      Try it free
                     </Button>
                   </MagneticButton>
 
                   <Link href="/how-it-works">
-                    <Button variant="ferrari" className="py-2.5">
-                      SEE HOW IT WORKS
+                    <Button variant="ghost" size="lg" className="w-full sm:w-auto text-sm border border-border">
+                      See how it works
                     </Button>
                   </Link>
-
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={loadHandbookFixture}
-                    className="w-full sm:w-auto text-xs h-11"
-                  >
-                    Load Sample Handbook
-                  </Button>
                 </motion.div>
 
-                {/* Trust Line (mono, ghost) per §4 */}
+                {/* Small line (mono) per text.md verbatim */}
                 <p className="font-mono text-xs text-ink-ghost tracking-wide pt-2">
-                  No account needed · Sessions vanish when you leave · We publish our own test scores
+                  No account needed · Nothing is saved · We publish our test scores
                 </p>
               </div>
 
@@ -361,7 +267,7 @@ Upon voluntary resignation or formal separation, accrued annual leave encashment
               </motion.div>
             </section>
 
-            {/* Tech Strip under Hero — revealed on scroll */}
+            {/* Tech Strip under Hero per text.md verbatim */}
             <motion.div
               id="stats-band"
               initial={{ opacity: 0, y: 20 }}
@@ -375,7 +281,23 @@ Upon voluntary resignation or formal separation, accrued annual leave encashment
               </div>
             </motion.div>
 
-            {/* Stats Band with Rolling Counters & Scorecard Chip — revealed on scroll */}
+            {/* Section: RAG explainer per text.md verbatim */}
+            <section className="py-16 px-4 sm:px-6 max-w-4xl mx-auto space-y-4 text-center sm:text-left border-b border-border">
+              <h2 className="text-2xl sm:text-3xl font-semibold text-ink-primary font-display">
+                How is this different from ChatGPT?
+              </h2>
+              <div className="text-sm sm:text-base text-gray-warm space-y-3 leading-relaxed">
+                <p>ChatGPT answers from memory. It sometimes makes things up.</p>
+                <p>
+                  Allcited answers from your document only. First it finds the right lines. Then it writes the answer from those lines.
+                </p>
+                <p>
+                  This method is called <strong className="text-ink-primary font-semibold">RAG — Retrieval-Augmented Generation</strong>. And it always shows you the lines it used.
+                </p>
+              </div>
+            </section>
+
+            {/* Section: Stats per text.md verbatim */}
             <motion.section
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -386,27 +308,27 @@ Upon voluntary resignation or formal separation, accrued annual leave encashment
               <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-8 text-center sm:text-left">
                 <div className="space-y-1">
                   <div className="font-mono text-4xl sm:text-5xl font-bold text-ink-primary">
-                    {statRecall}%
+                    87%
                   </div>
                   <p className="text-xs text-gray-warm leading-relaxed">
-                    questions where we find the exact right passage. Measured by us, against us, every release.
+                    we find the right passage for 87 of every 100 test questions
                   </p>
                 </div>
 
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 justify-center sm:justify-start">
                     <span className="font-mono text-4xl sm:text-5xl font-bold text-ink-primary">
-                      {statQuestions}
+                      46
                     </span>
                     <Link
                       href="/exam"
                       className="font-mono text-[10px] px-2.5 py-1 rounded bg-accent-primary/10 text-accent-primary hover:bg-accent-primary/20 border border-accent-primary/30 inline-flex items-center"
                     >
-                      View Scorecard →
+                      View scorecard →
                     </Link>
                   </div>
                   <p className="text-xs text-gray-warm leading-relaxed">
-                    questions in the exam we run on ourselves before every deploy.
+                    test questions we run on every release
                   </p>
                 </div>
 
@@ -415,30 +337,30 @@ Upon voluntary resignation or formal separation, accrued annual leave encashment
                     6
                   </div>
                   <p className="text-xs text-gray-warm leading-relaxed">
-                    file formats we read. PDF, Word, PowerPoint, Excel, Markdown, any URL.
+                    file types we read: PDF, Word, PowerPoint, Excel, Markdown, web pages
                   </p>
                 </div>
               </div>
             </motion.section>
 
-            {/* Trust Layer: Live Inline Cited-Answer Mini-Demo per §6.6 */}
+            {/* Section: Live demo per text.md verbatim */}
             <section className="py-16 px-4 sm:px-6 max-w-4xl mx-auto space-y-6">
               <div className="text-center space-y-2">
-                <span className="font-mono text-xs uppercase tracking-wider text-accent-primary">
-                  Interactive Preview
+                <span className="font-mono text-xs uppercase tracking-wider text-accent-primary font-semibold">
+                  TRY IT
                 </span>
                 <h2 className="text-2xl sm:text-3xl font-semibold text-ink-primary font-display">
-                  Experience Grounded Receipts Live
+                  Try it right here. No signup.
                 </h2>
                 <p className="text-xs sm:text-sm text-gray-warm max-w-md mx-auto">
-                  Click any citation stamp below to inspect the verbatim source receipt in real time.
+                  This is a real answer from a sample handbook. Click any citation. See the exact lines it came from.
                 </p>
               </div>
 
               <LiveMiniDemo />
             </section>
 
-            {/* Formats Marquee per §6.3 v2.1 & §6.4 */}
+            {/* Section: Formats (marquee) per text.md verbatim */}
             <section className="py-5 border-y border-border bg-bg-surface/30 overflow-hidden relative select-none">
               <motion.div
                 className="flex items-center gap-8 whitespace-nowrap font-mono text-xs text-gray-warm tracking-wider hover:[animation-play-state:paused]"
@@ -446,56 +368,21 @@ Upon voluntary resignation or formal separation, accrued annual leave encashment
                 transition={{
                   repeat: Infinity,
                   repeatType: "loop",
-                  duration: 40,
+                  duration: 36,
                   ease: "linear",
                 }}
               >
                 {[...Array(4)].map((_, i) => (
                   <span key={i} className="inline-flex items-center gap-6">
-                    <span className="text-ink-primary font-medium">PDF · DOCX · PPTX · XLSX · MD · TXT · any URL.</span>
+                    <span className="text-ink-primary font-medium">We read PDF · Word · PowerPoint · Excel · Markdown · web links</span>
                     <span className="text-accent-primary">◆</span>
                   </span>
                 ))}
               </motion.div>
             </section>
 
-            {/* Footer v2 (3 columns + open source pledge) per §6.3 */}
-            <footer className="border-t border-border bg-bg-surface/80 py-12 px-4 sm:px-6 text-xs text-gray-warm">
-              <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-8 mb-8">
-                <div className="space-y-2">
-                  <h4 className="font-semibold text-sm text-ink-primary font-display">Product</h4>
-                  <ul className="space-y-1.5 font-mono text-xs">
-                    <li><Link href="/product" className="hover:text-ink-primary">Architecture</Link></li>
-                    <li><Link href="/how-it-works" className="hover:text-ink-primary">How It Works</Link></li>
-                    <li><Link href="/pricing" className="hover:text-ink-primary">Pricing (₹0 / ₹299)</Link></li>
-                    <li><Link href="/library" className="hover:text-ink-primary">Shelf (Library)</Link></li>
-                  </ul>
-                </div>
-
-                <div className="space-y-2">
-                  <h4 className="font-semibold text-sm text-ink-primary font-display">Evidence</h4>
-                  <ul className="space-y-1.5 font-mono text-xs">
-                    <li><Link href="/exam" className="hover:text-ink-primary">46-Question Exam Suite</Link></li>
-                    <li><Link href="/dev" className="hover:text-ink-primary">/dev Component Gallery</Link></li>
-                    <li><Link href="/exam" className="hover:text-ink-primary">Release Scorecard History</Link></li>
-                  </ul>
-                </div>
-
-                <div className="space-y-2">
-                  <h4 className="font-semibold text-sm text-ink-primary font-display">Company</h4>
-                  <p className="text-xs text-gray-warm leading-relaxed">
-                    Allcited is built in the open. Every claim has a receipt; every deploy runs the exam.
-                  </p>
-                  <p className="font-mono text-[11px] text-accent-primary">
-                    Zero telemetry · Ephemeral RAM only
-                  </p>
-                </div>
-              </div>
-
-              <div className="pt-6 border-t border-border/60 text-center font-mono text-[11px] text-gray-warm">
-                Built with React, in the open. 46-question exam on every release. © 2026 Allcited.
-              </div>
-            </footer>
+            {/* Shared Footer per text.md */}
+            <Footer />
           </div>
         )}
       </div>

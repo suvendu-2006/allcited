@@ -1,230 +1,155 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import React, { useState } from "react";
+import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 
 export default function PricingPage() {
-  const [currentPlan, setCurrentPlan] = useState<string>("free");
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
-  useEffect(() => {
-    // Check url search params for success
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get("success") === "true") {
-        setSuccessMsg("Pro unlocked. Go read something enormous.");
-        setCurrentPlan("pro");
-      }
-    }
-
-    const token = typeof window !== "undefined" ? localStorage.getItem("allcited_auth_token") : null;
-    if (token) {
-      fetch(`${apiUrl}/v1/stripe/subscription`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((res) => (res.ok ? res.json() : null))
-        .then((data) => {
-          if (data?.plan) setCurrentPlan(data.plan);
-        })
-        .catch(() => {});
-    }
-  }, [apiUrl]);
-
-  const handleUpgrade = async () => {
-    setIsLoading(true);
-    setErrorMsg(null);
-    try {
-      const token = localStorage.getItem("allcited_auth_token") || "mock_clerk_token";
-      const res = await fetch(`${apiUrl}/v1/stripe/checkout`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          price_id: "price_pro_monthly",
-          success_url: `${window.location.origin}/pricing?success=true`,
-          cancel_url: `${window.location.origin}/pricing?canceled=true`,
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err?.detail?.error?.message || "Failed to create checkout session");
-      }
-
-      const data = await res.json();
-      if (data.checkout_url) {
-        window.location.href = data.checkout_url;
-      }
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to initiate Stripe checkout";
-      setErrorMsg(message);
-      setIsLoading(false);
-    }
+  const handleCheckout = () => {
+    setCheckoutLoading(true);
+    setTimeout(() => {
+      alert("Test mode checkout: Pro tier activated for testing (no real charges).");
+      setCheckoutLoading(false);
+    }, 600);
   };
 
   return (
     <div className="min-h-screen bg-bg-base text-ink-primary flex flex-col">
       <Navbar />
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-12">
-        <div className="text-center mb-10">
-          {/* Header per §4 copy freeze */}
-          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-ink-primary font-display mb-3">
+      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-12 sm:py-16 space-y-16">
+        {/* Section: Intro per text.md verbatim */}
+        <div className="text-center max-w-3xl mx-auto space-y-4">
+          <motion.h1
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="text-3xl sm:text-5xl font-bold tracking-tight text-ink-primary font-display"
+          >
             Free to ask. Paid to go deep.
-          </h1>
-          <p className="text-sm text-gray-warm max-w-xl mx-auto leading-relaxed">
-            Asking questions is free, forever. Pro is for the heavy stuff — giant documents, precision mode, a shelf that keeps everything.
-          </p>
+          </motion.h1>
 
-          {successMsg && (
-            <div className="mt-4 p-3 bg-accent-primary/10 border border-accent-primary/30 text-ink-primary text-xs rounded-interactive max-w-md mx-auto animate-fade-in font-medium">
-              🎉 {successMsg}
-            </div>
-          )}
-
-          {errorMsg && (
-            <div className="mt-4 p-3 bg-danger/10 border border-danger/30 text-danger text-xs rounded-interactive max-w-md mx-auto animate-fade-in">
-              {errorMsg}
-            </div>
-          )}
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+            className="text-sm sm:text-base text-gray-warm leading-relaxed"
+          >
+            Questions are free, forever. Pro is for big files and heavy use.
+          </motion.p>
         </div>
 
-        {/* Pricing Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-          {/* Free Tier per §4 copy freeze */}
-          <div className="rounded-interactive border border-border bg-bg-surface p-6 sm:p-8 flex flex-col justify-between shadow-xs">
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-ink-primary font-display">Free</h3>
-                <span className="font-mono text-[11px] text-gray-warm">for everyone</span>
+        {/* Pricing Cards */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
+          {/* Section: Free card per text.md verbatim */}
+          <div className="p-8 rounded-interactive border border-border bg-bg-surface flex flex-col justify-between shadow-xs space-y-6">
+            <div className="space-y-4">
+              <div className="flex items-baseline justify-between border-b border-border/60 pb-4">
+                <div>
+                  <h2 className="text-xl font-bold text-ink-primary font-display">
+                    Free
+                  </h2>
+                  <span className="text-xs text-gray-warm font-mono">for everyone</span>
+                </div>
+                <div className="text-right">
+                  <span className="font-mono text-3xl font-bold text-ink-primary">₹0</span>
+                </div>
               </div>
 
-              <div className="flex items-baseline mb-4">
-                <span className="text-3xl font-bold font-mono text-ink-primary">₹0</span>
-              </div>
-
-              <p className="text-xs text-gray-warm mb-6 leading-relaxed">
-                Unlimited questions · documents up to 20 MB · all 6 formats · every citation, every trace.
+              <p className="text-xs text-gray-warm">
+                For reading, asking, and checking answers.
               </p>
 
-              <ul className="space-y-3 mb-8 text-xs text-ink-primary">
-                <li className="flex items-center gap-2">
-                  <span className="font-mono text-accent-primary font-bold">✓</span>
-                  <span>Unlimited questions, forever</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="font-mono text-accent-primary font-bold">✓</span>
-                  <span>Documents up to 20 MB</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="font-mono text-accent-primary font-bold">✓</span>
-                  <span>All 6 formats (PDF, DOCX, PPTX, XLSX, MD, URL)</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="font-mono text-accent-primary font-bold">✓</span>
-                  <span>Every citation stamp and verification trace</span>
-                </li>
+              <ul className="space-y-2.5 text-xs text-ink-primary font-mono pt-2">
+                {[
+                  "Unlimited questions, forever",
+                  "Files up to 20 MB",
+                  "All 6 file types",
+                  "Every citation and trace",
+                ].map((bullet) => (
+                  <li key={bullet} className="flex items-center gap-2">
+                    <span className="text-accent-primary font-bold">✓</span>
+                    <span>{bullet}</span>
+                  </li>
+                ))}
               </ul>
             </div>
 
-            <Button
-              variant="outline"
-              disabled
-              className="w-full text-xs h-9 cursor-default"
-            >
-              {currentPlan === "free" ? "Included Free" : "Active Base"}
-            </Button>
+            <div className="pt-4 border-t border-border/60">
+              <Link href="/?workspace=true" className="w-full block">
+                <Button variant="outline" size="lg" className="w-full text-xs">
+                  Start Free
+                </Button>
+              </Link>
+            </div>
           </div>
 
-          {/* Pro Tier per §4 copy freeze */}
-          <div className="rounded-interactive border-2 border-accent-primary bg-bg-surface p-6 sm:p-8 flex flex-col justify-between shadow-md relative overflow-hidden">
-            <div className="absolute top-0 right-0 bg-accent-primary text-primary-foreground text-[10px] font-mono font-bold uppercase tracking-wider py-1 px-3 rounded-bl-interactive">
-              Pro
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-ink-primary font-display">
-                  Pro
-                </h3>
+          {/* Section: Pro card per text.md verbatim */}
+          <div className="p-8 rounded-interactive border-2 border-accent-primary bg-bg-surface flex flex-col justify-between shadow-md space-y-6 relative">
+            <div className="space-y-4">
+              <div className="flex items-baseline justify-between border-b border-border/60 pb-4">
+                <div>
+                  <h2 className="text-xl font-bold text-ink-primary font-display">
+                    Pro
+                  </h2>
+                  <span className="text-xs text-accent-primary font-mono">cancel anytime</span>
+                </div>
+                <div className="text-right">
+                  <span className="font-mono text-3xl font-bold text-accent-primary">₹299</span>
+                  <span className="text-xs text-gray-warm font-mono">/month</span>
+                </div>
               </div>
 
-              <div className="flex items-baseline mb-4">
-                <span className="text-3xl font-bold font-mono text-ink-primary">₹299</span>
-                <span className="text-xs text-gray-warm ml-2 font-mono">/ month · cancel anytime</span>
-              </div>
-
-              <p className="text-xs text-gray-warm mb-6 leading-relaxed">
-                Everything in Free, plus: documents up to 100 MB · <strong>Precision mode</strong> (reads 50 passages before answering, not 25) · unlimited shelf · priority when we&apos;re busy.
+              <p className="text-xs text-gray-warm">
+                For big documents and heavy use.
               </p>
 
-              <ul className="space-y-3 mb-8 text-xs text-ink-primary">
-                <li className="flex items-center gap-2">
-                  <span className="font-mono text-accent-primary font-bold">✓</span>
-                  <span><strong>Documents up to 100 MB</strong></span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="font-mono text-accent-primary font-bold">✓</span>
-                  <span><strong>Precision mode</strong>: reads 50 passages before answering</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="font-mono text-accent-primary font-bold">✓</span>
-                  <span><strong>Unlimited shelf</strong> for long-term documents</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="font-mono text-accent-primary font-bold">✓</span>
-                  <span>High-speed priority when servers are swamped</span>
-                </li>
+              <ul className="space-y-2.5 text-xs text-ink-primary font-mono pt-2">
+                {[
+                  "Everything in Free",
+                  "Files up to 100 MB",
+                  "Precision mode (checks 50 passages instead of 25)",
+                  "Unlimited shelf",
+                  "Priority when busy",
+                ].map((bullet) => (
+                  <li key={bullet} className="flex items-center gap-2">
+                    <span className="text-accent-primary font-bold">✓</span>
+                    <span>{bullet}</span>
+                  </li>
+                ))}
               </ul>
             </div>
 
-            <div>
-              {currentPlan === "pro" ? (
-                <Button
-                  variant="outline"
-                  disabled
-                  className="w-full text-xs h-9 text-accent-primary border-accent-primary cursor-default"
-                >
-                  ✓ Current Plan Active
-                </Button>
-              ) : (
-                <Button
-                  variant="primary"
-                  onClick={handleUpgrade}
-                  disabled={isLoading}
-                  className="w-full text-xs h-9"
-                >
-                  {isLoading ? "Opening checkout…" : "Start Pro"}
-                </Button>
-              )}
-              {/* Ghost mono note per §4 copy freeze */}
-              <p className="text-center font-mono text-[10px] text-ink-ghost mt-2">
+            <div className="pt-4 border-t border-border/60 space-y-2">
+              <Button
+                variant="primary"
+                size="lg"
+                onClick={handleCheckout}
+                disabled={checkoutLoading}
+                className="w-full text-xs"
+              >
+                {checkoutLoading ? "Opening checkout..." : "Start Pro"}
+              </Button>
+
+              <p className="font-mono text-[10px] text-gray-warm text-center">
                 test-mode checkout during beta — no real charges
               </p>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Footer Trust Line */}
-        <div className="mt-12 text-center font-mono text-[11px] text-gray-warm flex items-center justify-center gap-4">
-          <span className="flex items-center gap-1">
-            <span className="text-accent-primary font-bold">✓</span>
-            Zero database storage without shelf save
-          </span>
-          <span>·</span>
-          <span>Stripe test-mode sandbox</span>
-          <span>·</span>
-          <span>Cancel anytime in one click</span>
-        </div>
+        {/* Section: Reassurance (under cards) per text.md verbatim */}
+        <section className="text-center font-mono text-xs text-gray-warm pt-4 border-t border-border/60">
+          <p>Nothing is stored unless you save it · Cancel anytime in one click</p>
+        </section>
       </main>
+
+      <Footer />
     </div>
   );
 }

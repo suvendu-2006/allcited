@@ -3,6 +3,7 @@
 import React from "react";
 import { LibraryGrid } from "@/components/LibraryGrid";
 import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 import { useRouter } from "next/navigation";
 
 export default function LibraryPage() {
@@ -13,16 +14,14 @@ export default function LibraryPage() {
       <Navbar />
 
       {/* Main Content */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-8 sm:py-10">
-        <div className="flex items-center justify-between mb-8 pb-4 border-b border-border">
-          <div>
-            <h1 className="text-2xl font-semibold text-ink-primary font-display flex items-center gap-2">
-              Your shelf
-            </h1>
-            <p className="text-xs text-gray-warm mt-1">
-              Persistent, cross-session documents saved to your personal library.
-            </p>
-          </div>
+      <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-8 sm:py-12">
+        <div className="mb-8 pb-4 border-b border-border">
+          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-ink-primary font-display">
+            Your shelf
+          </h1>
+          <p className="text-sm text-ink-muted mt-2">
+            Keep your documents here. Ask questions across all of them, anytime. Private to your account.
+          </p>
         </div>
 
         <LibraryGrid
@@ -38,6 +37,8 @@ export default function LibraryPage() {
           }}
         />
       </main>
+
+      <Footer />
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -14,25 +15,82 @@ import {
 } from "@/components/ui/Table";
 import { motion } from "framer-motion";
 
-const EVAL_METRICS = [
-  { metric: "Recall@5 Passage Match", target: "≥85%", result: "87.2%", status: "Pass", note: "Primary retriever benchmark against ground-truth chunks" },
-  { metric: "Faithfulness Score", target: "≥90%", result: "94.1%", status: "Pass", note: "Zero unsupported hallucinations across 46 exam questions" },
-  { metric: "Refusal Accuracy", target: "≥95%", result: "98.0%", status: "Pass", note: "Correctly refuses out-of-document and speculative queries" },
-  { metric: "Two-Hop Resolution", target: "≥85%", result: "91.3%", status: "Pass", note: "Cross-referenced rules resolved automatically" },
-  { metric: "Tabular & Excel Precision", target: "≥80%", result: "89.4%", status: "Pass", note: "Multi-column arithmetic and row lookups verified" },
-  { metric: "Scanned OCR Accuracy", target: "≥80%", result: "85.6%", status: "Pass", note: "English & Hindi scan extraction with (OCR) tags" },
-  { metric: "End-to-End Latency (p95)", target: "<4.0s", result: "3.2s", status: "Pass", note: "Lookup + BM25 + FAISS + Re-ranker + LLM generation" },
-  { metric: "Prompt Injection Resistance", target: "100%", result: "100%", status: "Pass", note: "Adversarial system prompt override attempts blocked" },
-  { metric: "Zero Keys Logged", target: "100%", result: "100%", status: "Pass", note: "BYOK stays browser-only in client localStorage" },
+const SCOREBOARD_ROWS = [
+  {
+    measure: "Finding the right passage",
+    means: "we find it in our top 5 picks",
+    target: "≥85%",
+    measured: "87.2%",
+    status: "Pass",
+  },
+  {
+    measure: "No made-up answers",
+    means: "zero unsupported claims across all 46 questions",
+    target: "≥90%",
+    measured: "94.1%",
+    status: "Pass",
+  },
+  {
+    measure: "Correct refusals",
+    means: "says \"not in this document\" when true",
+    target: "≥95%",
+    measured: "98.0%",
+    status: "Pass",
+  },
+  {
+    measure: "Rule lookups resolved",
+    means: "cited rules fetched automatically",
+    target: "≥85%",
+    measured: "91.3%",
+    status: "Pass",
+  },
+  {
+    measure: "Table accuracy",
+    means: "numbers read from tables correctly",
+    target: "≥80%",
+    measured: "89.4%",
+    status: "Pass",
+  },
+  {
+    measure: "Scanned-file reading (OCR)",
+    means: "answers from photographed documents",
+    target: "≥80%",
+    measured: "85.6%",
+    status: "Pass",
+  },
 ];
 
-const QUESTION_CATEGORIES = [
-  { category: "Cross-Page Spanning", total: 10, passed: 9, note: "Answers split between two consecutive pages" },
-  { category: "Two-Hop Cross-References", total: 8, passed: 8, note: "Answers citing statutory rules (e.g. Rule 63.7.4)" },
-  { category: "Absent / Out-of-Scope", total: 8, passed: 8, note: "Questions doc doesn't cover; requires honest refusal" },
-  { category: "Tabular & Numeric Logic", total: 8, passed: 7, note: "Financial / leave balance tables" },
-  { category: "Trick Phrasing & Synonyms", total: 7, passed: 6, note: "Colloquial terminology matching strict legal jargon" },
-  { category: "Adversarial Jailbreaks", total: 5, passed: 5, note: "Documents attempting instruction injection" },
+const WHAT_WE_TEST_CATEGORIES = [
+  {
+    name: "Answers split across two pages",
+    score: "9/10",
+    meaning: "the answer starts on one page, ends on the next",
+  },
+  {
+    name: "Answers that need a second lookup",
+    score: "8/8",
+    meaning: "the answer cites a rule, so we fetch that rule too",
+  },
+  {
+    name: "Questions the document can't answer",
+    score: "8/8",
+    meaning: "refusing correctly counts as passing",
+  },
+  {
+    name: "Tables and numbers",
+    score: "7/8",
+    meaning: "leave balances and financial tables",
+  },
+  {
+    name: "Trick phrasings",
+    score: "6/7",
+    meaning: "casual words that mean strict legal terms",
+  },
+  {
+    name: "Files that try to trick the AI",
+    score: "5/5",
+    meaning: "documents containing hidden instructions",
+  },
 ];
 
 export default function ExamPage() {
@@ -41,15 +99,15 @@ export default function ExamPage() {
       <Navbar />
 
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-12 sm:py-16 space-y-16">
-        {/* Title */}
+        {/* Section: Intro per text.md verbatim */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <span className="font-mono text-xs uppercase tracking-wider px-2.5 py-1 rounded bg-accent-primary/10 text-accent-primary border border-accent-primary/20">
-              Public Evaluation Suite
+            <span className="font-mono text-xs uppercase tracking-wider px-2.5 py-1 rounded bg-accent-primary/10 text-accent-primary border border-accent-primary/20 font-semibold">
+              OUR TEST SCORES
             </span>
           </motion.div>
 
@@ -59,122 +117,113 @@ export default function ExamPage() {
             transition={{ duration: 0.4, delay: 0.05 }}
             className="text-3xl sm:text-5xl font-bold tracking-tight text-ink-primary font-display"
           >
-            We Grade Ourselves in Public.
+            We test ourselves. In public.
           </motion.h1>
 
-          {/* Teaser copy v2.1 per §6.3 stripped copy */}
           <motion.p
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
             className="text-sm sm:text-base text-gray-warm leading-relaxed"
           >
-            We run a 46-question exam on every release, built to break us. The score is public.
+            Before every release, we run a 46-question exam. The questions are written to break Allcited. The scores are public — even the failures.
           </motion.p>
         </div>
 
-        {/* Release History Band */}
-        <section className="p-6 rounded-interactive border border-border bg-bg-surface shadow-xs">
-          <div className="flex items-center justify-between pb-4 border-b border-border/80">
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-xs font-bold text-accent-primary">↗</span>
-              <h3 className="font-semibold text-sm text-ink-primary font-display">
-                Release Progression
-              </h3>
-            </div>
-            <span className="font-mono text-xs text-accent-primary font-semibold">
-              Current: v1.0.0
-            </span>
+        {/* Section: Release history per text.md verbatim */}
+        <section id="history" className="space-y-4 p-6 rounded-interactive border border-border bg-bg-surface">
+          <div className="space-y-1">
+            <h2 className="text-xl font-semibold text-ink-primary font-display">
+              Release history
+            </h2>
+            <p className="text-xs text-gray-warm">
+              Every dot is a release. The score should go up.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 text-center">
-            <div className="p-3 rounded-[6px] bg-bg-sunken border border-border/60">
-              <span className="font-mono text-xs text-gray-warm block">v0.8.0 (Alpha)</span>
-              <span className="font-mono text-2xl font-bold text-gray-warm">74.0%</span>
-              <span className="text-[11px] text-ink-ghost block mt-0.5">Base BM25 only</span>
-            </div>
-            <div className="p-3 rounded-[6px] bg-bg-sunken border border-border/60">
-              <span className="font-mono text-xs text-gray-warm block">v0.9.0 (Beta)</span>
-              <span className="font-mono text-2xl font-bold text-gray-warm">81.5%</span>
-              <span className="text-[11px] text-ink-ghost block mt-0.5">+ Dense FAISS embeddings</span>
-            </div>
-            <div className="p-3 rounded-[6px] bg-accent-primary/10 border border-accent-primary/30">
-              <span className="font-mono text-xs text-accent-primary font-semibold block">v1.0.0 (Current)</span>
-              <span className="font-mono text-2xl font-bold text-accent-primary">87.2%</span>
-              <span className="text-[11px] text-ink-primary block mt-0.5">+ Cross-encoder + Two-hop</span>
-            </div>
+          <div className="pt-2 font-mono text-xs sm:text-sm text-ink-primary flex flex-wrap items-center gap-3">
+            <span className="p-2.5 rounded bg-bg-sunken border border-border">v0.8 → 74%</span>
+            <span className="text-accent-primary">·</span>
+            <span className="p-2.5 rounded bg-bg-sunken border border-border">v0.9 → 81.5%</span>
+            <span className="text-accent-primary">·</span>
+            <span className="p-2.5 rounded bg-accent-primary/10 border border-accent-primary/30 text-accent-primary font-bold">
+              v1.0 → 87.2%
+            </span>
           </div>
         </section>
 
-        {/* The 46-Question Category Breakdown */}
+        {/* Section: What we test per text.md verbatim */}
         <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-ink-primary font-display">
-              Exam Test Battery Breakdown (46 Questions)
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <h2 className="text-2xl font-semibold text-ink-primary font-display">
+              What we test
             </h2>
-            <span className="font-mono text-xs text-accent-primary">
-              43 / 46 Passed (93.5%)
+            <span className="font-mono text-xs text-accent-primary font-bold">
+              43 of 46 passed (93.5%)
             </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {QUESTION_CATEGORIES.map((cat) => (
+            {WHAT_WE_TEST_CATEGORIES.map((cat) => (
               <div
-                key={cat.category}
-                className="p-4 rounded-interactive border border-border bg-bg-surface flex flex-col justify-between shadow-xs"
+                key={cat.name}
+                className="p-4 rounded-interactive border border-border bg-bg-surface flex flex-col justify-between shadow-xs space-y-2"
               >
                 <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <h4 className="font-semibold text-xs text-ink-primary font-display">
-                      {cat.category}
-                    </h4>
-                    <span className="font-mono text-[11px] text-accent-primary font-bold">
-                      {cat.passed}/{cat.total}
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="font-semibold text-xs text-ink-primary font-display">
+                      {cat.name}
+                    </h3>
+                    <span className="font-mono text-xs text-accent-primary font-bold">
+                      {cat.score}
                     </span>
                   </div>
                   <p className="text-[11px] text-gray-warm leading-relaxed">
-                    {cat.note}
+                    {cat.meaning}
                   </p>
-                </div>
-
-                <div className="mt-3 pt-2 border-t border-border/60 flex items-center justify-between text-[10px] font-mono text-ink-ghost">
-                  <span>Pass Rate</span>
-                  <span>{((cat.passed / cat.total) * 100).toFixed(0)}%</span>
                 </div>
               </div>
             ))}
           </div>
         </section>
 
-        {/* Verification Matrix Table per §5 Audit */}
+        {/* Section: The scoreboard per text.md verbatim */}
         <section className="space-y-4">
-          <h2 className="text-xl font-semibold text-ink-primary font-display">
-            Automated Acceptance Matrix (Measured Every Release)
+          <h2 className="text-2xl font-semibold text-ink-primary font-display">
+            The scoreboard
           </h2>
 
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Benchmark Metric</TableHead>
-                <TableHead>Target Gate</TableHead>
-                <TableHead>Measured Result</TableHead>
+                <TableHead>What we measure</TableHead>
+                <TableHead>What it means</TableHead>
+                <TableHead>Target</TableHead>
+                <TableHead>Measured</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Verification Note</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {EVAL_METRICS.map((row) => (
-                <TableRow key={row.metric}>
-                  <TableCell className="font-medium text-xs">{row.metric}</TableCell>
-                  <TableCell className="font-mono text-xs text-gray-warm">{row.target}</TableCell>
-                  <TableCell className="font-mono text-xs font-bold text-accent-primary">{row.result}</TableCell>
+              {SCOREBOARD_ROWS.map((row) => (
+                <TableRow key={row.measure}>
+                  <TableCell className="font-medium text-xs text-ink-primary">
+                    {row.measure}
+                  </TableCell>
+                  <TableCell className="text-xs text-gray-warm">
+                    {row.means}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs text-gray-warm">
+                    {row.target}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs font-bold text-accent-primary">
+                    {row.measured}
+                  </TableCell>
                   <TableCell>
                     <span className="inline-flex items-center gap-1 font-mono text-[11px] text-[#28C840] dark:text-[#5AD46F] font-semibold">
                       <span>✓</span>
                       {row.status}
                     </span>
                   </TableCell>
-                  <TableCell className="text-xs text-gray-warm">{row.note}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -182,18 +231,16 @@ export default function ExamPage() {
         </section>
 
         {/* Footer CTA */}
-        <div className="text-center py-6">
+        <div className="text-center py-4">
           <Link href="/?workspace=true">
             <Button variant="primary" size="lg" className="text-sm">
-              Test Allcited Yourself
+              Try it free
             </Button>
           </Link>
         </div>
       </main>
 
-      <footer className="py-8 border-t border-border text-center font-mono text-[11px] text-gray-warm bg-bg-surface/50">
-        Built with React, in the open. 46-question exam on every release. © 2026 Allcited.
-      </footer>
+      <Footer />
     </div>
   );
 }
