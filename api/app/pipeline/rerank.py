@@ -5,6 +5,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 from sentence_transformers import CrossEncoder
 
+from app.pipeline.embed import resolve_local_model_path
 from app.pipeline.retrieve import ScoredChunk
 
 logger = logging.getLogger(__name__)
@@ -41,7 +42,17 @@ class Reranker:
     @property
     def model(self) -> CrossEncoder:
         if self._model is None:
-            self._model = CrossEncoder(self.model_name)
+            resolved = resolve_local_model_path(self.model_name, "reranker")
+            if resolved != self.model_name:
+                logger.info("Loading reranker model from local path: %s", resolved)
+                try:
+                    self._model = CrossEncoder(resolved, local_files_only=True)
+                except Exception as e:
+                    logger.warning("Local reranker model load failed from %s: %s; falling back to hub", resolved, e)
+                    self._model = CrossEncoder(self.model_name)
+            else:
+                logger.info("Loading reranker model from Hugging Face Hub: %s", self.model_name)
+                self._model = CrossEncoder(self.model_name)
         return self._model
 
     def rerank(

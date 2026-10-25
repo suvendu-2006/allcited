@@ -103,7 +103,7 @@ export function LibraryGrid({
     }
   };
 
-  // State 1: Degradation Notice per text.md
+  // State 1: Degradation Notice
   if (isDegraded) {
     return (
       <div className="space-y-6">
@@ -132,7 +132,7 @@ export function LibraryGrid({
     );
   }
 
-  // State 3: Empty (signed out) per text.md
+  // State 3: Empty (signed out)
   if (!isSignedIn) {
     return (
       <div className="dot-grid rounded-interactive border border-border p-8 sm:p-12 text-center bg-bg-surface/40">
@@ -163,7 +163,6 @@ export function LibraryGrid({
   // State 4: Signed in with Documents & Ask-My-Library Composer
   return (
     <div className="space-y-6">
-      {/* Ask across everything on your shelf per §4 */}
       <form
         onSubmit={(e) => {
           e.preventDefault();

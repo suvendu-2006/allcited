@@ -358,10 +358,9 @@ def test_pipeline_e2e_groq_failover_to_nvidia(monkeypatch):
     the pipeline streams from NVIDIA NIM and delivers done event with provider='nvidia'.
     """
     async def run_test():
-        from app.pipeline.chunker import Chunk
-        from app.pipeline.twohop import TwoHopChunk
-        from app.sessions import DocumentSession
         from app.pipeline.answer import stream_answer_pipeline
+        from app.pipeline.chunker import Chunk
+        from app.sessions import DocumentSession
 
         async def instant_sleep(*args, **kwargs):
             return
@@ -389,8 +388,8 @@ def test_pipeline_e2e_groq_failover_to_nvidia(monkeypatch):
 
         monkeypatch.setattr(httpx.AsyncClient, "__init__", mock_init)
 
-        from app.pipeline.refmap import ReferenceMap
         from app.pipeline.indexes import DocumentIndex
+        from app.pipeline.refmap import ReferenceMap
 
         # Create session with 1 chunk
         c = Chunk(id="c1", doc_id="d1", content_hash="h1", text="Notice period is 60 calendar days.", section_path=["Separation"], token_count=10, page=1)

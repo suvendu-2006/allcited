@@ -169,7 +169,7 @@ export function executeThemeWave(
       );
 
       anim.onfinish = () => {
-        // Trigger soft ripple ring afterglow 400ms after settle per §6.5
+        // Trigger soft ripple ring afterglow 400ms after settle
         setTimeout(() => {
           const ripple = document.createElement("div");
           ripple.className = "wave-ripple-ring";

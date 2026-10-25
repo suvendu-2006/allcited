@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { CitationChip } from "./CitationChip";
 import { motion, AnimatePresence } from "framer-motion";
+import { Check, X } from "lucide-react";
 
 export function LiveMiniDemo() {
   const [isStreaming, setIsStreaming] = useState(false);
@@ -108,9 +109,10 @@ export function LiveMiniDemo() {
               <button
                 type="button"
                 onClick={() => setActiveReceipt(null)}
-                className="text-gray-warm hover:text-ink-primary"
+                className="text-gray-warm hover:text-ink-primary p-0.5 rounded cursor-pointer"
+                aria-label="Close quote"
               >
-                ✕
+                <X className="w-3 h-3" />
               </button>
             </div>
             <p className="font-sans text-xs text-ink-primary leading-relaxed">
@@ -120,18 +122,17 @@ export function LiveMiniDemo() {
         )}
       </AnimatePresence>
 
-      {/* Privacy checks per §4D verbatim */}
       <div className="pt-3 border-t border-border/70 grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-[10.5px] text-gray-warm text-center sm:text-left">
         <div className="flex items-center gap-1.5">
-          <span className="text-accent-primary font-bold">✓</span>
+          <Check className="w-3.5 h-3.5 text-accent-primary flex-shrink-0" />
           <span>Your file is deleted when you leave</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-accent-primary font-bold">✓</span>
+          <Check className="w-3.5 h-3.5 text-accent-primary flex-shrink-0" />
           <span>Your own key stays in your browser</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-accent-primary font-bold">✓</span>
+          <Check className="w-3.5 h-3.5 text-accent-primary flex-shrink-0" />
           <span>We never look at your files</span>
         </div>
       </div>

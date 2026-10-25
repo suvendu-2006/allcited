@@ -77,7 +77,6 @@ export function Composer({
       />
 
       <div className="flex items-center justify-between pt-1 px-1">
-        {/* Hint per §4 copy freeze: ↵ to send · ⇧↵ for a new line */}
         <span
           className={`font-mono text-[11px] text-gray-warm transition-opacity duration-120 ${
             isFocused ? "opacity-100" : "opacity-0 sm:opacity-80"

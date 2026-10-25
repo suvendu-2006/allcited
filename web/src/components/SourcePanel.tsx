@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { Citation } from "@/lib/sse";
-import { X, Check, Copy } from "lucide-react";
+import { X, Check, Copy, Sparkles } from "lucide-react";
 
 interface SourcePanelProps {
   citations: Citation[];
@@ -35,7 +35,7 @@ export function SourcePanel({
     }
   }, [activeLabel]);
 
-  // Handle Escape key to close per §6.9
+  // Close on Escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isOpen) {
@@ -74,7 +74,7 @@ export function SourcePanel({
         />
       )}
 
-      {/* Receipts Drawer (360px per §6.9 verbatim) */}
+      {/* Receipts Drawer */}
       <aside
         role="complementary"
         aria-label="Source receipts drawer"
@@ -82,7 +82,6 @@ export function SourcePanel({
           isOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
         }`}
       >
-        {/* Panel Header per §6.9: Doc title appears once */}
         <div className="p-4 border-b border-border flex items-center justify-between flex-shrink-0 bg-bg-surface/90 backdrop-blur-sm">
           <div className="min-w-0 pr-2">
             <h3 className="font-semibold text-sm text-ink-primary font-display tracking-tight flex items-center gap-2">
@@ -134,7 +133,7 @@ export function SourcePanel({
               const isOcr = Boolean(c.is_ocr) || c.label.includes("(OCR)");
               const isExpanded = expandedLabels.has(c.label);
 
-              // Section & page label (Doc title appears only once in panel header per §6.9)
+              // Section & page label
               const sectionName = c.section_path?.length ? c.section_path.slice(-1)[0] : "";
               const pageStr = c.page_number || c.page ? `p.${c.page_number || c.page}` : "";
               const chunkLabel = [sectionName, pageStr].filter(Boolean).join(" · ");
@@ -147,7 +146,7 @@ export function SourcePanel({
                     else cardRefs.current.delete(c.label);
                   }}
                   onClick={() => onSelectCitation?.(c.label)}
-                  className={`p-3.5 rounded-r-[6px] text-xs transition-all duration-120 cursor-pointer bg-bg-sunken border-t-0 border-r-0 border-b-0 ${
+                  className={`p-3.5 rounded-interactive text-xs transition-all duration-120 cursor-pointer bg-bg-sunken border-t-0 border-r-0 border-b-0 ${
                     isTwoHop
                       ? isSelected
                         ? "border-l-[3px] border-l-[#FEBC2E] dark:border-l-[#FCC64B] -translate-y-[1px] shadow-sm ring-1 ring-[#FEBC2E]/30"
@@ -194,22 +193,19 @@ export function SourcePanel({
                     </button>
                   </div>
 
-                  {/* Two-Hop Note per §6.9 */}
                   {isTwoHop && (
                     <div className="mb-2 text-[11px] font-mono text-[#8F5B00] dark:text-[#FCC64B] flex items-center gap-1">
-                      <span>✦</span>
+                      <Sparkles className="w-3 h-3 flex-shrink-0" />
                       <span>{c.added_reason || "Cross-referenced passage"}</span>
                     </div>
                   )}
 
-                  {/* OCR Note per §4 */}
                   {isOcr && (
                     <div className="mb-2 font-mono text-[10px] text-amber-800 dark:text-amber-300">
                       (OCR — read from scan)
                     </div>
                   )}
 
-                  {/* Excerpt with 6-line clamp & fade mask per §6.9 (no inner boxes) */}
                   {isExpanded ? (
                     <div>
                       <div className="text-ink-primary font-sans text-[13px] leading-relaxed whitespace-pre-wrap select-text">

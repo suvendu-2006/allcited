@@ -165,7 +165,6 @@ export function ModelSettings({
         className="bg-bg-surface border border-border rounded-interactive shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header per §4 copy freeze */}
         <div className="flex items-start justify-between px-6 py-4 border-b border-border bg-bg-surface/90">
           <div>
             <h2 className="text-base font-semibold text-ink-primary font-display">
@@ -194,7 +193,6 @@ export function ModelSettings({
             </div>
           )}
 
-          {/* Mode 1: Allcited Free per §4 */}
           <label
             className={`flex items-start gap-3 p-3.5 rounded-interactive border cursor-pointer transition-all ${
               mode === "groq"
@@ -220,7 +218,6 @@ export function ModelSettings({
             </div>
           </label>
 
-          {/* Mode 2: Your own key per §4 */}
           <div
             className={`p-3.5 rounded-interactive border transition-all ${
               mode === "byok"
@@ -244,8 +241,7 @@ export function ModelSettings({
                 <p className="text-xs text-gray-warm mt-0.5">
                   Your key, your speed, your limits.
                 </p>
-                {/* Promise in mono per §4 */}
-                <p className="font-mono text-[11px] text-gray-warm mt-1.5 bg-bg-sunken p-2 border border-border/60">
+                <p className="font-sans text-[11px] text-gray-warm mt-1.5 bg-bg-sunken p-2 border border-border/60">
                   Stays in your browser. Never stored, never logged, never sent anywhere but your provider.
                 </p>
               </div>
@@ -310,7 +306,6 @@ export function ModelSettings({
             )}
           </div>
 
-          {/* Mode 3: Local (Ollama) per §4 */}
           <div
             className={`p-3.5 rounded-interactive border transition-all ${
               mode === "ollama"
@@ -395,7 +390,7 @@ export function ModelSettings({
                   )}
                 </div>
 
-                <p className="font-mono text-[10px] text-gray-warm">
+                <p className="font-sans text-[10px] text-gray-warm">
                   Local mode needs Allcited running on your computer. On the web, pick another mode.
                 </p>
               </div>

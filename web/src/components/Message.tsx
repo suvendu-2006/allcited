@@ -105,7 +105,7 @@ export function Message({ message, onCitationClick }: MessageProps) {
     );
   }
 
-  // Assistant Message Refusal Check per §4 copy freeze
+  // Assistant Message Refusal Check
   const lowerContent = (message.content || "").toLowerCase();
   const isOffTopic =
     message.refusalType === "off_topic" ||
@@ -127,7 +127,6 @@ export function Message({ message, onCitationClick }: MessageProps) {
   return (
     <div className="flex justify-start animate-fade-in w-full">
       <div className="flex gap-3 w-full">
-        {/* [A] Wordmark Chip per §6.9 wireframe */}
         <div className="w-6 h-6 rounded bg-bg-sunken border border-border text-[#CC5A3F] dark:text-[#E8765A] flex items-center justify-center flex-shrink-0 text-[11px] font-mono font-bold select-none mt-1 shadow-2xs">
           A
         </div>
@@ -152,7 +151,6 @@ export function Message({ message, onCitationClick }: MessageProps) {
             </div>
           )}
 
-          {/* Refusal Card 1: Off-Topic per §4 copy freeze */}
           {isOffTopic ? (
             <div className="p-4 rounded-interactive border border-border bg-bg-surface border-l-[3px] border-l-[#CC5A3F] dark:border-l-[#E8765A] text-ink-primary shadow-xs space-y-1.5 animate-fade-in">
               <div className="flex items-center gap-2">
@@ -166,7 +164,6 @@ export function Message({ message, onCitationClick }: MessageProps) {
               </p>
             </div>
           ) : isNotInDoc ? (
-            /* Refusal Card 2: Not in document per §4 copy freeze */
             <div className="p-4 rounded-interactive border border-border bg-bg-surface border-l-[3px] border-l-[#CC5A3F] dark:border-l-[#E8765A] text-ink-primary shadow-xs space-y-1.5 animate-fade-in">
               <div className="flex items-center gap-2">
                 <ShieldAlert className="w-4 h-4 text-[#CC5A3F] dark:text-[#E8765A] flex-shrink-0" />
@@ -191,16 +188,15 @@ export function Message({ message, onCitationClick }: MessageProps) {
             </div>
           )}
 
-          {/* Answer Meta Row per §6.9 wireframe: Right? 👍 👎 · Why this answer? (NO tokens) */}
           {message.stage === "done" && message.questionId && (
             <div className="flex items-center justify-between text-[11px] text-gray-warm pt-1 px-1">
-              {/* Feedback: Right? 👍 👎 */}
               <div className="flex items-center gap-1.5">
                 <span className="text-[11px] text-gray-warm">Right?</span>
                 <button
                   type="button"
                   onClick={() => handleFeedback(1)}
                   aria-label="Thumbs up"
+                  title="Helpful 👍"
                   className={`p-1 rounded-[4px] transition-colors cursor-pointer ${
                     feedback === "up"
                       ? "text-accent-primary bg-accent-primary/10"
@@ -213,6 +209,7 @@ export function Message({ message, onCitationClick }: MessageProps) {
                   type="button"
                   onClick={() => handleFeedback(-1)}
                   aria-label="Thumbs down"
+                  title="Unhelpful 👎"
                   className={`p-1 rounded-[4px] transition-colors cursor-pointer ${
                     feedback === "down"
                       ? "text-[#CC5A3F] bg-[#CC5A3F]/10"

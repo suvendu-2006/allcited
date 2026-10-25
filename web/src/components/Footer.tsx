@@ -7,12 +7,10 @@ export function Footer() {
   return (
     <footer className="border-t border-border bg-bg-surface/60 backdrop-blur-sm py-12 px-4 sm:px-8 text-xs select-none">
       <div className="max-w-6xl mx-auto space-y-8">
-        {/* Top line per §4D verbatim */}
         <p className="font-editorial text-base sm:text-lg text-ink-primary font-medium">
           Allcited is built in the open. Every claim has a receipt. Every release runs the exam.
         </p>
 
-        {/* Columns per §4D verbatim */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 pt-2 text-xs">
           {/* Column 1: Product */}
           <div className="space-y-3">
@@ -87,9 +85,8 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Bottom line per §4D verbatim */}
         <div className="pt-6 border-t border-border/60 text-center sm:text-left">
-          <p className="font-mono text-[11px] text-gray-warm">
+          <p className="font-sans text-[11px] text-gray-warm">
             Built with React, in the open. 46-question exam on every release. © 2026 Allcited.
           </p>
         </div>

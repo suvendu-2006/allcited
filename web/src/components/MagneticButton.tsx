@@ -19,7 +19,7 @@ export function MagneticButton({ children, className = "", onClick }: MagneticBu
     const { clientX, clientY } = e;
     const { left, top, width, height } = ref.current.getBoundingClientRect();
 
-    // Max translation <= 6px per §6.4
+    // Max translation <= 6px
     const middleX = clientX - (left + width / 2);
     const middleY = clientY - (top + height / 2);
     const maxOffset = 6;

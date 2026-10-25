@@ -145,7 +145,7 @@
   z-index: 9999;
 }
 
-/* Ripple Afterglow per §6.5 */
+/* Ripple Afterglow */
 .wave-ripple-ring {
   pointer-events: none;
   position: fixed;

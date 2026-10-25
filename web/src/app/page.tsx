@@ -15,7 +15,7 @@ import { LiveMiniDemo } from "@/components/LiveMiniDemo";
 import { Button } from "@/components/ui/button";
 import { Footer } from "@/components/Footer";
 import { motion, useMotionValue, useSpring } from "framer-motion";
-import { Star } from "lucide-react";
+import { Star, Settings } from "lucide-react";
 
 const PROOF_TICKER_ITEMS = [
   { text: "Every claim, cited", isStamp: false },
@@ -172,7 +172,7 @@ export default function Home() {
     }
   }, [sessionId, isSignedIn, documentName, clerk, getToken, apiUrl]);
 
-  // Carry across active document when upgrading from guest to signed-in per §6.10
+  // Carry across active document when upgrading from guest to signed-in
   useEffect(() => {
     if (isSignedIn && typeof window !== "undefined" && sessionId) {
       const pendingSession = sessionStorage.getItem("allcited_pending_save_session");
@@ -196,7 +196,7 @@ export default function Home() {
     setInWorkspace(true);
   };
 
-  // Headline wordmark letters for staggered animation per §6.4
+  // Headline wordmark letters for staggered animation
   const headlineWords = ["Answers,", "with", "receipts."];
 
   return (
@@ -223,7 +223,6 @@ export default function Home() {
             />
           ) : (
             <div className="flex-1 min-h-0 relative flex flex-col" ref={workspaceRef}>
-              {/* Top Workspace Bar per §6.9 wireframe: 40px session bar */}
               <div className="px-4 h-10 border-b border-border bg-bg-surface flex items-center justify-between text-xs flex-shrink-0">
                 <div className="flex items-center gap-2 min-w-0">
                   <Button
@@ -257,7 +256,7 @@ export default function Home() {
                           : "border-border/80 hover:border-accent-primary hover:bg-bg-sunken text-ink-primary"
                       }`}
                     >
-                      <span>{isSaved ? "Saved to shelf ✓" : "Save to shelf"}</span>
+                      <span>{isSaved ? "Saved to shelf ·" : "Save to shelf"}</span>
                     </button>
                   )}
 
@@ -267,7 +266,7 @@ export default function Home() {
                     className="font-mono text-[11px] text-gray-warm hover:text-ink-primary flex items-center gap-1.5 px-2 py-1 rounded border border-border/60 hover:bg-bg-sunken cursor-pointer"
                   >
                     <span>Engine: {providerConfig.mode}</span>
-                    <span className="text-accent-primary">⚙</span>
+                    <Settings className="w-3.5 h-3.5 text-accent-primary" />
                   </button>
                 </div>
               </div>
@@ -322,7 +321,6 @@ export default function Home() {
               <DeepSeaAurora />
 
               <div className="relative z-10 max-w-4xl mx-auto space-y-6 my-auto">
-                {/* Hero Headline with Staggered Entrance per §6.4 */}
                 <h1 className="font-editorial text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-ink-primary drop-shadow-xs">
                   {headlineWords.map((word, idx) => (
                     <motion.span
@@ -341,7 +339,6 @@ export default function Home() {
                   ))}
                 </h1>
 
-                {/* Subtext per text.md verbatim */}
                 <motion.p
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -351,7 +348,6 @@ export default function Home() {
                   Upload a document. Ask any question. Every answer shows where it came from.
                 </motion.p>
 
-                {/* CTAs per text.md verbatim: Try it free (primary) · See how it works (ghost) */}
                 <motion.div
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -412,14 +408,12 @@ export default function Home() {
                   </MagneticButton>
                 </motion.div>
 
-                {/* Small line (mono) per text.md verbatim */}
-                <p className="font-mono text-xs text-ink-ghost tracking-wide pt-2">
+                <p className="font-sans text-xs text-ink-ghost tracking-wide pt-2">
                   Sign in or continue as guest · Nothing is saved unless you keep it · We publish our test scores
                 </p>
               </div>
             </section>
 
-            {/* Tech Strip under Hero per text.md verbatim */}
             <motion.div
               id="stats-band"
               initial={{ opacity: 0, y: 20 }}
@@ -433,7 +427,6 @@ export default function Home() {
               </div>
             </motion.div>
 
-            {/* Section: RAG explainer per text.md verbatim */}
             <section className="py-16 px-4 sm:px-6 max-w-4xl mx-auto space-y-4 text-center sm:text-left border-b border-border">
               <h2 className="text-2xl sm:text-3xl font-semibold text-ink-primary font-display">
                 How is this different from ChatGPT?
@@ -448,7 +441,6 @@ export default function Home() {
               </div>
             </section>
 
-            {/* Section: Stats per text.md verbatim */}
             <motion.section
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -494,7 +486,6 @@ export default function Home() {
               </div>
             </motion.section>
 
-            {/* Section: Live demo per text.md verbatim */}
             <section className="py-16 px-4 sm:px-6 max-w-4xl mx-auto space-y-6">
               <div className="text-center space-y-2">
                 <span className="font-mono text-xs uppercase tracking-wider text-accent-primary font-semibold">
@@ -503,7 +494,7 @@ export default function Home() {
                 <h2 className="text-2xl sm:text-3xl font-semibold text-ink-primary font-display">
                   Try it right here.
                 </h2>
-                <p className="font-mono text-xs text-accent-primary font-medium max-w-md mx-auto">
+                <p className="font-sans text-xs text-accent-primary font-medium max-w-md mx-auto">
                   Guest mode available — continue without login.
                 </p>
                 <p className="text-xs sm:text-sm text-gray-warm max-w-md mx-auto">
@@ -514,7 +505,6 @@ export default function Home() {
               <LiveMiniDemo />
             </section>
 
-            {/* Section: Proof ticker (marquee — rotate these 10 items, seal-red ◆ separators, ~40s loop, pause on hover) per text.md verbatim */}
             <section className="py-4 border-y border-border bg-bg-surface/40 overflow-hidden relative select-none group">
               <div className="animate-proof-ticker items-center gap-6 whitespace-nowrap will-change-transform">
                 {[...PROOF_TICKER_ITEMS, ...PROOF_TICKER_ITEMS].map((item, idx) => (
@@ -534,13 +524,11 @@ export default function Home() {
               </div>
             </section>
 
-            {/* Shared Footer per text.md */}
             <Footer />
           </div>
         )}
       </div>
 
-      {/* Side Source Receipts Drawer (360px per §6.9 verbatim) */}
       <SourcePanel
         citations={activeCitations}
         documentName={documentName}

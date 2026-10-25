@@ -6,6 +6,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { Check } from "lucide-react";
 
 export default function PricingPage() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -23,7 +24,6 @@ export default function PricingPage() {
       <Navbar />
 
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-12 sm:py-16 space-y-16">
-        {/* Section: Intro per text.md verbatim */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
           <motion.h1
             initial={{ opacity: 0, y: 16 }}
@@ -46,7 +46,6 @@ export default function PricingPage() {
 
         {/* Pricing Cards */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
-          {/* Section: Free card per text.md verbatim */}
           <div className="p-8 rounded-interactive border border-border bg-bg-surface flex flex-col justify-between shadow-xs space-y-6">
             <div className="space-y-4">
               <div className="flex items-baseline justify-between border-b border-border/60 pb-4">
@@ -73,7 +72,7 @@ export default function PricingPage() {
                   "Every citation and trace",
                 ].map((bullet) => (
                   <li key={bullet} className="flex items-center gap-2">
-                    <span className="text-accent-primary font-bold">✓</span>
+                    <Check className="w-3.5 h-3.5 text-accent-primary flex-shrink-0" />
                     <span>{bullet}</span>
                   </li>
                 ))}
@@ -89,7 +88,6 @@ export default function PricingPage() {
             </div>
           </div>
 
-          {/* Section: Pro card per text.md verbatim */}
           <div className="p-8 rounded-interactive border-2 border-accent-primary bg-bg-surface flex flex-col justify-between shadow-md space-y-6 relative">
             <div className="space-y-4">
               <div className="flex items-baseline justify-between border-b border-border/60 pb-4">
@@ -118,7 +116,7 @@ export default function PricingPage() {
                   "Priority when busy",
                 ].map((bullet) => (
                   <li key={bullet} className="flex items-center gap-2">
-                    <span className="text-accent-primary font-bold">✓</span>
+                    <Check className="w-3.5 h-3.5 text-accent-primary flex-shrink-0" />
                     <span>{bullet}</span>
                   </li>
                 ))}
@@ -143,7 +141,6 @@ export default function PricingPage() {
           </div>
         </section>
 
-        {/* Section: Reassurance (under cards) per text.md verbatim */}
         <section className="text-center font-mono text-xs text-gray-warm pt-4 border-t border-border/60">
           <p>Nothing is stored unless you save it · Cancel anytime in one click</p>
         </section>

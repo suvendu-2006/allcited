@@ -108,7 +108,9 @@ def test_scanned_pdf_answers_3_questions_with_ocr_citations():
         ("What is the minimum password character length required by internal security?", "16"),
     ]
 
+    import time
     for q_text, expected_keyword in test_queries:
+        time.sleep(1.0)
         query_res = client.post(
             "/v1/query",
             json={"session_id": session_id, "query": q_text},
@@ -134,3 +136,48 @@ def test_scanned_pdf_answers_3_questions_with_ocr_citations():
 
         # Answer text must also contain (OCR) citation flag
         assert "(OCR)" in answer_text, f"Answer text must contain '(OCR)': {answer_text}"
+
+
+def test_easyocr_provider_on_scanned_pdf():
+    """Verify EasyOCR provider extracts text directly from scanned PDF fixture."""
+    import fitz
+    from app.pipeline.parsers.ocr import parse_easyocr_langs, run_ocr
+
+    # Test language mapping
+    assert parse_easyocr_langs("eng+hin") == ["en", "hi"]
+    assert parse_easyocr_langs("eng") == ["en"]
+    assert parse_easyocr_langs("en,hi") == ["en", "hi"]
+
+    fixture_path = Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "scanned_handbook.pdf"
+    assert fixture_path.exists()
+
+    doc = fitz.open(str(fixture_path))
+    ocr_text = run_ocr(doc[0], 0, langs="eng+hin", provider="easyocr")
+    assert len(ocr_text) > 50, f"Expected EasyOCR to extract >50 chars, got: {ocr_text}"
+    assert "Handbook" in ocr_text or "Employee" in ocr_text or "Allcited" in ocr_text
+
+
+def test_readyz_endpoint():
+    """Verify /v1/readyz readiness endpoint returns 200 and pipeline status."""
+    client = TestClient(app)
+    res = client.get("/v1/readyz")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] in ("ok", "ready")
+    assert data.get("ready") is True
+    assert data["pipeline"]["embedding"] == "ready"
+    assert data["pipeline"]["reranker"] == "ready"
+
+
+def test_local_model_path_resolution():
+    """Verify local models in api/models are resolved without downloading from Hub."""
+    from app.pipeline.embed import resolve_local_model_path
+
+    embed_path = resolve_local_model_path("all-MiniLM-L6-v2", "embedding")
+    assert "models/all-MiniLM-L6-v2" in embed_path or "api/models/all-MiniLM-L6-v2" in embed_path
+    assert Path(embed_path).exists()
+
+    rerank_path = resolve_local_model_path("cross-encoder/ms-marco-MiniLM-L-6-v2", "reranker")
+    assert "models/ms-marco-MiniLM-L-6-v2" in rerank_path or "api/models/ms-marco-MiniLM-L-6-v2" in rerank_path
+    assert Path(rerank_path).exists()
+

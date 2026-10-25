@@ -50,6 +50,18 @@ class HealthResponse(BaseModel):
     environment: str = Field("development", description="Deployment environment: development, test, or production", examples=["production"])
 
 
+class ReadyzResponse(BaseModel):
+    status: str = Field("ok", description="Readiness state indicator", examples=["ok"])
+    ready: bool = Field(True, description="Whether server components are ready", examples=[True])
+    version: str = Field("0.1.0", description="API semantic version", examples=["0.1.0"])
+    mode: str = Field("cloud", description="Runtime brain mode: cloud, byok, or private", examples=["cloud"])
+    environment: str = Field("development", description="Deployment environment: development, test, or production", examples=["production"])
+    pipeline: Dict[str, str] = Field(
+        default_factory=lambda: {"embedding": "ready", "reranker": "ready", "ocr": "ready"},
+        description="Subsystem readiness state mapping",
+    )
+
+
 class AuthProfileResponse(BaseModel):
     status: str = Field("authenticated", description="Authentication state indicator", examples=["authenticated"])
     user_id: str = Field(..., description="Authenticated user identifier (Clerk 'sub')", examples=["user_2bF8kL09qXmN4"])

@@ -14,6 +14,7 @@ import {
   TableCell,
 } from "@/components/ui/Table";
 import { motion } from "framer-motion";
+import { Check } from "lucide-react";
 import evalData from "@/data/eval_results.json";
 
 interface ScoreboardRow {
@@ -61,7 +62,6 @@ export default function ExamPage() {
       <Navbar />
 
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-12 sm:py-16 space-y-16">
-        {/* Section: Intro per text.md verbatim */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -92,7 +92,6 @@ export default function ExamPage() {
           </motion.p>
         </div>
 
-        {/* Section: Release history per text.md verbatim */}
         <section id="history" className="space-y-4 p-6 rounded-interactive border border-border bg-bg-surface">
           <div className="space-y-1">
             <h2 className="text-xl font-semibold text-ink-primary font-display">
@@ -114,7 +113,6 @@ export default function ExamPage() {
           </div>
         </section>
 
-        {/* Section: What we test per text.md verbatim */}
         <section className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <h2 className="text-2xl font-semibold text-ink-primary font-display">
@@ -149,7 +147,6 @@ export default function ExamPage() {
           </div>
         </section>
 
-        {/* Section: The scoreboard per text.md verbatim */}
         <section className="space-y-4">
           <h2 className="text-2xl font-semibold text-ink-primary font-display">
             The scoreboard
@@ -182,7 +179,7 @@ export default function ExamPage() {
                   </TableCell>
                   <TableCell>
                     <span className="inline-flex items-center gap-1 font-mono text-[11px] text-[#28C840] dark:text-[#5AD46F] font-semibold">
-                      <span>✓</span>
+                      <Check className="w-3.5 h-3.5" />
                       {row.status}
                     </span>
                   </TableCell>

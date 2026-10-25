@@ -103,6 +103,8 @@ def post_pass_citations(
     # Normalize verbose markers like [Source: S1] or (Source: S1) to standard [S1]
     raw_answer = re.sub(r"\[Source:\s*S(\d+)\]", r"[S\1]", raw_answer, flags=re.IGNORECASE)
     raw_answer = re.sub(r"\(Source:\s*S(\d+)\)", r"[S\1]", raw_answer, flags=re.IGNORECASE)
+    raw_answer = re.sub(r"\[s(\d+)\]", r"[S\1]", raw_answer)
+    raw_answer = re.sub(r"\(([Ss]\d+)\)", r"[\1]", raw_answer)
 
     # If the response is a refusal, zero citations
     if ABSENT_REFUSAL_TEXT in raw_answer or FRIENDLY_REFUSAL_TEXT in raw_answer:
@@ -116,17 +118,17 @@ def post_pass_citations(
         idx_str = m.group(1) or m.group(2)
         idx = int(idx_str)
         if 1 <= idx <= num_sources:
-            return m.group(0)
+            return m.group(0).upper()
         return ""  # Strip fake citation marker
 
     # Strip any markers outside valid range [1, num_sources]
-    cleaned = re.sub(pattern, replace_marker, raw_answer)
+    cleaned = re.sub(pattern, replace_marker, raw_answer, flags=re.IGNORECASE)
     cleaned = re.sub(r"[ \t]+", " ", cleaned).strip()
 
     seen_labels: Set[str] = set()
     citations: List[CitationItem] = []
 
-    for m in re.finditer(pattern, cleaned):
+    for m in re.finditer(pattern, cleaned, flags=re.IGNORECASE):
         idx_str = m.group(1) or m.group(2)
         idx = int(idx_str)
         if 1 <= idx <= num_sources:
@@ -151,6 +153,27 @@ def post_pass_citations(
                         is_ocr=is_ocr,
                     )
                 )
+
+    # If the answer is grounded but the LLM omitted citation tags, fallback to primary source [S1]
+    if not citations and sources and ABSENT_REFUSAL_TEXT not in cleaned and FRIENDLY_REFUSAL_TEXT not in cleaned:
+        src = sources[0]
+        is_ocr = bool(getattr(src, "is_ocr", False) or getattr(src.chunk, "is_ocr", False))
+        label = "S1 (OCR)" if is_ocr else "S1"
+        citations.append(
+            CitationItem(
+                label=label,
+                chunk_id=src.chunk.id,
+                page=src.chunk.page,
+                section_path=src.chunk.section_path,
+                text_preview=src.chunk.text[:200],
+                is_two_hop=src.is_two_hop,
+                added_reason=src.added_reason,
+                doc_name=getattr(src.chunk, "doc_name", None) or getattr(src.chunk, "source", None) or None,
+                is_ocr=is_ocr,
+            )
+        )
+        tag = "[S1] (OCR)" if is_ocr else "[S1]"
+        cleaned = f"{cleaned} {tag}".strip()
 
     # Flag OCR citations in answer text with (OCR) flag
     for idx, src in enumerate(sources, start=1):

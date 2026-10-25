@@ -41,7 +41,8 @@ class Settings(BaseSettings):
     RELEVANCE_FLOOR: float = Field(default=0.0001, ge=0.0, le=1.0, description="Cross-encoder relevance floor for early refusal")
     GUARDS: str = Field(default="on", description="Prompt injection & PII guards: on or off")
     GRAPH_MAX_EXPANSION: int = Field(default=4, ge=1, le=10, description="Max neighbor facts in GraphRAG-lite")
-    OCR_LANGS: str = Field(default="eng+hin", description="Tesseract OCR language list")
+    OCR_LANGS: str = Field(default="eng+hin", description="OCR language list (e.g. 'eng+hin' or 'en+hi')")
+    OCR_PROVIDER: str = Field(default="tesseract", description="OCR provider engine: 'tesseract' or 'easyocr'")
     TRACES_DIR: str = Field(default="data/traces", description="Directory path for per-question JSONL traces")
 
     # Auth & Storage (Clerk & Supabase)

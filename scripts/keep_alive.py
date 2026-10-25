@@ -28,13 +28,15 @@ def ping_health(
     api_url: str,
     client: Optional[httpx.Client] = None,
     timeout: float = 10.0,
+    endpoint: str = "/v1/readyz",
 ) -> Dict[str, Any]:
     """
-    Ping the /v1/health endpoint of the specified API URL.
+    Ping the readiness endpoint (default /v1/readyz) of the specified API URL.
     Returns status dict with latency and health data.
     """
     clean_url = api_url.rstrip("/")
-    target = f"{clean_url}/v1/health"
+    clean_ep = endpoint if endpoint.startswith("/") else f"/{endpoint}"
+    target = f"{clean_url}{clean_ep}"
 
     start_time = time.perf_counter()
     should_close = False
@@ -84,6 +86,11 @@ def main():
         help="API base URL to ping (default: API_URL env or http://localhost:8000)",
     )
     parser.add_argument(
+        "--endpoint",
+        default="/v1/readyz",
+        help="Endpoint to ping (default: /v1/readyz)",
+    )
+    parser.add_argument(
         "--daemon",
         action="store_true",
         help="Run continuously in a loop",
@@ -97,13 +104,13 @@ def main():
     args = parser.parse_args()
 
     if not args.daemon:
-        res = ping_health(args.url)
+        res = ping_health(args.url, endpoint=args.endpoint)
         sys.exit(0 if res["success"] else 1)
 
-    logger.info("Starting keep-alive daemon for %s (interval: %ds)...", args.url, args.interval)
+    logger.info("Starting keep-alive daemon for %s%s (interval: %ds)...", args.url, args.endpoint, args.interval)
     while True:
         try:
-            ping_health(args.url)
+            ping_health(args.url, endpoint=args.endpoint)
         except Exception as e:
             logger.error("Unexpected error in daemon loop: %s", str(e))
         time.sleep(args.interval)

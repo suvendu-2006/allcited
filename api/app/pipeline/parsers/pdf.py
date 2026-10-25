@@ -5,11 +5,11 @@ from io import BytesIO
 from typing import List, Union
 
 import pymupdf as fitz
-import pytesseract
 from PIL import Image
 
 from app.config import get_settings
 from app.pipeline.parsers.base import ParsedBlock
+from app.pipeline.parsers.ocr import run_ocr
 
 logger = logging.getLogger(__name__)
 
@@ -20,29 +20,8 @@ class PDFParserError(Exception):
 
 
 def _ocr_page(page: fitz.Page, pno: int) -> str:
-    """Render page to high-res image and perform Tesseract OCR (eng+hin)."""
-    try:
-        settings = get_settings()
-        ocr_langs = getattr(settings, "OCR_LANGS", "eng+hin")
-    except Exception:
-        ocr_langs = "eng+hin"
-
-    try:
-        pix = page.get_pixmap(dpi=200)
-        img = Image.open(BytesIO(pix.tobytes("png")))
-    except Exception as e:
-        logger.error("Failed to render page %d to pixmap: %s", pno, e)
-        return ""
-
-    try:
-        return pytesseract.image_to_string(img, lang=ocr_langs)
-    except Exception as e:
-        logger.warning("OCR failed on page %d with lang=%s: %s; falling back to 'eng'", pno, ocr_langs, e)
-        try:
-            return pytesseract.image_to_string(img, lang="eng")
-        except Exception as e2:
-            logger.error("OCR fallback to 'eng' failed on page %d: %s", pno, e2)
-            return ""
+    """Render page to high-res image and perform OCR via configured provider (Tesseract or EasyOCR)."""
+    return run_ocr(page, pno)
 
 
 def parse_pdf(

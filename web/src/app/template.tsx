@@ -17,7 +17,7 @@ export default function Template({ children }: { children: React.ReactNode }) {
       exit={{ opacity: 0, y: -8 }}
       transition={{
         duration: 0.28,
-        ease: [0.3, 0.7, 0.3, 1], // ease/enter per §4.1
+        ease: [0.3, 0.7, 0.3, 1], // ease/enter
       }}
       className="flex-1 flex flex-col min-h-0"
     >

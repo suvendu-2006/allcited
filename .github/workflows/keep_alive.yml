@@ -14,8 +14,8 @@ jobs:
         env:
           API_URL: ${{ secrets.PROD_API_URL || 'https://allcited-api.hf.space' }}
         run: |
-          echo "Pinging $API_URL/v1/health..."
-          curl -f -s -S --max-time 15 "$API_URL/v1/health" || {
+          echo "Pinging $API_URL/v1/readyz..."
+          curl -f -s -S --max-time 15 "$API_URL/v1/readyz" || {
             echo "Keep-alive ping failed or timed out"
             exit 1
           }

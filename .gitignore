@@ -64,6 +64,7 @@ cache/
 tmp/
 /data/
 api/data/
+api/models/
 !web/src/data/
 *.jsonl
 .vercel

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { UploadCloud, CheckCircle2, AlertCircle, Link2, ArrowRight } from "lucide-react";
+import { UploadCloud, CheckCircle2, AlertCircle, Link2, ArrowRight, X } from "lucide-react";
 import { Button } from "./ui/button";
 
 interface UploadProps {
@@ -59,7 +59,7 @@ export function Upload({
     return () => clearInterval(interval);
   }, [isUploading]);
 
-  // Rolling count-up animation on success per §4.2
+  // Rolling count-up animation on success
   useEffect(() => {
     if (successInfo) {
       let start = 0;
@@ -212,26 +212,25 @@ export function Upload({
 
   return (
     <div className={`relative ${className}`}>
-      {/* Success Banner with count-up per §3 & §4.2 */}
       {successInfo && (
         <div className="mb-3 px-3.5 py-2.5 rounded-interactive bg-accent-primary/10 border border-accent-primary/30 text-ink-primary text-xs font-medium flex items-center justify-between shadow-xs animate-fade-in">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-accent-primary flex-shrink-0" />
             <span>
-              ✅ <strong className="font-mono">{animatedCount}</strong> chunks ready — ask away.
+              <strong className="font-mono">{animatedCount}</strong> chunks ready — ask away.
             </span>
           </div>
           <button
             type="button"
             onClick={() => setSuccessInfo(null)}
-            className="text-ink-ghost hover:text-ink-primary text-xs font-mono ml-2"
+            className="text-ink-ghost hover:text-ink-primary text-xs font-mono ml-2 p-0.5 rounded cursor-pointer"
+            aria-label="Dismiss banner"
           >
-            ✕
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
 
-      {/* Error Banner with §3 exact copy */}
       {errorMessage && (
         <div className="mb-3 px-3.5 py-2.5 rounded-interactive bg-danger/10 border-l-4 border-l-danger border border-border text-ink-primary text-xs font-medium flex items-center justify-between shadow-xs animate-fade-in">
           <div className="flex items-center gap-2">
@@ -241,9 +240,10 @@ export function Upload({
           <button
             type="button"
             onClick={() => setErrorMessage(null)}
-            className="text-ink-ghost hover:text-ink-primary text-xs font-mono ml-2"
+            className="text-ink-ghost hover:text-ink-primary text-xs font-mono ml-2 p-0.5 rounded cursor-pointer"
+            aria-label="Dismiss error"
           >
-            ✕
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
@@ -329,7 +329,6 @@ export function Upload({
           <div className="flex flex-col items-center justify-center gap-2">
             {isUploading ? (
               <div className="w-full max-w-xs space-y-3">
-                {/* Thin teal progress bar with ghost-percentage in mono per §4.2 */}
                 <div className="w-full bg-bg-sunken h-1.5 rounded-full overflow-hidden border border-border">
                   <div
                     className="bg-accent-primary h-full transition-all duration-300 ease-out"

@@ -69,7 +69,6 @@ export default function HowItWorksPage() {
       <Navbar />
 
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-12 sm:py-16 space-y-16">
-        {/* Section: Intro per text.md verbatim */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -99,7 +98,6 @@ export default function HowItWorksPage() {
           </motion.p>
         </div>
 
-        {/* Section: The seven stages (numbered cards) per text.md verbatim */}
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {STAGES.map((stage) => (
             <div
@@ -126,7 +124,6 @@ export default function HowItWorksPage() {
           ))}
         </section>
 
-        {/* Section: RAG callout (highlighted block) per text.md verbatim */}
         <section className="p-6 sm:p-8 rounded-interactive border border-accent-primary/30 bg-accent-primary/5 space-y-3 text-center sm:text-left">
           <h2 className="text-xl sm:text-2xl font-semibold text-ink-primary font-display">
             Under the hood: RAG
@@ -141,7 +138,6 @@ export default function HowItWorksPage() {
           </div>
         </section>
 
-        {/* Section: Citation anatomy per text.md verbatim */}
         <section className="space-y-6 pt-4 border-t border-border">
           <div className="space-y-2 text-center sm:text-left">
             <h2 className="text-2xl sm:text-3xl font-semibold text-ink-primary font-display">
@@ -152,7 +148,6 @@ export default function HowItWorksPage() {
             </p>
           </div>
 
-          {/* Example block (mono) per text.md verbatim */}
           <div className="p-6 rounded-interactive border border-border bg-bg-surface space-y-4 font-mono text-xs">
             <div className="p-3.5 rounded bg-bg-sunken border border-border/60">
               <span className="text-gray-warm block text-[10.5px] uppercase tracking-wider mb-1">
@@ -178,19 +173,18 @@ export default function HowItWorksPage() {
               <span className="text-accent-primary block text-[10.5px] uppercase tracking-wider mb-1 font-bold">
                 Receipt:
               </span>
-              <p className="text-ink-primary font-mono text-xs leading-relaxed">
+              <p className="text-ink-primary font-sans text-xs leading-relaxed">
                 <code>[S1] 2.1 Leave Policy · p.23 — &ldquo;A maximum of 8 unused annual leave days may be carried forward into the subsequent calendar year.&rdquo;</code>
               </p>
             </div>
           </div>
         </section>
 
-        {/* Section: Formats per text.md verbatim */}
         <section className="space-y-3 pt-4 border-t border-border text-center sm:text-left">
           <h2 className="text-xl sm:text-2xl font-semibold text-ink-primary font-display">
             Works with
           </h2>
-          <p className="text-sm text-gray-warm font-mono">
+          <p className="text-sm text-gray-warm font-sans">
             PDF, Word, PowerPoint, Excel, Markdown, and web links.
           </p>
 

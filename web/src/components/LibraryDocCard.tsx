@@ -54,7 +54,6 @@ export function LibraryDocCard({
           </button>
         </div>
 
-        {/* Mono meta string per §4: 214 chunks · added Oct 24 */}
         <p className="font-mono text-xs text-gray-warm">
           {doc.chunk_count} chunks · added {formattedDate}
         </p>

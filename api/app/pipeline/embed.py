@@ -1,14 +1,48 @@
 import hashlib
-from typing import Dict, List, Tuple
+import logging
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
 from app.pipeline.chunker import Chunk
 
+logger = logging.getLogger(__name__)
+
 DEFAULT_EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 EMBEDDING_DIM = 384
 BATCH_SIZE = 64
+
+
+def resolve_local_model_path(model_name: str, model_type: str = "embedding") -> str:
+    """
+    Check if a local directory exists containing downloaded model weights.
+    Searches candidate paths (relative to repo/api, cwd, and container root).
+    Returns local path string if valid weights exist; otherwise returns original model_name.
+    """
+    p = Path(model_name)
+    if p.exists() and ((p / "model.safetensors").exists() or (p / "config.json").exists()):
+        return str(p.resolve())
+
+    simple_name = model_name.split("/")[-1]
+    name_candidates = [model_name, simple_name]
+
+    api_root = Path(__file__).resolve().parent.parent.parent
+    base_dirs = [
+        api_root / "models",
+        Path.cwd() / "models",
+        Path.cwd() / "api" / "models",
+        Path("/app/models"),
+    ]
+
+    for b in base_dirs:
+        for nc in name_candidates:
+            cand = b / nc
+            if cand.exists() and ((cand / "model.safetensors").exists() or (cand / "config.json").exists()):
+                return str(cand.resolve())
+
+    return model_name
 
 
 class EmbeddingManager:
@@ -26,7 +60,17 @@ class EmbeddingManager:
     @property
     def model(self) -> SentenceTransformer:
         if self._model is None:
-            self._model = SentenceTransformer(self.model_name)
+            resolved = resolve_local_model_path(self.model_name, "embedding")
+            if resolved != self.model_name:
+                logger.info("Loading embedding model from local path: %s", resolved)
+                try:
+                    self._model = SentenceTransformer(resolved, local_files_only=True)
+                except Exception as e:
+                    logger.warning("Local embedding model load failed from %s: %s; falling back to hub", resolved, e)
+                    self._model = SentenceTransformer(self.model_name)
+            else:
+                logger.info("Loading embedding model from Hugging Face Hub: %s", self.model_name)
+                self._model = SentenceTransformer(self.model_name)
         return self._model
 
     def _hash_text(self, text: str) -> str:

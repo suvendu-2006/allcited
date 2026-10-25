@@ -7,6 +7,7 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { CitationChip } from "@/components/CitationChip";
 import { motion } from "framer-motion";
+import { Check } from "lucide-react";
 
 export default function ProductPage() {
   const [activeChipDemo, setActiveChipDemo] = useState(false);
@@ -16,7 +17,6 @@ export default function ProductPage() {
       <Navbar />
 
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-12 sm:py-16 space-y-16">
-        {/* Section: Intro per text.md verbatim */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -47,7 +47,6 @@ export default function ProductPage() {
           </motion.p>
         </div>
 
-        {/* Section: Feature cards per text.md verbatim (6 cards with micro-visuals) */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Card 01: Receipts on everything. */}
           <div className="p-6 rounded-interactive border border-border bg-bg-surface flex flex-col justify-between shadow-xs">
@@ -176,7 +175,7 @@ export default function ProductPage() {
             </div>
             <div className="mt-4 pt-3 border-t border-border/60">
               <div className="p-2.5 rounded bg-bg-sunken border border-border/40 font-mono text-[11px] flex items-center gap-2 text-gray-warm">
-                <span className="text-accent-primary font-bold">✓</span>
+                <Check className="w-3.5 h-3.5 text-accent-primary flex-shrink-0" />
                 <span>Groq Cloud · OpenAI BYOK · Local Ollama</span>
               </div>
             </div>
@@ -199,14 +198,13 @@ export default function ProductPage() {
             </div>
             <div className="mt-4 pt-3 border-t border-border/60">
               <div className="p-2.5 rounded bg-bg-sunken border border-border/40 font-mono text-[11px] flex items-center gap-2 text-gray-warm">
-                <span className="text-accent-primary font-bold">✓</span>
+                <Check className="w-3.5 h-3.5 text-accent-primary flex-shrink-0" />
                 <span>Zero telemetry · Ephemeral in-memory index</span>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Section: Pipeline per text.md verbatim */}
         <section className="space-y-6 pt-6 border-t border-border">
           <div className="space-y-2 text-center sm:text-left">
             <h2 className="text-2xl sm:text-3xl font-semibold text-ink-primary font-display">
@@ -272,7 +270,6 @@ export default function ProductPage() {
             ))}
           </div>
 
-          {/* Button at the end per text.md verbatim */}
           <div className="text-center sm:text-left pt-4">
             <Link href="/?workspace=true">
               <Button variant="primary" size="lg" className="text-sm">

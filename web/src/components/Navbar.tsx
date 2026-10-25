@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import { InteractiveOrbitClock } from "./ui/InteractiveOrbitClock";
 import { Button } from "./ui/button";
+import { Settings } from "lucide-react";
 
 interface NavbarProps {
   onOpenSettings?: () => void;
@@ -19,7 +20,7 @@ export function Navbar({ onOpenSettings, isInApp }: NavbarProps) {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-bg-surface/90 backdrop-blur-md px-4 sm:px-8 h-16 flex items-center justify-between flex-shrink-0 transition-colors select-none">
-      {/* Left: Navigation links per §4D verbatim */}
+      {/* Left: Navigation links */}
       <div className="flex items-center gap-6">
         <nav className="flex items-center gap-3 sm:gap-5 text-xs font-mono text-gray-warm">
           <Link
@@ -87,11 +88,9 @@ export function Navbar({ onOpenSettings, isInApp }: NavbarProps) {
             onClick={onOpenSettings}
             title="Model Settings & Provider Config"
             aria-label="Open model settings"
-            className="w-8 h-8 flex items-center justify-center rounded-lg border border-border bg-bg-surface hover:bg-bg-hover text-ink-primary hover:text-accent-primary transition-all shadow-sm active:scale-95"
+            className="w-8 h-8 flex items-center justify-center rounded-interactive border border-border bg-bg-surface hover:bg-bg-hover text-ink-primary hover:text-accent-primary transition-all shadow-sm active:scale-95 cursor-pointer"
           >
-            <span className="text-base leading-none" aria-hidden="true">
-              ⚙
-            </span>
+            <Settings className="w-4 h-4 text-ink-primary" aria-hidden="true" />
           </button>
         )}
 
@@ -112,7 +111,6 @@ export function Navbar({ onOpenSettings, isInApp }: NavbarProps) {
           </div>
         </SignedIn>
 
-        {/* Open Allcited CTA per §4D verbatim */}
         <Link href="/?workspace=true" className="hidden sm:inline-block">
           <Button variant="primary" size="sm" className="text-xs h-8 px-3">
             Open Allcited

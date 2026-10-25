@@ -90,7 +90,6 @@ export function AuthScreen({ onContinueAsGuest, onBackToHome }: AuthScreenProps)
             </div>
           </div>
 
-          {/* Equal-Weight Guest Bypass Button per §6.10 */}
           <div className="space-y-2 pt-1 text-center">
             <Button
               variant="outline"
@@ -101,8 +100,7 @@ export function AuthScreen({ onContinueAsGuest, onBackToHome }: AuthScreenProps)
               Continue without login
             </Button>
 
-            {/* Mono Ghost Explainer Line per §6.10 */}
-            <p className="font-mono text-[11px] text-ink-ghost tracking-tight px-2 leading-relaxed">
+            <p className="font-sans text-[11px] text-ink-ghost tracking-tight px-2 leading-relaxed">
               Guest mode: everything works, nothing is saved. Sign in later to keep your documents.
             </p>
           </div>

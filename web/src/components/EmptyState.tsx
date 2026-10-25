@@ -18,7 +18,6 @@ const SAMPLE_QUESTIONS = [
 export function EmptyState({ onSelectSampleQuestion, isGuest }: EmptyStateProps) {
   return (
     <div className="dot-grid rounded-interactive border border-border/60 p-8 sm:p-12 my-6 text-center relative overflow-hidden bg-bg-surface/30">
-      {/* Floating ambient citation chip per §4.3 */}
       <div className="mb-6 flex justify-center">
         <div className="animate-bounce [animation-duration:6s] inline-block shadow-sm">
           <CitationChip
@@ -40,14 +39,12 @@ export function EmptyState({ onSelectSampleQuestion, isGuest }: EmptyStateProps)
         Drop a document anywhere on this page, or try one of these on the sample handbook:
       </p>
 
-      {/* Guest Mode Explainer per §6.10 */}
       {isGuest && (
-        <p className="font-mono text-xs text-ink-ghost max-w-md mx-auto mb-6 leading-relaxed">
+        <p className="font-sans text-xs text-ink-ghost max-w-md mx-auto mb-6 leading-relaxed">
           Guest mode: nothing is saved. Sign in anytime to keep documents.
         </p>
       )}
 
-      {/* 3 sample questions per §4.2 copy freeze */}
       <div className="flex flex-wrap items-center justify-center gap-2 max-w-xl mx-auto">
         {SAMPLE_QUESTIONS.map((question) => (
           <button

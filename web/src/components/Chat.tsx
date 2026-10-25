@@ -26,7 +26,7 @@ interface ChatProps {
   isGuest?: boolean;
 }
 
-// Dry-wit rotating copy per §4 copy freeze
+// Rotating status indicators
 const SEARCHING_VARIANTS = [
   "reading the shelves…",
   "flipping pages…",
@@ -220,7 +220,6 @@ export function Chat({
                   <Upload onUploadSuccess={onUploadSuccess} />
                 </div>
               )}
-              {/* Empty state per §4 copy freeze */}
               <EmptyState
                 onSelectSampleQuestion={(q) => handleSend(q)}
                 isGuest={isGuest}

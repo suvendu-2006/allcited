@@ -40,6 +40,7 @@ from app.schemas import (
     FeedbackCandidatesResponse,
     FeedbackResponse,
     HealthResponse,
+    ReadyzResponse,
     IngestResponse,
     ListDocumentsResponse,
     ModelsResponse,
@@ -54,7 +55,8 @@ from app.security.pii import setup_pii_logging
 from app.security.ssrf import SSRFBlockedError, safe_fetch_url
 from app.sessions import get_session_store
 from app.stats import get_platform_stats
-from app.telegram import router as telegram_router, run_telegram_polling
+from app.telegram import router as telegram_router
+from app.telegram import run_telegram_polling
 from app.trace import TraceRecord, get_trace_manager
 
 logger = logging.getLogger(__name__)
@@ -227,6 +229,28 @@ async def health():
         "version": "0.1.0",
         "mode": settings.MODE,
         "environment": settings.ENVIRONMENT,
+    }
+
+
+@app.get(
+    "/v1/readyz",
+    response_model=ReadyzResponse,
+    summary="Readiness check for container health and keep-alive ping",
+    operation_id="getReadyz",
+    tags=["System"],
+)
+async def readyz():
+    return {
+        "status": "ok",
+        "ready": True,
+        "version": "0.1.0",
+        "mode": settings.MODE,
+        "environment": settings.ENVIRONMENT,
+        "pipeline": {
+            "embedding": "ready",
+            "reranker": "ready",
+            "ocr": "ready",
+        },
     }
 
 

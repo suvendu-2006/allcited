@@ -114,3 +114,46 @@ The eval matrix had flat 100.0% retrieval hit-rates across every row, defeating 
   - No row at 100% across all categories (e.g. BM25 at 50.0% on Paraphrase, 50.0% on Distractor; Vector at 75.0% on Paraphrase, 75.0% on P1).
   - `/exam` page data matches `README.md` tables verbatim from `eval_results.json`.
   - Chunking comparison table present with 5 evaluated strategies and documented trade-offs.
+## FIX 12 — De-AI the codebase (audit vs the "AI-giveaways" transcript, 2026-10-25) [COMPLETED]
+Evidence-based sweep found 3 true hits, 2 partials, 9 clean. Fix the hits:
+
+1. **Comment purge (50 spec-narration comments).** Delete every `{/* ... per §X */}`-style narration comment in web/src — spec references don't belong in shipped code. Keep ONLY comments that state a non-obvious constraint (why, not what). Gate: `grep -rn "per §" web/src` = 0; total comment lines in components < 5% of code lines.
+2. **Emoji purge (22 emojis, 11 files).** Replace with typographic equivalents: ✓-checks → CSS check style or "·"; ⚡ speed lines → mono stat chips; celebration/confetti emojis → deleted outright. The ONLY surviving emoji-family elements: the 👍/👎 feedback controls (functional, interactive). Gate: emoji regex sweep (U+1F300–U+1FAFF, U+2600–27BF) = 0 hits outside Message.tsx feedback + Toast success.
+3. **Mono/sans rebalance (158 mono vs 12 sans).** Mono is the machine voice — citations, IDs, stage chips, code, stat figures ONLY. All prose: answers, paragraphs, card bodies, descriptions → font-sans. Gate: grep font-mono in Message.tsx prose blocks = 0 (chips/ids excepted); body text computed style = Inter.
+4. Radius stragglers: `rounded-lg` / `rounded-r` → nearest token (interactive/input/none).
+5. Owner homework (cannot be delegated): a 1-hour guided walkthrough of api/app pipeline + web/src structure so "can't give a definite explanation" never happens — schedule with the verifier window.
+
+- **Gate verification passed:**
+  - `grep -rn "per §" web/src` = 0 hits.
+  - Total comment lines in components = 163 / 4,508 (3.62% < 5%).
+  - Emoji regex sweep (`U+1F300–U+1FAFF`, `U+2600–U+27BF`) = 0 hits outside `Message.tsx` feedback buttons.
+  - `grep font-mono` in `Message.tsx` prose blocks = 0 (only `[A]` wordmark chip and NVIDIA indicator chip retain mono).
+  - Radius stragglers: `grep -rnE "rounded-lg|rounded-r\b" web/src` = 0 hits (`rounded-lg` and `rounded-r` replaced with `rounded-interactive`).
+  - Next.js production build (`npm run build`) compiled successfully with zero type or lint errors.
+
+Clean (no action, keep as interview proof): spacing 100% on-grid · old-theme tokens 0 (no jammed-websites) · copy tells ~0 · radii tokenized · Supabase choice documented.
+## FIX 13 — Code-fixes for HF free-tier limits (3 of 8 are code-fixable) — ✅ COMPLETED
+1. **OCR without Tesseract:** Swapped `pytesseract` for a pluggable provider interface in `app/pipeline/parsers/ocr.py` supporting both **EasyOCR** (pure Python/PyTorch, en+hi) and **Tesseract** behind the unified `OCR_LANGS` interface.
+   - Configurable via `OCR_PROVIDER` (`tesseract` default in Docker, `easyocr` on hosted Space).
+   - Maps language codes (`eng+hin` -> `["en", "hi"]`).
+   - Caches `easyocr.Reader` instance so initialization overhead occurs once.
+   - Preserves `is_ocr=True` tags and `(OCR)` citation flags throughout chunking and retrieval.
+   - Documented trade-offs in `README.md` (~1–3 s/page on CPU, models download to cache on first scanned document).
+2. **Fast cold boots via Git-LFS:** Committed the two models (`sentence-transformers/all-MiniLM-L6-v2` and `cross-encoder/ms-marco-MiniLM-L-6-v2`, ~180 MB) to `api/models/` tracked with `.gitattributes` Git-LFS (`*.safetensors`, `*.bin`).
+   - Implemented `resolve_local_model_path()` in `app/pipeline/embed.py` and `app/pipeline/rerank.py`.
+   - Checks local directories first (`api/models/`, `/app/models/`), falls back to remote Hugging Face Hub download only if local files are missing.
+   - Verified models load in < 1 second locally without network requests (`local_files_only=True`).
+3. **Keep-alive ping targets `/v1/readyz`:**
+   - Implemented `/v1/readyz` readiness probe in `api/app/main.py` and `ReadyzResponse` schema in `app/schemas.py`.
+   - Updated `.github/workflows/keep_alive.yml` to ping `$API_URL/v1/readyz`.
+   - Updated `scripts/keep_alive.py` with `--endpoint` defaulting to `/v1/readyz`.
+   - Updated `deploy/hf-space/README.md`.
+
+- **Gate verification passed:**
+  - `tests/test_ocr.py::test_easyocr_provider_on_scanned_pdf` PASSED — EasyOCR extracts scanned text directly.
+  - `tests/test_ocr.py::test_scanned_pdf_answers_3_questions_with_ocr_citations` PASSED — Scanned PDF answers 3 target questions with `[S1] (OCR)` citations.
+  - `tests/test_ocr.py::test_readyz_endpoint` PASSED — `/v1/readyz` returns 200 OK with pipeline readiness state.
+  - `tests/test_ocr.py::test_local_model_path_resolution` PASSED — Local weights in `api/models` resolve with 0 Hub downloads.
+  - `tests/test_deploy.py` (all 5 tests) PASSED — Validates keep-alive against `/v1/readyz`, HF Space Docker metadata, and GitHub Actions workflow YAML.
+
+Not code-fixable (accepted, documented): single shared instance, quota policy, no SLA, hf.space domain — mitigations are architectural (statelessness, portability, caches) and already in place.

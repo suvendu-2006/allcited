@@ -279,7 +279,10 @@ All backend routes are prefixed with `/v1`. Responses include an `X-Request-ID` 
 
 We believe in radical engineering honesty. Allcited intentionally does not attempt to solve every problem:
 
-1. **OCR Confidence on Low-DPI Documents:** Tesseract OCR (eng+hin) extracts text cleanly from scans down to ~150 DPI. Degraded handwriting, skew > 15°, or heavy watermarking may introduce localized character noise.
+1. **OCR Confidence & Provider Trade-offs:** Allcited supports dual OCR providers via `pipeline/parsers/ocr.py` (`OCR_PROVIDER=tesseract` or `OCR_PROVIDER=easyocr`):
+   - **Tesseract (Default in Docker / Local):** Native C++ binaries (`eng+hin`), fast (~200–500ms/page), zero model download overhead.
+   - **EasyOCR (Hosted Cloud / Hugging Face Spaces):** Pure Python/PyTorch pipeline requiring no system C-binaries. Trade-offs: ~1–3 s/page on CPU, models (~80 MB) download to cache on first scanned document.
+   - OCR Confidence on Low-DPI Documents: Degraded handwriting, skew > 15°, or heavy watermarking may introduce localized character noise on low-DPI scans (<150 DPI).
 2. **DOCX Images & Nested Footnotes:** In accordance with plan design, embedded drawings, vector shapes, and margin footnotes in DOCX files are bypassed in favor of clean heading-style tree parsing.
 3. **Complex Nested XLSX Spreadsheets:** Sheets with irregularly merged header hierarchies are windowed row-wise (25 rows per chunk); formulas are indexed as literal values rather than re-computed dynamically.
 4. **Org-Scale Enterprise Baggage (Decision D-26):** Allcited deliberately excludes company-scale enterprise overhead:

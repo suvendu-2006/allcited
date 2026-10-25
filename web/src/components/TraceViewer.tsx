@@ -125,7 +125,7 @@ export function TraceViewer({
   const composeSeconds = ((trace?.latencies_ms?.llm_ms || 2100) / 1000).toFixed(1);
   const droppedCount = Math.max(0, (trace?.retrieved_count || 25) - (trace?.reranked_count || 4));
 
-  // Determine margin note text per §4.4
+  // Determine margin note text
   const twoHopCitation = trace?.citations?.find((c) => c.is_two_hop);
   const marginNote = twoHopCitation
     ? `found on p.23 — 2nd hop via rule 63.7.4`
@@ -142,7 +142,6 @@ export function TraceViewer({
         className="bg-bg-surface border border-border rounded-interactive shadow-2xl max-w-xl w-full max-h-[85vh] flex flex-col overflow-hidden animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header per §4 copy freeze */}
         <div className="flex items-start justify-between px-6 py-4 border-b border-border bg-bg-surface/90">
           <div>
             <div className="flex items-center gap-2">
@@ -168,11 +167,9 @@ export function TraceViewer({
                 )}
               </button>
             </div>
-            {/* Subtext per §4: the whole trail, 200ms at a time */}
             <p className="font-mono text-[11px] text-gray-warm mt-0.5">
               the whole trail, {(totalMs / 1000).toFixed(1)}s total
             </p>
-            {/* Intro line under header per §4 */}
             <p className="text-xs text-ink-ghost mt-1">
               Nothing hidden. This is every step we took.
             </p>
@@ -206,7 +203,6 @@ export function TraceViewer({
 
           {trace && (
             <>
-              {/* Vertical Timeline Ledger per §4 and §4.2 */}
               <div className="relative pl-6 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-[2px] before:bg-border">
                 {/* Step 1: Route */}
                 <div className="relative">
@@ -282,7 +278,6 @@ export function TraceViewer({
                 </div>
               </div>
 
-              {/* The Personality Detail per §4.4 (Caveat font, exactly one handwritten note) */}
               <div className="p-3 rounded-interactive bg-accent-primary/5 border border-accent-primary/20 flex items-center justify-between">
                 <span className="font-mono text-[11px] text-gray-warm">
                   margin receipt:

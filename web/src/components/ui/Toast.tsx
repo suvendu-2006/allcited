@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { CheckCircle2, AlertCircle, Copy, Check } from "lucide-react";
+import { CheckCircle2, AlertCircle, Copy, Check, X } from "lucide-react";
 
 export interface ToastItem {
   id: string;
@@ -78,9 +78,10 @@ export function Toast({ toast, onClose }: ToastProps) {
           <button
             type="button"
             onClick={onClose}
-            className="flex-shrink-0 text-ink-ghost hover:text-ink-primary transition-colors text-xs"
+            className="flex-shrink-0 text-ink-ghost hover:text-ink-primary transition-colors text-xs p-0.5 rounded cursor-pointer"
+            aria-label="Close toast"
           >
-            ✕
+            <X className="w-3.5 h-3.5" />
           </button>
         )}
       </div>
