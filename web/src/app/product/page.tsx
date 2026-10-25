@@ -5,15 +5,6 @@ import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { CitationChip } from "@/components/CitationChip";
-import {
-  Sparkles,
-  Layers,
-  Shield,
-  ArrowRight,
-  Cpu,
-  Search,
-  CheckCircle2,
-} from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function ProductPage() {
@@ -55,21 +46,21 @@ export default function ProductPage() {
           </motion.p>
         </div>
 
-        {/* 6 Feature Cards with Micro-Visuals per §6.3 / §4B */}
+        {/* 6 Feature Cards with Micro-Visuals per §6.3 / §4B (1-sentence stripped copy + typography-first index) */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Card 1: Receipts on everything */}
           <div className="p-6 rounded-interactive border border-border bg-bg-surface flex flex-col justify-between shadow-xs">
             <div className="space-y-2.5">
-              <div className="flex items-center gap-2">
-                <span className="w-8 h-8 rounded-interactive bg-accent-cite/10 border border-accent-cite/30 text-accent-cite flex items-center justify-center font-mono text-xs font-bold">
-                  [S]
+              <div className="flex items-center gap-2.5">
+                <span className="font-mono text-xs font-bold text-accent-primary border border-accent-primary/30 bg-accent-primary/10 rounded px-2 py-0.5">
+                  01
                 </span>
                 <h3 className="font-semibold text-base text-ink-primary font-display">
                   Receipts on everything
                 </h3>
               </div>
               <p className="text-xs text-gray-warm leading-relaxed">
-                No answer without its source — every claim carries a stamp like <code className="font-mono text-accent-cite">[S1] §4.2, p.23</code>, and one click drops you on the exact passage. If the document doesn&apos;t say it, we say so, plainly.
+                Every claim links to the exact passage it came from — no source, no answer.
               </p>
             </div>
 
@@ -95,7 +86,7 @@ export default function ProductPage() {
                   animate={{ opacity: 1, height: "auto" }}
                   className="mt-2.5 pt-2 border-t border-border/80 text-[11px] font-mono text-accent-primary"
                 >
-                  §2.1 Leave Policy · p.23: &ldquo;A maximum of 8 unused annual leave days may be carried forward…&rdquo;
+                  2.1 Leave Policy · p.23: &ldquo;A maximum of 8 unused annual leave days may be carried forward…&rdquo;
                 </motion.div>
               )}
             </div>
@@ -104,16 +95,16 @@ export default function ProductPage() {
           {/* Card 2: Words and meaning */}
           <div className="p-6 rounded-interactive border border-border bg-bg-surface flex flex-col justify-between shadow-xs">
             <div className="space-y-2.5">
-              <div className="flex items-center gap-2">
-                <span className="w-8 h-8 rounded-interactive bg-[#2D62FF]/10 border border-[#2D62FF]/30 text-[#2D62FF] dark:text-[#6E97FF] flex items-center justify-center">
-                  <Search className="w-4 h-4" />
+              <div className="flex items-center gap-2.5">
+                <span className="font-mono text-xs font-bold text-[#2D62FF] dark:text-[#6E97FF] border border-[#2D62FF]/30 bg-[#2D62FF]/10 rounded px-2 py-0.5">
+                  02
                 </span>
                 <h3 className="font-semibold text-base text-ink-primary font-display">
                   Words <em>and</em> meaning
                 </h3>
               </div>
               <p className="text-xs text-gray-warm leading-relaxed">
-                Two search engines run on every question: one matches your words with BM25 keyword precision, one matches your intent with vector embeddings. Together they miss almost nothing across dense tabular or legal jargon.
+                Dense embeddings find meaning while sparse BM25 matches exact codes and clause numbers.
               </p>
             </div>
 
@@ -130,23 +121,23 @@ export default function ProductPage() {
           {/* Card 3: It reads the fine print */}
           <div className="p-6 rounded-interactive border border-border bg-bg-surface flex flex-col justify-between shadow-xs">
             <div className="space-y-2.5">
-              <div className="flex items-center gap-2">
-                <span className="w-8 h-8 rounded-interactive bg-[#FEBC2E]/10 border border-[#FEBC2E]/30 text-[#8F5B00] dark:text-[#FCC64B] flex items-center justify-center">
-                  <Sparkles className="w-4 h-4" />
+              <div className="flex items-center gap-2.5">
+                <span className="font-mono text-xs font-bold text-[#8F5B00] dark:text-[#FCC64B] border border-[#FEBC2E]/30 bg-[#FEBC2E]/10 rounded px-2 py-0.5">
+                  03
                 </span>
                 <h3 className="font-semibold text-base text-ink-primary font-display">
                   It reads the fine print
                 </h3>
               </div>
               <p className="text-xs text-gray-warm leading-relaxed">
-                When an answer says &quot;as per rule 63.7.4,&quot; our two-hop engine automatically goes and retrieves rule 63.7.4. Definitions and cross-referenced clauses are resolved before the answer is written.
+                When a rule points to another schedule, Allcited follows the trail and binds both.
               </p>
             </div>
 
             {/* Micro-visual: Two-hop resolution badge */}
             <div className="mt-5 p-3 rounded-[6px] bg-bg-sunken border border-border/60 flex items-center gap-2 text-[11px] font-mono">
-              <span className="text-gray-warm">§3.2 cites rule 63.7.4</span>
-              <ArrowRight className="w-3.5 h-3.5 text-[#FEBC2E] dark:text-[#FCC64B]" />
+              <span className="text-gray-warm">3.2 cites rule 63.7.4</span>
+              <span className="text-[#8F5B00] dark:text-[#FCC64B]">→</span>
               <span className="text-[#8F5B00] dark:text-[#FCC64B] font-semibold">
                 +1 definition pulled &amp; verified
               </span>
@@ -156,16 +147,16 @@ export default function ProductPage() {
           {/* Card 4: It shows its work */}
           <div className="p-6 rounded-interactive border border-border bg-bg-surface flex flex-col justify-between shadow-xs">
             <div className="space-y-2.5">
-              <div className="flex items-center gap-2">
-                <span className="w-8 h-8 rounded-interactive bg-accent-primary/10 border border-accent-primary/30 text-accent-primary flex items-center justify-center">
-                  <Layers className="w-4 h-4" />
+              <div className="flex items-center gap-2.5">
+                <span className="font-mono text-xs font-bold text-accent-cite border border-accent-cite/30 bg-accent-cite/10 rounded px-2 py-0.5">
+                  04
                 </span>
                 <h3 className="font-semibold text-base text-ink-primary font-display">
                   It shows its work
                 </h3>
               </div>
               <p className="text-xs text-gray-warm leading-relaxed">
-                Every answer has a full verification trace: what we searched, what we nearly picked, and why we selected what we did. Latency receipts and reranking scores are laid bare.
+                Latency receipts, candidate pools, and reranking scores are audited on an open ledger.
               </p>
             </div>
 
@@ -185,16 +176,16 @@ export default function ProductPage() {
           {/* Card 5: Your key, your business */}
           <div className="p-6 rounded-interactive border border-border bg-bg-surface flex flex-col justify-between shadow-xs">
             <div className="space-y-2.5">
-              <div className="flex items-center gap-2">
-                <span className="w-8 h-8 rounded-interactive bg-accent-hot/10 border border-accent-hot/30 text-accent-hot flex items-center justify-center">
-                  <Cpu className="w-4 h-4" />
+              <div className="flex items-center gap-2.5">
+                <span className="font-mono text-xs font-bold text-accent-hot border border-accent-hot/30 bg-accent-hot/10 rounded px-2 py-0.5">
+                  05
                 </span>
                 <h3 className="font-semibold text-base text-ink-primary font-display">
                   Your key, your business
                 </h3>
               </div>
               <p className="text-xs text-gray-warm leading-relaxed">
-                Bring your own OpenAI, Anthropic, or Groq API key, or run locally via Ollama. Keys stay strictly in your browser&apos;s localStorage and never touch our servers or persistent logs.
+                Client API keys stay strictly in local storage and never touch our servers or persistent logs.
               </p>
             </div>
 
@@ -210,22 +201,22 @@ export default function ProductPage() {
           {/* Card 6: It forgets on purpose */}
           <div className="p-6 rounded-interactive border border-border bg-bg-surface flex flex-col justify-between shadow-xs">
             <div className="space-y-2.5">
-              <div className="flex items-center gap-2">
-                <span className="w-8 h-8 rounded-interactive bg-[#28C840]/10 border border-[#28C840]/30 text-[#28C840] dark:text-[#5AD46F] flex items-center justify-center">
-                  <Shield className="w-4 h-4" />
+              <div className="flex items-center gap-2.5">
+                <span className="font-mono text-xs font-bold text-ink-primary border border-border bg-bg-sunken rounded px-2 py-0.5">
+                  06
                 </span>
                 <h3 className="font-semibold text-base text-ink-primary font-display">
                   It forgets on purpose
                 </h3>
               </div>
               <p className="text-xs text-gray-warm leading-relaxed">
-                In-memory session processing ensures documents vanish the moment your session concludes. Need long-term retention? Save it to your private shelf — encrypted and yours alone.
+                In-memory processing ensures documents vanish the moment your session concludes.
               </p>
             </div>
 
             {/* Micro-visual: Memory safety pledge */}
             <div className="mt-5 p-3 rounded-[6px] bg-bg-sunken border border-border/60 flex items-center gap-2 text-[11px] font-mono text-gray-warm">
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#28C840] dark:text-[#5AD46F]" />
+              <span className="text-accent-primary font-bold">✓</span>
               <span>Ephemeral RAM index · Zero database footprint</span>
             </div>
           </div>
@@ -286,7 +277,7 @@ export default function ProductPage() {
 
       {/* Footer per §6.3 */}
       <footer className="py-8 border-t border-border text-center font-mono text-[11px] text-gray-warm bg-bg-surface/50">
-        Built with React 18 · Next.js 14 · Allcited v1.0 · © 2026 Allcited
+        Built with React, in the open. 46-question exam on every release. © 2026 Allcited.
       </footer>
     </div>
   );

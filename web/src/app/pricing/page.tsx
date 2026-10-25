@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Check, Sparkles, Loader2, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/Navbar";
 
@@ -118,19 +117,19 @@ export default function PricingPage() {
 
               <ul className="space-y-3 mb-8 text-xs text-ink-primary">
                 <li className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-accent-primary flex-shrink-0" />
+                  <span className="font-mono text-accent-primary font-bold">✓</span>
                   <span>Unlimited questions, forever</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-accent-primary flex-shrink-0" />
+                  <span className="font-mono text-accent-primary font-bold">✓</span>
                   <span>Documents up to 20 MB</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-accent-primary flex-shrink-0" />
+                  <span className="font-mono text-accent-primary font-bold">✓</span>
                   <span>All 6 formats (PDF, DOCX, PPTX, XLSX, MD, URL)</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-accent-primary flex-shrink-0" />
+                  <span className="font-mono text-accent-primary font-bold">✓</span>
                   <span>Every citation stamp and verification trace</span>
                 </li>
               </ul>
@@ -153,8 +152,7 @@ export default function PricingPage() {
 
             <div>
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-ink-primary font-display flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-accent-primary" />
+                <h3 className="text-lg font-semibold text-ink-primary font-display">
                   Pro
                 </h3>
               </div>
@@ -170,19 +168,19 @@ export default function PricingPage() {
 
               <ul className="space-y-3 mb-8 text-xs text-ink-primary">
                 <li className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-accent-primary flex-shrink-0" />
+                  <span className="font-mono text-accent-primary font-bold">✓</span>
                   <span><strong>Documents up to 100 MB</strong></span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-accent-primary flex-shrink-0" />
+                  <span className="font-mono text-accent-primary font-bold">✓</span>
                   <span><strong>Precision mode</strong>: reads 50 passages before answering</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-accent-primary flex-shrink-0" />
+                  <span className="font-mono text-accent-primary font-bold">✓</span>
                   <span><strong>Unlimited shelf</strong> for long-term documents</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-accent-primary flex-shrink-0" />
+                  <span className="font-mono text-accent-primary font-bold">✓</span>
                   <span>High-speed priority when servers are swamped</span>
                 </li>
               </ul>
@@ -204,14 +202,7 @@ export default function PricingPage() {
                   disabled={isLoading}
                   className="w-full text-xs h-9"
                 >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
-                      Opening checkout…
-                    </>
-                  ) : (
-                    "Start Pro"
-                  )}
+                  {isLoading ? "Opening checkout…" : "Start Pro"}
                 </Button>
               )}
               {/* Ghost mono note per §4 copy freeze */}
@@ -225,7 +216,7 @@ export default function PricingPage() {
         {/* Footer Trust Line */}
         <div className="mt-12 text-center font-mono text-[11px] text-gray-warm flex items-center justify-center gap-4">
           <span className="flex items-center gap-1">
-            <Shield className="w-3 h-3 text-accent-primary" />
+            <span className="text-accent-primary font-bold">✓</span>
             Zero database storage without shelf save
           </span>
           <span>·</span>

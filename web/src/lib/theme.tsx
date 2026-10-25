@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { executeWebReveal } from "./webReveal";
+import { executeThemeWave } from "./waveTransition";
 
 type Theme = "light" | "dark";
 
@@ -50,7 +50,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const nextTheme: Theme = theme === "dark" ? "light" : "dark";
     const coords = e ? { x: e.clientX, y: e.clientY } : null;
 
-    executeWebReveal(coords, nextTheme === "dark", () => {
+    executeThemeWave(coords, nextTheme === "dark", () => {
       setTheme(nextTheme);
     });
   };

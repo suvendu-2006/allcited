@@ -1,9 +1,9 @@
 /**
  * Theme Wave Transition Engine
- * According to ALLCITED.md §5
+ * According to ALLCITED.md §5 & §6.5 (v2.1 Wave Reveal)
  *
  * Implements View Transitions API + WAAPI animated clip-path wave
- * with 5 morphing keyframes and seamless fallbacks.
+ * with 5 morphing keyframes and robust graceful fallbacks.
  */
 
 interface WaveCoordinates {
@@ -24,9 +24,11 @@ function generateWavyDiscPath(
 ): string {
   if (baseRadius <= 0.1) {
     // Zero-radius point
-    return `M ${cx} ${cy} ` +
+    return (
+      `M ${cx} ${cy} ` +
       Array.from({ length: 8 }, () => `C ${cx} ${cy} ${cx} ${cy} ${cx} ${cy}`).join(" ") +
-      " Z";
+      " Z"
+    );
   }
 
   const N = 8;
@@ -75,46 +77,58 @@ export function executeThemeWave(
   isDarkNext: boolean,
   applyTheme: () => void
 ): void {
-  // 1. Fallback for reduced motion or no document
+  // 1. Fallback for reduced motion or SSR
   if (typeof window === "undefined" || typeof document === "undefined") {
     applyTheme();
     return;
   }
 
   const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  // View Transitions API check
   const hasViewTransition = "startViewTransition" in document;
 
   if (!hasViewTransition || prefersReduced) {
-    // 250ms CSS crossfade fallback
     applyTheme();
     return;
   }
 
+  const x = coords?.x ?? window.innerWidth / 2;
+  const y = coords?.y ?? 40;
+
+  // Farthest corner distance
+  const maxDistX = Math.max(x, window.innerWidth - x);
+  const maxDistY = Math.max(y, window.innerHeight - y);
+  const maxRadius = Math.hypot(maxDistX, maxDistY) * 1.15;
+
+  // Create temporary ember tint band container
+  const tintBand = document.createElement("div");
+  tintBand.style.position = "fixed";
+  tintBand.style.left = `${x}px`;
+  tintBand.style.top = `${y}px`;
+  tintBand.style.width = "20px";
+  tintBand.style.height = "20px";
+  tintBand.style.borderRadius = "9999px";
+  tintBand.style.pointerEvents = "none";
+  tintBand.style.zIndex = "9998";
+  tintBand.style.boxShadow = isDarkNext
+    ? "0 0 120px 40px rgba(232, 118, 90, 0.18)" // vermillion #E8765A into dark
+    : "0 0 120px 40px rgba(245, 242, 234, 0.28)"; // warm paper wash into light
+  document.body.appendChild(tintBand);
+
   // 2. Wrap class flip in document.startViewTransition
-  const transition = (document as unknown as { startViewTransition: (cb: () => void) => { ready: Promise<void> } }).startViewTransition(() => {
+  const transition = (
+    document as unknown as {
+      startViewTransition: (cb: () => void) => { ready: Promise<void> };
+    }
+  ).startViewTransition(() => {
     applyTheme();
-    // Update theme-color meta tag per §5.5
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     if (metaThemeColor) {
-      metaThemeColor.setAttribute("content", isDarkNext ? "#06211D" : "#FAF8ED");
+      metaThemeColor.setAttribute("content", isDarkNext ? "#0D0C0B" : "#F5F2EA");
     }
   });
 
-  // 3. Animate the transition
+  // 3. Animate the transition with 5 wave-edged keyframes (750ms ease/exit)
   transition.ready.then(() => {
-    const x = coords?.x ?? window.innerWidth / 2;
-    const y = coords?.y ?? 40;
-
-    // Farthest corner distance
-    const maxDistX = Math.max(x, window.innerWidth - x);
-    const maxDistY = Math.max(y, window.innerHeight - y);
-    const maxRadius = Math.hypot(maxDistX, maxDistY) * 1.1;
-
-    // Precompute 5 keyframe paths
-    // Radius growing 0.12R -> 0.95R with wave crest phase rotating ~140 deg
-    // Crest amplitude 6% decaying to 2%
     const keyframeConfigs = [
       { r: 0.05 * maxRadius, amp: 0.06, phase: 0 },
       { r: 0.28 * maxRadius, amp: 0.05, phase: (35 * Math.PI) / 180 },
@@ -123,12 +137,24 @@ export function executeThemeWave(
       { r: 1.15 * maxRadius, amp: 0.015, phase: (140 * Math.PI) / 180 },
     ];
 
+    // Animate tint band scale
+    tintBand.animate(
+      [
+        { transform: "translate(-50%, -50%) scale(1)", opacity: "1" },
+        { transform: `translate(-50%, -50%) scale(${(maxRadius / 10).toFixed(1)})`, opacity: "0" },
+      ],
+      {
+        duration: 750,
+        easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+      }
+    ).onfinish = () => tintBand.remove();
+
     try {
       const pathKeyframes = keyframeConfigs.map((cfg) =>
         `path("${generateWavyDiscPath(x, y, cfg.r, cfg.amp, cfg.phase)}")`
       );
 
-      document.documentElement.animate(
+      const anim = document.documentElement.animate(
         {
           clipPath: [
             `path("${generateWavyDiscPath(x, y, 0, 0, 0)}")`,
@@ -141,6 +167,20 @@ export function executeThemeWave(
           pseudoElement: "::view-transition-new(root)",
         }
       );
+
+      anim.onfinish = () => {
+        // Trigger soft ripple ring afterglow 400ms after settle per §6.5
+        setTimeout(() => {
+          const ripple = document.createElement("div");
+          ripple.className = "wave-ripple-ring";
+          ripple.style.left = `${x}px`;
+          ripple.style.top = `${y}px`;
+          ripple.style.width = "100px";
+          ripple.style.height = "100px";
+          document.body.appendChild(ripple);
+          setTimeout(() => ripple.remove(), 700);
+        }, 400);
+      };
     } catch {
       // Fallback to circle clip-path animation if WAAPI path syntax is unsupported
       document.documentElement.animate(

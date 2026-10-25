@@ -9,17 +9,17 @@
 }
 
 @layer base {
-  /* Light Theme: "Paper" (wisprtype cream base, teal accent, seal red citations) */
+  /* Light Theme: "Paper" (Ink & Ember: paper base, seal-red accent, amber citations) */
   :root {
-    --bg-base: #FAF8ED;
+    --bg-base: #F5F2EA;
     --bg-surface: #FFFFFF;
-    --bg-sunken: #F1EEE0;
+    --bg-sunken: #ECE8DC;
 
-    --ink-primary: #16161A;
-    --ink-ghost: rgba(22, 22, 26, 0.45);
+    --ink-primary: #1A1918;
+    --ink-ghost: rgba(26, 25, 24, 0.45);
 
-    --accent-primary: #034F46;
-    --accent-cite: #A6362F;
+    --accent-primary: #A6362F;
+    --accent-cite: #9A5B00;
     --accent-hot: #C2410C;
 
     --status-retrieve: #2D62FF;
@@ -28,7 +28,7 @@
     --status-cache: #28C840;
 
     --danger: #7F1C34;
-    --border: rgba(22, 22, 26, 0.12);
+    --border: rgba(26, 25, 24, 0.12);
     --gray-warm: #71716A;
 
     /* Tailwind mapped tokens */
@@ -39,7 +39,7 @@
     --popover: var(--bg-surface);
     --popover-foreground: var(--ink-primary);
     --primary: var(--accent-primary);
-    --primary-foreground: #FAF8ED;
+    --primary-foreground: #F5F2EA;
     --secondary: var(--bg-sunken);
     --secondary-foreground: var(--ink-primary);
     --muted: var(--bg-sunken);
@@ -53,20 +53,20 @@
     --radius-input: 4px;
     --radius-chrome: 0px;
 
-    --dot-color: rgba(22, 22, 26, 0.065);
+    --dot-color: rgba(26, 25, 24, 0.065);
   }
 
-  /* Dark Theme: "Teal-Ink Night" (wisprtype teal deepened into night) */
+  /* Dark Theme: "Warm Ink" (Ink & Ember: warm black base, lifted seal accent, amber citations) */
   .dark {
-    --bg-base: #06211D;
-    --bg-surface: #0B2A24;
-    --bg-sunken: #10352E;
+    --bg-base: #0D0C0B;
+    --bg-surface: #171514;
+    --bg-sunken: #201D1B;
 
-    --ink-primary: #F2EFE0;
-    --ink-ghost: rgba(242, 239, 224, 0.48);
+    --ink-primary: #EFEAD9;
+    --ink-ghost: rgba(239, 234, 217, 0.48);
 
-    --accent-primary: #31C7A5;
-    --accent-cite: #F08A75;
+    --accent-primary: #E8765A;
+    --accent-cite: #E8B04B;
     --accent-hot: #FF7A4D;
 
     --status-retrieve: #6E97FF;
@@ -75,7 +75,7 @@
     --status-cache: #5AD46F;
 
     --danger: #F0788C;
-    --border: rgba(242, 239, 224, 0.14);
+    --border: rgba(239, 234, 217, 0.14);
     --gray-warm: #A8A69A;
 
     /* Tailwind mapped tokens */
@@ -86,7 +86,7 @@
     --popover: var(--bg-surface);
     --popover-foreground: var(--ink-primary);
     --primary: var(--accent-primary);
-    --primary-foreground: #06211D;
+    --primary-foreground: #0D0C0B;
     --secondary: var(--bg-sunken);
     --secondary-foreground: var(--ink-primary);
     --muted: var(--bg-sunken);
@@ -94,10 +94,10 @@
     --accent: var(--bg-sunken);
     --accent-foreground: var(--ink-primary);
     --destructive: var(--danger);
-    --destructive-foreground: #06211D;
+    --destructive-foreground: #0D0C0B;
     --ring: var(--accent-primary);
 
-    --dot-color: rgba(242, 239, 224, 0.065);
+    --dot-color: rgba(239, 234, 217, 0.065);
   }
 
   * {
@@ -131,15 +131,26 @@
   z-index: 9999;
 }
 
-/* Webby Afterglow Watermark per §6.5 */
-[data-web-afterglow="true"] .hero-web-watermark {
-  opacity: 0.04 !important;
-  transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+/* Ripple Afterglow per §6.5 */
+.wave-ripple-ring {
+  pointer-events: none;
+  position: fixed;
+  border-radius: 9999px;
+  border: 1.5px solid var(--accent-primary);
+  opacity: 0.03;
+  animation: rippleExpand 600ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  z-index: 9998;
 }
 
-.hero-web-watermark {
-  opacity: 0;
-  transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+@keyframes rippleExpand {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0.08;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.2);
+    opacity: 0;
+  }
 }
 
 /* Subtle Shimmer for Skeletons (warm tinted) */

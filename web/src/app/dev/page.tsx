@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -53,8 +52,7 @@ export default function DevGalleryPage() {
             href="/"
             className="flex items-center text-xs font-medium text-gray-warm hover:text-ink-primary transition-colors"
           >
-            <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
-            Back to App
+            ← Back to App
           </Link>
           <div className="flex items-center gap-3">
             <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-bg-sunken border border-border">
@@ -71,19 +69,19 @@ export default function DevGalleryPage() {
             Design System & Component Inventory
           </h1>
           <p className="text-xs text-gray-warm mt-1">
-            Verification testbed for ALLCITED.md §3 tokens, §5 wave transition, and §6 components.
+            Verification testbed for design tokens, wave transitions, and interactive components.
           </p>
         </div>
 
         {/* Section 1: Color Tokens */}
         <section className="space-y-4">
           <h2 className="text-lg font-semibold font-display border-b border-border pb-2">
-            1. Color Tokens (§3.1 & §3.2)
+            1. Color Tokens (3.1 & 3.2 Ink & Ember)
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
             <div className="p-3 rounded-interactive border border-border bg-bg-base text-ink-primary text-xs">
               <span className="font-mono block text-[10px] text-gray-warm">bg/base</span>
-              <span className="font-semibold">Paper / Teal-Ink</span>
+              <span className="font-semibold">Paper / Warm-Ink</span>
             </div>
             <div className="p-3 rounded-interactive border border-border bg-bg-surface text-ink-primary text-xs shadow-xs">
               <span className="font-mono block text-[10px] text-gray-warm">bg/surface</span>
@@ -95,11 +93,11 @@ export default function DevGalleryPage() {
             </div>
             <div className="p-3 rounded-interactive bg-accent-primary text-primary-foreground text-xs shadow-xs">
               <span className="font-mono block text-[10px] opacity-80">accent/primary</span>
-              <span className="font-semibold">Wispr Teal</span>
+              <span className="font-semibold">Seal Red</span>
             </div>
             <div className="p-3 rounded-interactive bg-accent-cite text-white text-xs shadow-xs">
               <span className="font-mono block text-[10px] opacity-80">accent/cite</span>
-              <span className="font-semibold">Seal Red</span>
+              <span className="font-semibold">Amber</span>
             </div>
             <div className="p-3 rounded-interactive bg-danger text-white text-xs shadow-xs">
               <span className="font-mono block text-[10px] opacity-80">danger</span>
@@ -111,7 +109,7 @@ export default function DevGalleryPage() {
         {/* Section 2: Typography & Voices */}
         <section className="space-y-4">
           <h2 className="text-lg font-semibold font-display border-b border-border pb-2">
-            2. Typography & The Two Voices (§3.3)
+            2. Typography & The Two Voices (3.3)
           </h2>
           <div className="space-y-3 p-4 rounded-interactive border border-border bg-bg-surface">
             <div>
@@ -144,10 +142,10 @@ export default function DevGalleryPage() {
         {/* Section 3: Buttons */}
         <section className="space-y-4">
           <h2 className="text-lg font-semibold font-display border-b border-border pb-2">
-            3. Buttons (§6 & §4.2)
+            3. Buttons (4.2 & 6)
           </h2>
           <div className="flex flex-wrap items-center gap-3">
-            <Button variant="primary">Primary Teal</Button>
+            <Button variant="primary">Primary Seal</Button>
             <Button variant="outline">Outline</Button>
             <Button variant="secondary">Secondary</Button>
             <Button variant="ghost">Ghost</Button>
@@ -160,7 +158,7 @@ export default function DevGalleryPage() {
         {/* Section 4: Stage & Citation Chips */}
         <section className="space-y-4">
           <h2 className="text-lg font-semibold font-display border-b border-border pb-2">
-            4. Chips (§6, §4.2)
+            4. Chips (4.2 & 6)
           </h2>
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
@@ -208,7 +206,7 @@ export default function DevGalleryPage() {
         {/* Section 5: Inputs, Tabs, Tooltip, Table */}
         <section className="space-y-4">
           <h2 className="text-lg font-semibold font-display border-b border-border pb-2">
-            5. Form Controls & Chrome (§6)
+            5. Form Controls & Chrome (6)
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-3 p-4 rounded-interactive border border-border bg-bg-surface">
@@ -280,7 +278,7 @@ export default function DevGalleryPage() {
         {/* Section 6: Empty & Error States */}
         <section className="space-y-4">
           <h2 className="text-lg font-semibold font-display border-b border-border pb-2">
-            6. Workspace States (§7)
+            6. Workspace States (7)
           </h2>
           <EmptyState onSelectSampleQuestion={() => {}} />
           <ErrorState

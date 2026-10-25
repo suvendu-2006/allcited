@@ -629,7 +629,7 @@ Scale (rem): 0.75 / 0.8125 / 0.9375 / 1.0625 / 1.25 / 1.5625 / 2.1 / 3.2 / 4.6 �
 | `spring/chip` | stiffness 420, damping 32 | citation chips, toasts |
 
 ### 4.2 Micro-interaction catalog (the "minute details" inventory)
-- **Citation chip** (`[S1] §4.2`): mono, amber; hover → lifts 1px + underline grows left→right 120ms; click → spring-pop into pinned state; panel opens (base). *This is the product's signature element — it gets the most polish.*
+- **Citation chip** (`[S1] 4.2`): mono, amber; hover → lifts 1px + underline grows left→right 120ms; click → spring-pop into pinned state; panel opens (base). *This is the product's signature element — it gets the most polish.*
 - **Streaming answer**: tokens fade-up in word batches (`opacity 0→1, translateY 3px→0`, 140ms stagger 18ms); caret `accent/hot` blinking; on `citations` event, chips spring in sequence 60ms apart.
 - **Stage status line** ("searching → re-reading 25 passages → composing"): each stage = a mono chip that fills its hue when active (steven.com chips), with a 3-dot pulse; completed stages dim to ghost. This *is* the motion-graphic of the main screen.
 - **Composer**: focus → border animates to `accent/primary` + subtle glow ring; ⌘↵ hint fades in on focus; disabled state loses 40% opacity with 120ms.
@@ -758,7 +758,7 @@ Every §7 screen works against the live backend in all 4 states · wave transiti
 **How it works** *(3 steps)*
 1. **Drop it in.** Drag any document. We cut it into chunks, map its cross-references, and index every word and meaning.
 2. **Ask like a human.** "Can I carry my leaves forward?" works better here than robot keywords. Vague is fine — we'll rephrase it for you.
-3. **Follow the trail.** Every claim carries a stamp like `[S1] §4.2, p.23`. Click it. Read the original yourself. That's the whole point.
+3. **Follow the trail.** Every claim carries a stamp like `[S1] 4.2, p.23`. Click it. Read the original yourself. That's the whole point.
 
 **Features grid** *(6 cards)*
 - **Receipts on everything** — No answer without its source. If the document doesn't say it, we say so.
@@ -842,7 +842,7 @@ Every §7 screen works against the live backend in all 4 states · wave transiti
 ## 4. Source panel ("The receipts")
 
 - Panel header: **The receipts** · `4 passages · 2 added by cross-reference`
-- Chunk label (mono): `§4.2 Leave Policy · p.23`
+- Chunk label (mono): `4.2 Leave Policy · p.23`
 - Two-hop tag: `pulled in because the answer cites rule 63.7.4`
 - OCR tag: `(OCR — read from a scan, double-check me)`
 - Empty: `Ask something first — the receipts will pile up here.`
@@ -1018,34 +1018,39 @@ Every §7 screen works against the live backend in all 4 states · wave transiti
 
 # §6 — AWARD-LEVEL FRONTEND REVAMP (v2 plan)
 
-> Triggered by the owner's review (2026-10-25): flat hero background, dead navigation, thin content, missing micro-animations, wave toggle replaced by a **web-mesh reveal**. This section **overrides** the parts of §3/§4 it names (see §6.8). Everything else in §3/§4 stands.
+> Triggered by the owner's reviews (2026-10-25). **v2.1 corrections after the owner saw the build: the green/teal identity is REJECTED ("literally green background — absolute trash"); copy must be stripped to essentials ("nothing useless"); decorative icons removed; and the toggle animation is a WAVE, not a web — "WABE" was "wave" misheard. The wave emanates from the toggle.** Overrides §3/§4 per §6.8.
 
-## 6.0 The five findings → the five fixes
+## 6.0 The findings → the fixes (v2.1)
 
 | # | Finding | Fix | Section |
 |---|---|---|---|
-| 1 | Hero background flat, color combo weak | "Deep-Sea Aurora" hero: layered mesh gradients + film grain + cursor spotlight | §6.1 |
-| 2 | Nav buttons don't change the view; everything in one window | Real routes, page-transition animations, live URL/title/active-states | §6.2 |
-| 3 | Content thin; no tech mention; no micro-animations | Expanded copy (§4B), "Built with" strip (React/Next.js), full motion catalog on framer-motion | §6.3–6.4 |
-| 4 | Needs award-level *and* trust | Live inline demo on landing, public scorecard, trust badges — Awwwards criteria mapped | §6.6 |
-| 5 | Toggle animation must be a **web expanding from the center** | Web-mesh theme reveal (spokes + spiral cells filling outward) + toggle-logo slot for the owner's reference | §6.5 |
+| 1 | Green background, bad color combination | **Kill the teal spine.** New identity: "Ink & Ember" — warm-black/paper neutrals + seal-red accent; ember aurora hero | §6.1 |
+| 2 | Nav buttons don't change the view | Real routes, page transitions, live URL/title/active-states | §6.2 |
+| 3 | Thin + self-indulgent copy; no React mention; no micro-animations | Stripped factual copy (§4B-min), one-line tech strip with React, framer-motion catalog | §6.3–6.4 |
+| 4 | Cheap logo/icon explosion | **Icon purge:** ≤3 functional icons app-wide; typography-first design | §6.4 |
+| 5 | Toggle animation = **WAVE from the center** (owner's clarification) | Wave-edged theme reveal expanding from the toggle point (§3.5 spec, refined) | §6.5 |
 
-## 6.1 Hero background v2 — "Deep-Sea Aurora"
+## 6.1 Color & hero v2.1 — "Ink & Ember" (the green spine is dead)
 
-**Problem with v1:** flat `#06211D` + 0.65px dot-grid = technically correct, visually dead. Award heroes need *depth, light, and motion*.
+**Verdict on v1:** the teal-everything identity reads as *a green website*. Owner rejected it outright. The new base is neutral and warm; color appears only as **seal red** (action) and **amber** (receipts) — goshuin's actual palette, which never had green in it.
 
-**The design — four stacked layers (dark mode):**
+**v2.1 token override (replaces the §3.1/§3.2 accent+base rows):**
 
-| Layer | What | Spec |
+| Token | Light "Paper" | Dark "Warm Ink" |
 |---|---|---|
-| L1 Base | near-black petrol | `#041A16` (v2 hero base — deeper than `#06211D` for glow contrast) |
-| L2 Aurora | 3 blurred radial glows, slowly drifting | teal `#31C7A5` @ 14% (top-left, 60vmax), mint `#5AD46F` @ 8% (right, 45vmax), amber `#E8B04B` @ 6% (bottom, 35vmax); `filter: blur(90px)`; each drifts on its own 14–22s ease-in-out loop (translate ±6%) |
-| L3 Grain | SVG turbulence noise overlay | inline `<svg>` feTurbulence fractalNoise, opacity 4%, `mix-blend-mode: overlay` — kills gradient banding, adds print richness |
-| L4 Spotlight | cursor-following glow | radial-gradient 30vmax at pointer, teal @ 6%, 200ms lerp; disabled on touch + reduced-motion |
+| `bg/base` | `#F5F2EA` | `#0D0C0B` (warm black — zero green) |
+| `bg/surface` | `#FFFFFF` | `#171514` |
+| `bg/sunken` | `#ECE8DC` | `#201D1B` |
+| `ink/primary` | `#1A1918` | `#EFEAD9` |
+| `accent/primary` | **`#A6362F` seal red** (buttons, links, focus, nav underline) | **`#E8765A` lifted seal** |
+| `accent/cite` | `#9A5B00` amber (citations — gold stamps) | `#E8B04B` |
+| `danger` | `#7F1C34` maroon (context-styled: left rail, never bare) | `#F0788C` |
+| `gray/warm` | `#71716A` | `#A8A69A` |
+| stage chips | wisprtype 4-hue set, unchanged (the only green allowed — 4px chips) | unchanged |
 
-**Light mode variant:** cream `#FAF8ED` base, same glows at **one-third opacity** (aurora wash, not aurora show), same grain. **Hero text:** bone `#F2EFE0` on dark / ink on light, Georgia serif headline unchanged (§3.3), now with a soft text-shadow glow from the aurora behind.
+Type system, mono machine-voice, radii logic, borders — **unchanged** from §3.
 
-**Contrast rule stays law:** text sits only over L1/L2 areas where measured contrast ≥ 4.5:1 — the aurora layers render *behind* a tested scrim gradient (transparent → base 55% at text zone).
+**Hero — "Ember Aurora," four layers (dark):** L1 base `#0D0C0B` · L2 three drifting blurred glows — vermillion `#E8765A` @ 12% (top-left), amber `#E8B04B` @ 8% (right), deep seal `#A6362F` @ 6% (bottom); blur 90px, 14–22s drift loops · L3 SVG grain 4% overlay · L4 cursor spotlight (vermillion @ 5%, 30vmax, 200ms lerp). **Light:** paper base, same glows at one-third opacity. Text: Georgia serif headline, ink/bone, over a contrast-tested scrim (≥4.5:1 enforced by unit test).
 
 ## 6.2 Navigation & pages v2 — real routes, real transitions
 
@@ -1064,27 +1069,21 @@ Every §7 screen works against the live backend in all 4 states · wave transiti
 **Behavior contract (the fix for "doesn't change the window"):**
 1. Every nav item is a real `<Link>` → URL changes, browser title changes, back/forward works, deep links work.
 2. **Page transitions:** `template.tsx` wraps pages in motion — exit (opacity 1→0, y 0→-8, 180ms) → enter (opacity 0→1, y 12→0, 280ms, `ease/enter`); content sections stagger in 60ms apart on first paint of each route.
-3. Active nav item gets the teal underline that grows left→right (120ms); hover on any nav item shifts text color 120ms + a 1px lift.
+3. Active nav item gets the seal-red underline that grows left→right (120ms); hover on any nav item shifts text color 120ms + a 1px lift.
 4. Mobile: nav collapses to a full-screen overlay menu (staggered link entrance, 280ms), closed by Esc/swipe.
 
-## 6.3 Content density v2 — §4B copy additions (verbatim source)
+## 6.3 Copy v2.1 — stripped to essentials ("nothing useless")
 
-**Hero sub v2 (replaces §4 hero sub):**
-> Drop in a PDF, Word file, deck, spreadsheet, or a link. Ask real questions. Every claim comes stamped with the exact section it came from — click the stamp, read the original, decide for yourself.
+Rule: **every sentence states a fact or makes a promise. No cleverness for its own sake.** Replacements:
 
-**Tech strip (new section under hero — mono, marquee):**
-> Built with React 18 · Next.js 14 · TypeScript · Tailwind · Framer Motion · FastAPI · FAISS · pgvector — open-source stack, no black boxes, every design token documented.
+- **Hero sub:** Drop in any document. Ask anything. Every answer shows its source.
+- **Tech strip (mono, one line):** React · Next.js · TypeScript · FastAPI · FAISS — open source, top to bottom.
+- **Feature card format (title + ONE sentence + micro-visual):** *Receipts on everything. Every claim links to the exact passage it came from — no source, no answer.*
+- **Exam teaser:** We run a 46-question exam on every release, built to break us. The score is public.
+- **Formats marquee:** PDF · DOCX · PPTX · XLSX · MD · TXT · any URL.
+- **Footer:** Built with React, in the open. 46-question exam on every release. © 2026 Allcited.
 
-**Feature card v2 format (each card: title + 2-sentence body + micro-visual):** sample for "Receipts on everything":
-> **Receipts on everything.** No answer without its source — every claim carries a stamp like `[S1] §4.2, p.23`, and one click drops you on the exact passage. If the document doesn't say it, we say so, plainly.
-> *(micro-visual: a mini answer with a citation chip that pulses and opens a source preview on loop)*
-
-**"The exam" landing teaser v2:**
-> We run a 46-question exam on every release — questions designed to break us: answers split across pages, cross-references that force a second lookup, trick phrasings, and things the document simply doesn't say. Our score is public, per-release, with every failure documented. When was the last time an AI product showed you its report card?
-
-**Formats marquee line:** `PDF · DOCX · PPTX · XLSX · MD · TXT · any URL — six doors into one library.`
-
-**Footer v2:** three columns (Product / Evidence / Company) + mono line: `Built with React, in the open. 46-question exam on every release. © 2026 Allcited.`
+All other §4 strings stand. When in doubt: cut.
 
 ## 6.4 Micro-animation system v2 — adopt `framer-motion` (v1 shipped without it)
 
@@ -1103,31 +1102,28 @@ Add `framer-motion` to deps (the gap behind "no micro-animations"). Then impleme
 
 **Global rules:** all ambient loops pause on `document.hidden`; `prefers-reduced-motion` disables entrance/ambient (content appears instantly, transitions become 80ms fades); animation only on compositor-friendly props (transform/opacity) — no layout thrash.
 
-## 6.5 Theme toggle v2 — the WEB reveal (owner's requested animation)
+**Icon policy (v2.1 — the "cheap logos" purge):** decorative icons are banned. **Maximum 3 functional icons in the entire app** (candidates: theme toggle, close/×, external-link arrow). Structure, hierarchy, and meaning come from **typography, numbers, hairlines, and whitespace** — the cipher.tv/ferrari lesson. Remove all lucide decorations from cards, stats, features, and nav; delete unused icon imports from `package.json` if nothing remains.
 
-**Replaces §3.5's wave.** Owner's spec: from the toggle point, a **web expands** — spokes and spiral threads growing outward — and the site converts to the new theme through the web.
+## 6.5 Theme toggle v2.1 — the WAVE (owner's clarified animation)
 
-**The Web Reveal — 4 phases, ~950ms total:**
+**Correction:** "WABE" = **WAVE**. The web-mesh concept from v2 is retired — misheard. The owner's animation, final: **a wave expands from the toggle point and washes the new theme across the site.**
 
-| Phase | Time | What happens |
-|---|---|---|
-| 1 · Bloom | 0–180ms | At the toggle's coordinates, a web *blooms*: 8–12 radial spokes draw outward (stroke-dashoffset, 140ms) + 1st spiral ring connects them |
-| 2 · Spread | 180–650ms | Concentric spiral rings expand outward (each ring = growing web cell); **the new theme is revealed inside the cells the web has passed** — implemented as View Transitions API: `::view-transition-new(root)` clipped by an animated clip-path whose radius grows with the web, while an SVG web overlay (spokes + spirals, 1.5px, accent color @ 60% opacity) draws on top |
-| 3 · Edge pass | 650–850ms | Web's outermost ring sweeps past the farthest viewport corner (radius = `hypot` from origin); aurora hero layers cross-fade to the new theme's palette |
-| 4 · Dissolve | 850–950ms | Web threads fade to 0 opacity (200ms); content settles (1px scale 0.998→1) |
+**The Wave Reveal — §3.5's spec is the build target, refined:**
+- View Transitions API wraps the theme flip; `::view-transition-new(root)` is clipped by an animated `clip-path: path()` — a **wave-edged disc expanding from the toggle's click coordinates**, 5 keyframes, crest phase rotating ~140° as radius grows to the farthest corner, crest amplitude decaying as it approaches full cover. **750ms, `ease/exit`.**
+- **Tint band riding the edge:** vermillion `#E8765A` @ 18% sweeping into dark; warm paper wash sweeping into light — the wave itself is ember-colored in both directions.
+- **Afterglow:** one soft ripple ring expands from the toggle 400ms after settle (3% opacity) — the site feels washed, not clicked.
+- Fallbacks: no View Transitions → 250ms crossfade; `prefers-reduced-motion` → instant swap. FOUC guard unchanged (§3.5).
 
-**Implementation notes:** one pre-generated SVG web path set (same command-count per ring for smooth morph), WAAPI-driven, zero per-frame JS for the theme itself; fallback (no View Transitions / reduced-motion): 120ms crossfade + web-bloom micro-animation on the toggle only. **A "webby" afterglow:** for 600ms after the switch, a faint web watermark (2% opacity) lingers in the hero background — the site feels "webby" post-toggle, per the owner's wording.
-
-**Toggle logo v2 — SLOT OPEN:** owner will share the reference design for the dark/light toggle icon. Slot: `ThemeToggleLogo.tsx` — SVG, accepts `theme` prop, expected to morph sun↔dark emblem (path morph 250ms spring) with a 90° rotation on click. Until the reference arrives, ship the accessible interim icon (sun/moon) — swap is a one-file change, no other component touches it.
+**Toggle logo — SLOT OPEN:** the owner will share the toggle-icon reference. `ThemeToggleLogo.tsx` = one-file SVG slot (`theme` prop, morph on switch). Interim: accessible sun/moon. No other component touches it.
 
 ## 6.6 Trust layer (award-level *and* trustworthy — Awwwards criteria mapped)
 
 | Awwwards criterion | What we ship |
 |---|---|
-| Design 40% | Aurora hero, web toggle, motion catalog, goshuin serif + receipts identity |
+| Design 40% | Ember-aurora hero, wave toggle, motion catalog, serif + seal-red receipts identity — typography-first, near-zero icons |
 | Usability 30% | real routes, keyboard map, focus rings, reduced-motion, mobile overlay nav |
-| Creativity 20% | the web-mesh theme reveal; citations-as-stamps visual language |
-| Content 10% | §4B density, public scorecard, honest FAQ |
+| Creativity 20% | the wave theme reveal; citations-as-stamps visual language |
+| Content 10% | stripped factual copy (§6.3), public scorecard, honest FAQ |
 
 **Trust artifacts on the landing:** (1) **Live mini-demo** — a preloaded handbook answers one canned question right on `/`, streaming with citations, no signup, no API key needed (cached result); (2) **Public scorecard chip** in the stats band linking to `/exam`; (3) **"Nothing stored" pledge** — three mono lines under the demo; (4) verification sign-off (§5) linked from the footer once keys are live and re-run.
 
@@ -1136,18 +1132,19 @@ Add `framer-motion` to deps (the gap behind "no micro-animations"). Then impleme
 | Step | Do | Done when |
 |---|---|---|
 | R1 | add `framer-motion`; route split `/product` `/how-it-works` `/exam` per §6.2 | each route renders with its own title/URL; nav active-states live |
-| R2 | hero v2: 4 layers per §6.1 (base, aurora, grain, spotlight) in both themes | screenshots pass eyeball vs reference; contrast unit test over text zone ≥4.5:1; 60fps scroll on M1 |
+| R2 | color v2.1 swap (§6.1 tokens) + ember-aurora hero layers in both themes + **icon purge** | zero green in any base token (grep test); ≤3 icons app-wide; contrast unit test ≥4.5:1; 60fps scroll |
 | R3 | page transitions + entrance choreography (§6.2/§6.4) | route change visibly transitions; reduced-motion respected |
 | R4 | micro-animation catalog complete (§6.4) incl. magnetic CTAs, counters, marquee, product-page micro-visuals | every §6.4 row demonstrable; `document.hidden` pauses loops |
-| R5 | web-mesh toggle (§6.5) + `ThemeToggleLogo` slot | toggle: web bloom→spread→dissolve both directions; fallback + reduced-motion paths tested; 60fps mid-transition |
-| R6 | §4B copy swap + tech strip + formats marquee + footer v2 | every §4B string verbatim in UI; React/Next.js mentioned |
+| R5 | **wave toggle** (§6.5) + `ThemeToggleLogo` slot | wave expands from toggle point both directions; ripple afterglow; fallback + reduced-motion tested; 60fps mid-transition |
+| R6 | §6.3 stripped copy swap + tech strip + footer | every §6.3 string verbatim; React mentioned; no leftover v2 copy |
 | R7 | trust layer: live mini-demo, scorecard chip, pledge (§6.6) | demo streams a cited answer on `/` with zero keys |
 | R8 | full pass: Lighthouse ≥90 ×3, axe clean, keyboard walkthrough, mobile viewport, Playwright updated for new routes | budgets green in CI; old nav-button tests replaced by route tests |
-| R9 | owner review with screen-recording of: aurora hero, route transitions, web toggle, demo | owner sign-off |
+| R9 | owner review with screen-recording of: ember hero, route transitions, wave toggle, demo | owner sign-off |
 
-## 6.8 Overrides vs §3/§4 (the only changes to the standing spec)
+## 6.8 Overrides vs §3/§4 (v2.1 — the only changes to the standing spec)
 
-1. §3.5 wave transition → **superseded by §6.5 web reveal** (wave code retired).
-2. §3.1/§3.2 hero usage: `bg/base` stays the app canvas; **hero sections use `#041A16`/`#FAF8ED` + aurora layers** per §6.1.
-3. §4 hero sub, exam teaser, footer → replaced by §4B versions; feature cards upgraded to title+2-sentence+micro-visual format.
-4. Everything else in §3/§4 — tokens, type system, seal-red citations, stage hues, error copy, refusals — **unchanged**.
+1. §3.5 wave transition: **IN FORCE** — refined by §6.5 (origin at the toggle, ember tint band, ripple afterglow). The v2 web-mesh concept never existed; ignore it.
+2. §3.1/§3.2 color system: **teal spine revoked.** Primary accent = goshuin seal red (`#A6362F` light / `#E8765A` dark); dark base = warm ink `#0D0C0B`; light base = paper `#F5F2EA`; citations = amber. Full table in §6.1. Type system, mono voice, stage chips, radii — unchanged.
+3. §4 copy: hero sub, tech strip, feature cards, exam teaser, footer → replaced by the stripped §6.3 versions.
+4. Icon policy: ≤3 functional icons app-wide (§6.4); typography carries the design.
+5. Everything else in §3/§4 — type system, seal-red citations (now also primary), stage hues, error copy, refusals, micro-interaction catalog — **unchanged**.

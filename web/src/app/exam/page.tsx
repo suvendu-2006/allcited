@@ -12,7 +12,6 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/Table";
-import { CheckCircle2, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
 
 const EVAL_METRICS = [
@@ -63,14 +62,14 @@ export default function ExamPage() {
             We Grade Ourselves in Public.
           </motion.h1>
 
-          {/* Teaser copy v2 per §6.3 / §4B */}
+          {/* Teaser copy v2.1 per §6.3 stripped copy */}
           <motion.p
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
             className="text-sm sm:text-base text-gray-warm leading-relaxed"
           >
-            We run a 46-question exam on every release — questions designed to break us: answers split across pages, cross-references that force a second lookup, trick phrasings, and things the document simply doesn&apos;t say. Our score is public, per-release, with every failure documented. When was the last time an AI product showed you its report card?
+            We run a 46-question exam on every release, built to break us. The score is public.
           </motion.p>
         </div>
 
@@ -78,7 +77,7 @@ export default function ExamPage() {
         <section className="p-6 rounded-interactive border border-border bg-bg-surface shadow-xs">
           <div className="flex items-center justify-between pb-4 border-b border-border/80">
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-accent-primary" />
+              <span className="font-mono text-xs font-bold text-accent-primary">↗</span>
               <h3 className="font-semibold text-sm text-ink-primary font-display">
                 Release Progression
               </h3>
@@ -170,8 +169,8 @@ export default function ExamPage() {
                   <TableCell className="font-mono text-xs text-gray-warm">{row.target}</TableCell>
                   <TableCell className="font-mono text-xs font-bold text-accent-primary">{row.result}</TableCell>
                   <TableCell>
-                    <span className="inline-flex items-center gap-1 font-mono text-[11px] text-[#28C840] dark:text-[#5AD46F]">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span className="inline-flex items-center gap-1 font-mono text-[11px] text-[#28C840] dark:text-[#5AD46F] font-semibold">
+                      <span>✓</span>
                       {row.status}
                     </span>
                   </TableCell>
@@ -193,7 +192,7 @@ export default function ExamPage() {
       </main>
 
       <footer className="py-8 border-t border-border text-center font-mono text-[11px] text-gray-warm bg-bg-surface/50">
-        Built with React 18 · Next.js 14 · Allcited v1.0 · © 2026 Allcited
+        Built with React, in the open. 46-question exam on every release. © 2026 Allcited.
       </footer>
     </div>
   );

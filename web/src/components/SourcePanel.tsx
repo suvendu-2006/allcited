@@ -108,7 +108,7 @@ export function SourcePanel({
           /* Empty State per §4 copy freeze */
           <div className="h-full flex flex-col items-center justify-center text-center p-6 text-gray-warm">
             <div className="w-12 h-12 rounded-full bg-bg-sunken border border-border flex items-center justify-center mb-3">
-              <span className="font-mono text-xs text-ink-ghost">§</span>
+              <span className="font-mono text-xs text-ink-ghost">[ ]</span>
             </div>
             <p className="text-xs leading-relaxed max-w-[240px]">
               Ask something first — the receipts will pile up here.
@@ -120,10 +120,10 @@ export function SourcePanel({
             const isTwoHop = Boolean(c.is_two_hop);
             const isOcr = Boolean(c.is_ocr) || c.label.includes("(OCR)");
 
-            // Chunk label formatting per §4
+            // Chunk label formatting per §4 (no bare § prefix)
             const sectionName = c.section_path?.length ? c.section_path.slice(-1)[0] : "";
             const pageStr = c.page_number || c.page ? `p.${c.page_number || c.page}` : "";
-            const chunkLabel = [sectionName ? `§ ${sectionName}` : "", pageStr].filter(Boolean).join(" · ");
+            const chunkLabel = [sectionName ? sectionName : "", pageStr].filter(Boolean).join(" · ");
 
             return (
               <div

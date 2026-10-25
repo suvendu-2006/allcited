@@ -89,10 +89,10 @@ export default function HowItWorksPage() {
               Follow the trail.
             </h3>
             <p className="text-xs text-gray-warm leading-relaxed">
-              Every claim carries a stamp like <code className="font-mono text-accent-cite">[S1] §4.2, p.23</code>. Click it. Read the original excerpt yourself in the receipt drawer. That&apos;s the whole point.
+              Every claim carries a stamp like <code className="font-mono text-accent-cite">[S1] 4.2, p.23</code>. Click it. Read the original excerpt yourself in the receipt drawer. That&apos;s the whole point.
             </p>
             <div className="pt-2 border-t border-border/60 font-mono text-[11px] text-accent-cite">
-              ⚡ Verbatim excerpt + two-hop proofs
+              Verbatim excerpt + two-hop proofs
             </div>
           </div>
         </section>
@@ -144,7 +144,7 @@ export default function HowItWorksPage() {
               </span>
               <div className="space-y-2 font-mono text-[11px]">
                 <div className="p-2 rounded bg-bg-surface border border-border">
-                  <span className="text-accent-cite font-semibold">[S1]</span> §2.1 Leave Policy · p.23
+                  <span className="text-accent-cite font-semibold">[S1]</span> 2.1 Leave Policy · p.23
                   <p className="text-gray-warm mt-1 font-sans text-[11.5px]">
                     &ldquo;A maximum of 8 unused annual leave days may be carried forward into the subsequent calendar year.&rdquo;
                   </p>
@@ -207,7 +207,7 @@ export default function HowItWorksPage() {
       </main>
 
       <footer className="py-8 border-t border-border text-center font-mono text-[11px] text-gray-warm bg-bg-surface/50">
-        Built with React 18 · Next.js 14 · Allcited v1.0 · © 2026 Allcited
+        Built with React, in the open. 46-question exam on every release. © 2026 Allcited.
       </footer>
     </div>
   );

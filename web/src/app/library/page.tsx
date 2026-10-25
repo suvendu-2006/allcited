@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { BookOpen } from "lucide-react";
 import { LibraryGrid } from "@/components/LibraryGrid";
 import { Navbar } from "@/components/Navbar";
 import { useRouter } from "next/navigation";
@@ -18,7 +17,6 @@ export default function LibraryPage() {
         <div className="flex items-center justify-between mb-8 pb-4 border-b border-border">
           <div>
             <h1 className="text-2xl font-semibold text-ink-primary font-display flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-accent-primary" />
               Your shelf
             </h1>
             <p className="text-xs text-gray-warm mt-1">

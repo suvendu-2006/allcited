@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "./ui/ThemeToggle";
 import { Button } from "./ui/button";
-import { Menu, X, Settings } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface NavbarProps {
@@ -97,9 +97,9 @@ export function Navbar({ onOpenSettings, apiConnected }: NavbarProps) {
               type="button"
               onClick={onOpenSettings}
               title="Who does the thinking? (Settings)"
-              className="p-1.5 rounded-[6px] text-ink-ghost hover:text-ink-primary hover:bg-bg-sunken transition-colors cursor-pointer"
+              className="p-1.5 rounded-[6px] text-ink-ghost hover:text-ink-primary hover:bg-bg-sunken transition-colors cursor-pointer font-mono text-xs"
             >
-              <Settings className="w-4 h-4" />
+              ⚙
             </button>
           )}
 

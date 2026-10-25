@@ -29,7 +29,7 @@ interface ChatProps {
 const SEARCHING_VARIANTS = [
   "reading the shelves…",
   "flipping pages…",
-  "hunting for §-marks…",
+  "hunting for citations…",
 ];
 
 export function Chat({

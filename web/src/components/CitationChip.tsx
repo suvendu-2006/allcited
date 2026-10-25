@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { Citation } from "@/lib/sse";
-import { Sparkles } from "lucide-react";
 
 interface CitationChipProps {
   citation: Citation;
@@ -47,7 +46,7 @@ export function CitationChip({ citation, isPinned = false, onClick }: CitationCh
             : "bg-accent-cite/10 dark:bg-accent-cite/20 text-accent-cite dark:text-accent-cite border border-accent-cite/30 dark:border-accent-cite/40"
         }`}
       >
-        {isTwoHop && <Sparkles className="w-2.5 h-2.5 flex-shrink-0" />}
+        {isTwoHop && <span className="text-[10px] flex-shrink-0">✦</span>}
         <span className="relative">
           [{cleanLabel}]
           {/* Animated underline left to right on hover */}

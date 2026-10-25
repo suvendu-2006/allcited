@@ -25,7 +25,7 @@ export const SAMPLE_QUESTIONS = [
 export const SEARCHING_VARIANTS = [
   "reading the shelves…",
   "flipping pages…",
-  "hunting for §-marks…",
+  "hunting for citations…",
 ];
 
 export const REFUSAL_NOT_IN_DOC = {

@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { CitationChip } from "./CitationChip";
-import { Sparkles, CheckCircle2, Shield, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function LiveMiniDemo() {
@@ -44,7 +43,7 @@ export function LiveMiniDemo() {
     <div className="rounded-interactive border border-border bg-bg-surface p-6 sm:p-8 shadow-md relative overflow-hidden space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border/70">
         <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#28C840] dark:bg-[#5AD46F] animate-pulse" />
+          <span className="w-2 h-2 rounded-full bg-[#28C840] dark:bg-[#5AD46F] animate-pulse" />
           <span className="font-mono text-xs font-semibold text-ink-primary">
             Live Inline Demo: &ldquo;Acme Employee Handbook.md&rdquo;
           </span>
@@ -59,7 +58,7 @@ export function LiveMiniDemo() {
           disabled={isStreaming}
           className="inline-flex items-center gap-1.5 font-mono text-xs text-accent-primary hover:underline disabled:opacity-50"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${isStreaming ? "animate-spin" : ""}`} />
+          <span className={isStreaming ? "animate-spin inline-block" : ""}>↻</span>
           <span>Replay stream</span>
         </button>
       </div>
@@ -126,7 +125,7 @@ export function LiveMiniDemo() {
             </div>
             <p className="font-sans text-xs text-ink-primary leading-relaxed">
               {activeReceipt === "S1"
-                ? "§2.1 Leave Entitlements · p.23: 'A maximum of 8 unused annual leave days may be carried forward into the subsequent calendar year. Any surplus beyond 8 days will automatically lapse on March 31.'"
+                ? "2.1 Leave Entitlements · p.23: 'A maximum of 8 unused annual leave days may be carried forward into the subsequent calendar year. Any surplus beyond 8 days will automatically lapse on March 31.'"
                 : "Rule 63.7.4 Leave Encashment on Resignation · p.45: 'Upon voluntary resignation or formal separation, accrued annual leave encashment is strictly capped at a monetary reimbursement equivalent to 15 gross working days.'"}
             </p>
           </motion.div>
@@ -136,15 +135,15 @@ export function LiveMiniDemo() {
       {/* "Nothing Stored" Pledge under demo per §6.6 */}
       <div className="pt-3 border-t border-border/70 grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-[10.5px] text-gray-warm text-center sm:text-left">
         <div className="flex items-center gap-1.5">
-          <Shield className="w-3 h-3 text-accent-primary flex-shrink-0" />
+          <span className="text-accent-primary font-bold">✓</span>
           <span>Ephemeral RAM only — vanishes on exit</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <CheckCircle2 className="w-3 h-3 text-accent-primary flex-shrink-0" />
+          <span className="text-accent-primary font-bold">✓</span>
           <span>BYOK kept strictly in client browser</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <Sparkles className="w-3 h-3 text-accent-primary flex-shrink-0" />
+          <span className="text-accent-primary font-bold">✓</span>
           <span>Zero telemetry on file contents</span>
         </div>
       </div>

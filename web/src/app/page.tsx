@@ -11,11 +11,6 @@ import { DeepSeaAurora } from "@/components/DeepSeaAurora";
 import { MagneticButton } from "@/components/MagneticButton";
 import { LiveMiniDemo } from "@/components/LiveMiniDemo";
 import { Button } from "@/components/ui/button";
-import {
-  FileText,
-  Settings,
-  Sparkles,
-} from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function Home() {
@@ -221,10 +216,10 @@ Upon voluntary resignation or formal separation, accrued annual leave encashment
                 <button
                   type="button"
                   onClick={() => setIsSettingsOpen(true)}
-                  className="font-mono text-[11px] text-gray-warm hover:text-ink-primary flex items-center gap-1"
+                  className="font-mono text-[11px] text-gray-warm hover:text-ink-primary flex items-center gap-1.5 px-2 py-1 rounded border border-border/60 hover:bg-bg-sunken"
                 >
                   <span>Engine: {providerConfig.mode}</span>
-                  <Settings className="w-3 h-3 text-ink-ghost" />
+                  <span className="text-accent-primary">⚙</span>
                 </button>
               </div>
             </div>
@@ -269,11 +264,6 @@ Upon voluntary resignation or formal separation, accrued annual leave encashment
               {/* Layer 1-4 Aurora Background */}
               <DeepSeaAurora />
 
-              {/* Faint Web Watermark for afterglow per §6.5 */}
-              <div
-                className="hero-web-watermark absolute inset-0 pointer-events-none select-none bg-[radial-gradient(circle_at_center,rgba(49,199,165,0.06)_1px,transparent_1px)] bg-[size:48px_48px]"
-                aria-hidden="true"
-              />
 
               <div className="relative z-10 max-w-4xl mx-auto space-y-6">
                 {/* Hero Headline with Staggered Entrance per §6.4 */}
@@ -295,14 +285,14 @@ Upon voluntary resignation or formal separation, accrued annual leave encashment
                   ))}
                 </h1>
 
-                {/* Subtext per §6.3 / §4B */}
+                {/* Subtext per §6.3 v2.1 stripped copy */}
                 <motion.p
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.42, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
-                  className="text-base sm:text-lg text-gray-warm max-w-2xl mx-auto leading-relaxed font-sans"
+                  className="text-base sm:text-lg text-gray-warm max-w-xl mx-auto leading-relaxed font-sans"
                 >
-                  Drop in a PDF, Word file, deck, spreadsheet, or a link. Ask real questions. Every claim comes stamped with the exact section it came from — click the stamp, read the original, decide for yourself.
+                  Drop in any document. Ask anything. Every answer shows its source.
                 </motion.p>
 
                 {/* Magnetic CTAs per §6.4 */}
@@ -335,7 +325,6 @@ Upon voluntary resignation or formal separation, accrued annual leave encashment
                     onClick={loadHandbookFixture}
                     className="w-full sm:w-auto text-xs h-11"
                   >
-                    <FileText className="w-3.5 h-3.5 text-accent-primary mr-1.5" />
                     Load Sample Handbook
                   </Button>
                 </motion.div>
@@ -347,13 +336,10 @@ Upon voluntary resignation or formal separation, accrued annual leave encashment
               </div>
             </section>
 
-            {/* Tech Strip under Hero per §6.3 (Open-source Stack Marquee) */}
+            {/* Tech Strip under Hero per §6.3 v2.1 (mono, one line) */}
             <div className="border-y border-border bg-bg-surface py-2.5 overflow-hidden">
               <div className="whitespace-nowrap font-mono text-xs text-gray-warm flex items-center justify-center gap-2">
-                <span>⚡</span>
-                <strong className="text-ink-primary">Built with</strong>
-                <span>React 18 · Next.js 14 · TypeScript · Tailwind · Framer Motion · FastAPI · FAISS · pgvector</span>
-                <span className="text-ink-ghost">— open-source stack, no black boxes, every design token documented.</span>
+                <span>React · Next.js · TypeScript · FastAPI · FAISS — open source, top to bottom.</span>
               </div>
             </div>
 
@@ -376,9 +362,8 @@ Upon voluntary resignation or formal separation, accrued annual leave encashment
                     </span>
                     <Link
                       href="/exam"
-                      className="font-mono text-[10px] px-2 py-0.5 rounded bg-accent-primary/10 text-accent-primary hover:bg-accent-primary/20 border border-accent-primary/30 inline-flex items-center gap-1"
+                      className="font-mono text-[10px] px-2.5 py-1 rounded bg-accent-primary/10 text-accent-primary hover:bg-accent-primary/20 border border-accent-primary/30 inline-flex items-center"
                     >
-                      <Sparkles className="w-3 h-3" />
                       View Scorecard →
                     </Link>
                   </div>
@@ -415,7 +400,7 @@ Upon voluntary resignation or formal separation, accrued annual leave encashment
               <LiveMiniDemo />
             </section>
 
-            {/* Formats Marquee per §6.3 & §6.4 */}
+            {/* Formats Marquee per §6.3 v2.1 & §6.4 */}
             <section className="py-5 border-y border-border bg-bg-surface/30 overflow-hidden relative select-none">
               <motion.div
                 className="flex items-center gap-8 whitespace-nowrap font-mono text-xs text-gray-warm tracking-wider hover:[animation-play-state:paused]"
@@ -429,10 +414,8 @@ Upon voluntary resignation or formal separation, accrued annual leave encashment
               >
                 {[...Array(4)].map((_, i) => (
                   <span key={i} className="inline-flex items-center gap-6">
-                    <span className="text-ink-primary font-medium">PDF · DOCX · PPTX · XLSX · MD · TXT · any URL</span>
+                    <span className="text-ink-primary font-medium">PDF · DOCX · PPTX · XLSX · MD · TXT · any URL.</span>
                     <span className="text-accent-primary">◆</span>
-                    <span>six doors into one library.</span>
-                    <span className="text-ink-ghost">·</span>
                   </span>
                 ))}
               </motion.div>
