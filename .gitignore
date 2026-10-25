@@ -62,5 +62,7 @@ yarn-error.log*
 *.pkl
 cache/
 tmp/
-data/
+/data/
+api/data/
+!web/src/data/
 *.jsonl

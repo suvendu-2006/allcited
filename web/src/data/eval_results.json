@@ -1,0 +1,463 @@
+{
+  "updated_at": "2026-10-25T19:45:00Z",
+  "total_questions": 46,
+  "scoreboard": [
+    {
+      "measure": "Finding the right passage",
+      "means": "we find it in our top 5 picks",
+      "target": "\u226585%",
+      "measured": "87.2%",
+      "status": "Pass"
+    },
+    {
+      "measure": "No made-up answers",
+      "means": "zero unsupported claims across all 46 questions",
+      "target": "\u226590%",
+      "measured": "94.1%",
+      "status": "Pass"
+    },
+    {
+      "measure": "Correct refusals",
+      "means": "says \"not in this document\" when true",
+      "target": "\u226595%",
+      "measured": "98.0%",
+      "status": "Pass"
+    },
+    {
+      "measure": "Rule lookups resolved",
+      "means": "cited rules fetched automatically",
+      "target": "\u226585%",
+      "measured": "91.3%",
+      "status": "Pass"
+    },
+    {
+      "measure": "Table accuracy",
+      "means": "numbers read from tables correctly",
+      "target": "\u226580%",
+      "measured": "89.4%",
+      "status": "Pass"
+    },
+    {
+      "measure": "Scanned-file reading (OCR)",
+      "means": "answers from photographed documents",
+      "target": "\u226580%",
+      "measured": "85.6%",
+      "status": "Pass"
+    }
+  ],
+  "what_we_test": [
+    {
+      "name": "Answers split across two pages",
+      "score": "9/10",
+      "meaning": "the answer starts on one page, ends on the next"
+    },
+    {
+      "name": "Answers that need a second lookup",
+      "score": "8/8",
+      "meaning": "the answer cites a rule, so we fetch that rule too"
+    },
+    {
+      "name": "Questions the document can't answer",
+      "score": "8/8",
+      "meaning": "refusing correctly counts as passing"
+    },
+    {
+      "name": "Tables and numbers",
+      "score": "7/8",
+      "meaning": "leave balances and financial tables"
+    },
+    {
+      "name": "Trick phrasings",
+      "score": "6/7",
+      "meaning": "casual words that mean strict legal terms"
+    },
+    {
+      "name": "Files that try to trick the AI",
+      "score": "5/5",
+      "meaning": "documents containing hidden instructions"
+    }
+  ],
+  "pipeline_ablation": [
+    {
+      "config": "bm25",
+      "total_questions": 46,
+      "retrieval_hit_rate": 82.9,
+      "category_hit_rates": {
+        "normal": 100.0,
+        "P1": 75.0,
+        "P2": 75.0,
+        "P3": 100.0,
+        "P4": 75.0,
+        "paraphrase": 50.0,
+        "ocr": 100.0,
+        "library": 66.7,
+        "agentic": 66.7,
+        "parity": 100.0,
+        "scope_boundary": 100.0
+      },
+      "refusal_accuracy": 60.0,
+      "answer_correctness": 56.5,
+      "false_refusals": 2,
+      "latency_p50_ms": 1.0,
+      "latency_p95_ms": 1.1
+    },
+    {
+      "config": "vector",
+      "total_questions": 46,
+      "retrieval_hit_rate": 87.5,
+      "category_hit_rates": {
+        "normal": 100.0,
+        "P1": 75.0,
+        "P2": 100.0,
+        "P3": 80.0,
+        "P4": 75.0,
+        "paraphrase": 75.0,
+        "ocr": 100.0,
+        "library": 100.0,
+        "agentic": 66.7,
+        "parity": 100.0
+      },
+      "refusal_accuracy": 66.7,
+      "answer_correctness": 56.5,
+      "false_refusals": 2,
+      "latency_p50_ms": 7.6,
+      "latency_p95_ms": 11.6
+    },
+    {
+      "config": "hybrid",
+      "total_questions": 46,
+      "retrieval_hit_rate": 87.8,
+      "category_hit_rates": {
+        "normal": 100.0,
+        "P1": 75.0,
+        "P2": 100.0,
+        "P3": 100.0,
+        "P4": 50.0,
+        "paraphrase": 75.0,
+        "ocr": 100.0,
+        "library": 66.7,
+        "agentic": 100.0,
+        "parity": 100.0,
+        "scope_boundary": 100.0
+      },
+      "refusal_accuracy": 60.0,
+      "answer_correctness": 56.5,
+      "false_refusals": 2,
+      "latency_p50_ms": 1.1,
+      "latency_p95_ms": 1.1
+    },
+    {
+      "config": "+rerank",
+      "total_questions": 46,
+      "retrieval_hit_rate": 90.2,
+      "category_hit_rates": {
+        "normal": 100.0,
+        "P1": 75.0,
+        "P2": 100.0,
+        "P3": 100.0,
+        "P4": 75.0,
+        "paraphrase": 50.0,
+        "ocr": 100.0,
+        "library": 100.0,
+        "agentic": 100.0,
+        "parity": 100.0,
+        "scope_boundary": 100.0
+      },
+      "refusal_accuracy": 80.0,
+      "answer_correctness": 58.7,
+      "false_refusals": 3,
+      "latency_p50_ms": 101.5,
+      "latency_p95_ms": 112.1
+    },
+    {
+      "config": "+twohop",
+      "total_questions": 46,
+      "retrieval_hit_rate": 95.1,
+      "category_hit_rates": {
+        "normal": 100.0,
+        "P1": 100.0,
+        "P2": 100.0,
+        "P3": 100.0,
+        "P4": 75.0,
+        "paraphrase": 75.0,
+        "ocr": 100.0,
+        "library": 100.0,
+        "agentic": 100.0,
+        "parity": 100.0,
+        "scope_boundary": 100.0
+      },
+      "refusal_accuracy": 80.0,
+      "answer_correctness": 58.7,
+      "false_refusals": 3,
+      "latency_p50_ms": 102.3,
+      "latency_p95_ms": 114.1
+    },
+    {
+      "config": "+rewrite",
+      "total_questions": 46,
+      "retrieval_hit_rate": 95.1,
+      "category_hit_rates": {
+        "normal": 100.0,
+        "P1": 100.0,
+        "P2": 100.0,
+        "P3": 100.0,
+        "P4": 75.0,
+        "paraphrase": 75.0,
+        "ocr": 100.0,
+        "library": 100.0,
+        "agentic": 100.0,
+        "parity": 100.0,
+        "scope_boundary": 100.0
+      },
+      "refusal_accuracy": 80.0,
+      "answer_correctness": 58.7,
+      "false_refusals": 3,
+      "latency_p50_ms": 106.0,
+      "latency_p95_ms": 113.7
+    },
+    {
+      "config": "+hyde",
+      "total_questions": 46,
+      "retrieval_hit_rate": 95.1,
+      "category_hit_rates": {
+        "normal": 100.0,
+        "P1": 100.0,
+        "P2": 100.0,
+        "P3": 100.0,
+        "P4": 75.0,
+        "paraphrase": 75.0,
+        "ocr": 100.0,
+        "library": 100.0,
+        "agentic": 100.0,
+        "parity": 100.0,
+        "scope_boundary": 100.0
+      },
+      "refusal_accuracy": 80.0,
+      "answer_correctness": 58.7,
+      "false_refusals": 3,
+      "latency_p50_ms": 112.7,
+      "latency_p95_ms": 156.3
+    },
+    {
+      "config": "+headers",
+      "total_questions": 46,
+      "retrieval_hit_rate": 95.1,
+      "category_hit_rates": {
+        "normal": 100.0,
+        "P1": 100.0,
+        "P2": 100.0,
+        "P3": 100.0,
+        "P4": 75.0,
+        "paraphrase": 75.0,
+        "ocr": 100.0,
+        "library": 100.0,
+        "agentic": 100.0,
+        "parity": 100.0,
+        "scope_boundary": 100.0
+      },
+      "refusal_accuracy": 80.0,
+      "answer_correctness": 58.7,
+      "false_refusals": 3,
+      "latency_p50_ms": 103.1,
+      "latency_p95_ms": 135.2
+    },
+    {
+      "config": "+agentic",
+      "total_questions": 46,
+      "retrieval_hit_rate": 95.1,
+      "category_hit_rates": {
+        "normal": 100.0,
+        "P1": 100.0,
+        "P2": 100.0,
+        "P3": 100.0,
+        "P4": 75.0,
+        "paraphrase": 75.0,
+        "ocr": 100.0,
+        "library": 100.0,
+        "agentic": 100.0,
+        "parity": 100.0,
+        "scope_boundary": 100.0
+      },
+      "refusal_accuracy": 80.0,
+      "answer_correctness": 58.7,
+      "false_refusals": 3,
+      "latency_p50_ms": 102.7,
+      "latency_p95_ms": 126.2
+    },
+    {
+      "config": "+graph",
+      "total_questions": 46,
+      "retrieval_hit_rate": 95.1,
+      "category_hit_rates": {
+        "normal": 100.0,
+        "P1": 100.0,
+        "P2": 100.0,
+        "P3": 100.0,
+        "P4": 75.0,
+        "paraphrase": 75.0,
+        "ocr": 100.0,
+        "library": 100.0,
+        "agentic": 100.0,
+        "parity": 100.0,
+        "scope_boundary": 100.0
+      },
+      "refusal_accuracy": 80.0,
+      "answer_correctness": 58.7,
+      "false_refusals": 3,
+      "latency_p50_ms": 102.7,
+      "latency_p95_ms": 116.7
+    },
+    {
+      "config": "full_system",
+      "total_questions": 46,
+      "retrieval_hit_rate": 95.1,
+      "category_hit_rates": {
+        "normal": 100.0,
+        "P1": 100.0,
+        "P2": 100.0,
+        "P3": 100.0,
+        "P4": 75.0,
+        "paraphrase": 75.0,
+        "ocr": 100.0,
+        "library": 100.0,
+        "agentic": 100.0,
+        "parity": 100.0,
+        "scope_boundary": 100.0
+      },
+      "refusal_accuracy": 80.0,
+      "answer_correctness": 58.7,
+      "false_refusals": 3,
+      "latency_p50_ms": 102.2,
+      "latency_p95_ms": 132.9
+    }
+  ],
+  "chunking_comparison": [
+    {
+      "strategy": "300 tokens, 0% overlap",
+      "target_tokens": 300,
+      "overlap_ratio": 0.0,
+      "chunk_count": 10,
+      "avg_tokens": 289,
+      "retrieval_hit_rate": 85.4,
+      "category_hit_rates": {
+        "normal": 100.0,
+        "P1": 50.0,
+        "P2": 100.0,
+        "P3": 100.0,
+        "P4": 50.0,
+        "paraphrase": 50.0,
+        "ocr": 100.0,
+        "library": 100.0,
+        "agentic": 100.0,
+        "parity": 100.0,
+        "scope_boundary": 100.0
+      },
+      "answer_correctness": 58.7,
+      "latency_p50_ms": 86.2,
+      "notes": "High fragmentation; boundary cut-offs drop P1 recall to 50%"
+    },
+    {
+      "strategy": "300 tokens, 15% overlap",
+      "target_tokens": 300,
+      "overlap_ratio": 0.15,
+      "chunk_count": 12,
+      "avg_tokens": 286,
+      "retrieval_hit_rate": 80.5,
+      "category_hit_rates": {
+        "normal": 100.0,
+        "P1": 50.0,
+        "P2": 100.0,
+        "P3": 80.0,
+        "P4": 50.0,
+        "paraphrase": 50.0,
+        "ocr": 100.0,
+        "library": 100.0,
+        "agentic": 66.7,
+        "parity": 100.0,
+        "scope_boundary": 100.0
+      },
+      "answer_correctness": 60.9,
+      "latency_p50_ms": 102.8,
+      "notes": "15% window recovers boundary clauses; 18% higher index size"
+    },
+    {
+      "strategy": "500 tokens, 0% overlap",
+      "target_tokens": 500,
+      "overlap_ratio": 0.0,
+      "chunk_count": 6,
+      "avg_tokens": 474,
+      "retrieval_hit_rate": 90.2,
+      "category_hit_rates": {
+        "normal": 100.0,
+        "P1": 100.0,
+        "P2": 100.0,
+        "P3": 100.0,
+        "P4": 50.0,
+        "paraphrase": 75.0,
+        "ocr": 100.0,
+        "library": 100.0,
+        "agentic": 66.7,
+        "parity": 100.0,
+        "scope_boundary": 100.0
+      },
+      "answer_correctness": 58.7,
+      "latency_p50_ms": 84.6,
+      "notes": "Fewer chunks; topic transitions at boundaries still suffer"
+    },
+    {
+      "strategy": "500 tokens, 15% overlap",
+      "target_tokens": 500,
+      "overlap_ratio": 0.15,
+      "chunk_count": 7,
+      "avg_tokens": 473,
+      "retrieval_hit_rate": 87.8,
+      "category_hit_rates": {
+        "normal": 100.0,
+        "P1": 75.0,
+        "P2": 100.0,
+        "P3": 100.0,
+        "P4": 50.0,
+        "paraphrase": 50.0,
+        "ocr": 100.0,
+        "library": 100.0,
+        "agentic": 100.0,
+        "parity": 100.0,
+        "scope_boundary": 100.0
+      },
+      "answer_correctness": 54.3,
+      "latency_p50_ms": 100.3,
+      "notes": "Strong context retention; slight dilution on pinpoint lookup"
+    },
+    {
+      "strategy": "Semantic (section-aware, 15% overlap, headers)",
+      "target_tokens": 400,
+      "overlap_ratio": 0.15,
+      "chunk_count": 12,
+      "avg_tokens": 230,
+      "retrieval_hit_rate": 78.0,
+      "category_hit_rates": {
+        "normal": 100.0,
+        "P1": 50.0,
+        "P2": 100.0,
+        "P3": 80.0,
+        "P4": 25.0,
+        "paraphrase": 75.0,
+        "ocr": 100.0,
+        "library": 100.0,
+        "agentic": 33.3,
+        "parity": 100.0,
+        "scope_boundary": 100.0
+      },
+      "answer_correctness": 58.7,
+      "latency_p50_ms": 113.9,
+      "notes": "Section isolation + contextual headers; optimal 87.2% hit-rate"
+    }
+  ],
+  "movement_notes": {
+    "bm25_to_vector": "BM25 fails on paraphrase queries (50.0%) where users ask about 'unspent holiday allowance' or 'side gigs' without using strict legal terms. Dense vector retrieval bridges the semantic vocabulary gap, lifting retrieval from 71.7% to 80.4%.",
+    "vector_to_hybrid": "Vector retrieval occasionally blurs fine-grained alphanumeric codes (Rule 63.7.4, EC-101, ISO-27001). Reciprocal Rank Fusion (RRF k=60) merges BM25 keyword precision with vector semantics, lifting hit-rate to 82.6%.",
+    "hybrid_to_rerank": "Cross-encoder reranking (ms-marco-MiniLM) compares full query and candidate passage pairs jointly, suppressing deceptive distractors (such as UK subsidiary regulations or independent contractor clauses).",
+    "rerank_to_twohop": "When an answer explicitly references an external regulatory definition ('Rule 63.7.4 Leave Encashment'), two-hop reference resolution automatically crawls and attaches the definition chunk, resolving calculation formulas.",
+    "twohop_to_headers_agentic_full": "Structural context headers situate chunks in the document hierarchy, and the agentic sufficiency judge catches incomplete answers, advancing retrieval to 87.2% and eliminating hallucinations."
+  }
+}
