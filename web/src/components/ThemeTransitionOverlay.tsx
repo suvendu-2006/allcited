@@ -67,15 +67,15 @@ export function ThemeTransitionOverlay() {
         localStorage.setItem("allcited_theme", "light");
       }
 
-      // 2. Play tactile mechanical switch click
-      playToggleClick(nextDark);
+      // Silent trigger
+      playToggleClick();
       onComplete?.(nextDark);
 
-      // 3. 540ms single-curve GPU compositor animation without mid-flight React re-renders
+      // 2. Hardware 380ms GPU compositor animation
       const tFinish = setTimeout(() => {
         setIsActive(false);
         isAnimatingRef.current = false;
-      }, 550);
+      }, 400);
 
       return () => {
         clearTimeout(tFinish);
@@ -105,12 +105,11 @@ export function ThemeTransitionOverlay() {
   if (!isActive) return null;
 
   // Mode-relative edge styling:
-  // - Dark Mode target: Contrasting sharp dark edge (#1A1918) with vermillion halo
-  // - Light Mode target: Luminous warm white/paper edge (#FFFFFF) with radiant amber halo
-  // - Fill: Subtle translucent sheen (never opaque solid fill, so content stays visible)
+  // - Dark Mode target: Crisp dark perimeter edge with subtle warm vermillion halo
+  // - Light Mode target: Luminous warm white perimeter edge with subtle amber halo
   const strokeColor = isNextDark ? "#2A2826" : "#FFFFFF";
-  const haloColor = isNextDark ? "rgba(232, 118, 90, 0.45)" : "rgba(232, 176, 75, 0.5)";
-  const innerFill = isNextDark ? "rgba(13, 12, 11, 0.04)" : "rgba(245, 242, 234, 0.06)";
+  const haloColor = isNextDark ? "rgba(232, 118, 90, 0.35)" : "rgba(232, 176, 75, 0.4)";
+  const innerFill = isNextDark ? "rgba(13, 12, 11, 0.03)" : "rgba(245, 242, 234, 0.04)";
   const vertexColor = isNextDark ? "#E8765A" : "#9A5B00";
 
   return (
@@ -126,29 +125,29 @@ export function ThemeTransitionOverlay() {
         bottom: 0,
         width: "100vw",
         height: "100vh",
+        contain: "strict",
       }}
     >
       <style>{`
-        /* Continuous, unified single-curve GPU compositor animation */
         @keyframes allcitedTriangleLifecycle {
           0% {
-            transform: scale3d(0.015, 0.015, 1) rotate(0deg);
+            transform: translate3d(0, 0, 0) scale3d(0.08, 0.08, 1) rotate(0deg);
             opacity: 0;
           }
-          6% {
+          10% {
             opacity: 1;
           }
-          75% {
-            opacity: 1;
+          65% {
+            opacity: 0.85;
           }
           100% {
-            transform: scale3d(48, 48, 1) rotate(10deg);
+            transform: translate3d(0, 0, 0) scale3d(12, 12, 1) rotate(8deg);
             opacity: 0;
           }
         }
 
         .allcited-triangle-lifecycle {
-          animation: allcitedTriangleLifecycle 540ms cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+          animation: allcitedTriangleLifecycle 380ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
           transform-origin: center center;
           will-change: transform, opacity;
           backface-visibility: hidden;
@@ -158,7 +157,6 @@ export function ThemeTransitionOverlay() {
 
       {/* Screen-Center Expanding Triangle Container with Hardware 3D Compositing */}
       <div className="relative flex items-center justify-center allcited-triangle-lifecycle">
-        {/* Equilateral Triangle Centered at its Mathematical Centroid (0, 0) */}
         <svg
           viewBox="-120 -120 240 240"
           className="overflow-visible pointer-events-none"
@@ -167,12 +165,12 @@ export function ThemeTransitionOverlay() {
             height: "220px",
           }}
         >
-          {/* Subtle luminous halo edge with non-scaling stroke */}
+          {/* Subtle luminous halo edge */}
           <polygon
             points="0,-115.47 100,57.74 -100,57.74"
             fill="none"
             stroke={haloColor}
-            strokeWidth={isNextDark ? 8 : 9}
+            strokeWidth={isNextDark ? 6 : 7}
             vectorEffect="non-scaling-stroke"
             strokeLinejoin="round"
             strokeLinecap="round"
@@ -183,16 +181,16 @@ export function ThemeTransitionOverlay() {
             points="0,-115.47 100,57.74 -100,57.74"
             fill={innerFill}
             stroke={strokeColor}
-            strokeWidth={isNextDark ? 2.5 : 3.5}
+            strokeWidth={isNextDark ? 2 : 2.5}
             vectorEffect="non-scaling-stroke"
             strokeLinejoin="round"
             strokeLinecap="round"
           />
 
-          {/* Precision vertex accents with non-scaling stroke */}
-          <circle cx="0" cy="-115.47" r="4" fill={vertexColor} vectorEffect="non-scaling-stroke" />
-          <circle cx="100" cy="57.74" r="4" fill={vertexColor} vectorEffect="non-scaling-stroke" />
-          <circle cx="-100" cy="57.74" r="4" fill={vertexColor} vectorEffect="non-scaling-stroke" />
+          {/* Precision vertex accents */}
+          <circle cx="0" cy="-115.47" r="3" fill={vertexColor} vectorEffect="non-scaling-stroke" />
+          <circle cx="100" cy="57.74" r="3" fill={vertexColor} vectorEffect="non-scaling-stroke" />
+          <circle cx="-100" cy="57.74" r="3" fill={vertexColor} vectorEffect="non-scaling-stroke" />
         </svg>
       </div>
     </div>

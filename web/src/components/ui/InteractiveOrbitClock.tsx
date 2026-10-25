@@ -10,16 +10,16 @@ interface InteractiveOrbitClockProps {
 
 /**
  * Interactive Orbit Clock & Time Controller
- * - Circular orbit dial with a draggable satellite dot.
- * - Clicking and dragging the dot rotates it around the 24-hour cycle.
- * - Changing the time dynamically changes the theme (Day = Light, Night = Dark)
- *   and fires the screen-center expanding triangle transition.
- * - When moved away from real time, header displays "TIME TRAVELLER".
- * - Clicking "TIME TRAVELLER" smoothly snaps back to real local time.
+ * - 60fps/120fps hardware-accelerated draggable satellite dot on circular wire orbit.
+ * - Smoothly updates time in real-time as user drags around the 24-hour cycle.
+ * - While dragging: silently flips theme classes without stutter or layout lag.
+ * - On release / click: triggers the crisp screen-center triangle transition if theme changed.
+ * - Label indicates "LOCAL TIME" or "TIME TRAVELLER" (with ↺ reset).
  */
 export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockProps) {
   const { theme, setTheme } = useTheme();
   const dialRef = useRef<HTMLDivElement>(null);
+  const dotRef = useRef<HTMLDivElement>(null);
 
   // Time state: hours and minutes
   const [hours, setHours] = useState<number>(11);
@@ -31,6 +31,14 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
   const realTimeRef = useRef<{ h: number; m: number }>({ h: 11, m: 30 });
   const isTimeTravellerRef = useRef(false);
   isTimeTravellerRef.current = isTimeTraveller;
+
+  // Track theme at start of drag to know if it flipped
+  const initialThemeOnDrag = useRef<"light" | "dark">(theme);
+  const currentTargetTheme = useRef<"light" | "dark">(theme);
+
+  // Animation frame throttle ref
+  const rafId = useRef<number | null>(null);
+  const pendingCoords = useRef<{ x: number; y: number } | null>(null);
 
   // Initialize and run real-time clock tick
   useEffect(() => {
@@ -51,6 +59,11 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
     return () => clearInterval(interval);
   }, []);
 
+  // Update theme ref when theme prop updates
+  useEffect(() => {
+    currentTargetTheme.current = theme;
+  }, [theme]);
+
   /**
    * 24-Hour Cycle Angle Mapping:
    * 12:00 Noon (brightest day) = 0° (Top, 12 o'clock)
@@ -61,7 +74,6 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
    * Nighttime: 18:00 to 05:59 -> Dark theme
    */
   const totalMinutes = hours * 60 + minutes;
-  // Offset relative to noon (720 min)
   const offsetFromNoon = (totalMinutes - 720 + 1440) % 1440;
   const currentAngleDeg = (offsetFromNoon / 1440) * 360;
 
@@ -75,22 +87,8 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
     return { h, m };
   }, []);
 
-  // Update theme based on chosen time
-  const syncThemeWithTime = useCallback(
-    (h: number) => {
-      const shouldBeDark = h >= 18 || h < 6;
-      const targetTheme = shouldBeDark ? "dark" : "light";
-      if (theme !== targetTheme) {
-        executeThemeTransition(shouldBeDark, () => {
-          setTheme(targetTheme, false);
-        });
-      }
-    },
-    [theme, setTheme]
-  );
-
-  // Compute angle from mouse/touch event relative to dial center
-  const getAngleFromEvent = useCallback((clientX: number, clientY: number) => {
+  // Compute angle from event client coordinates relative to dial center
+  const getAngleFromCoords = useCallback((clientX: number, clientY: number) => {
     if (!dialRef.current) return 0;
     const rect = dialRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
@@ -98,36 +96,66 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
     const dx = clientX - centerX;
     const dy = clientY - centerY;
 
-    // Angle relative to positive X-axis in radians: -PI to +PI
     const rad = Math.atan2(dy, dx);
     let deg = (rad * 180) / Math.PI;
-    // Rotate coordinate system so 0 deg is at the Top (dy < 0, dx = 0)
-    deg = (deg + 90 + 360) % 360;
+    deg = (deg + 90 + 360) % 360; // 0 deg is Top
     return deg;
   }, []);
 
-  // Handle pointer down (click or drag start)
+  // Apply time and theme smoothly during drag (silent class switch)
+  const applyTimeAtAngle = useCallback(
+    (deg: number, triggerAnimation = false) => {
+      const { h, m } = angleToTime(deg);
+      setHours(h);
+      setMinutes(m);
+      setIsTimeTraveller(true);
+
+      const shouldBeDark = h >= 18 || h < 6;
+      const targetTheme = shouldBeDark ? "dark" : "light";
+
+      if (currentTargetTheme.current !== targetTheme) {
+        currentTargetTheme.current = targetTheme;
+        if (triggerAnimation) {
+          executeThemeTransition(shouldBeDark, () => {
+            setTheme(targetTheme, false);
+          });
+        } else {
+          // Direct silent switch while dragging to preserve 60/120fps fluid drag
+          setTheme(targetTheme, false);
+        }
+      }
+    },
+    [angleToTime, setTheme]
+  );
+
+  // Process dragging via requestAnimationFrame
+  const processDrag = useCallback(() => {
+    if (!pendingCoords.current) {
+      rafId.current = null;
+      return;
+    }
+    const { x, y } = pendingCoords.current;
+    const deg = getAngleFromCoords(x, y);
+    applyTimeAtAngle(deg, false);
+    rafId.current = null;
+  }, [getAngleFromCoords, applyTimeAtAngle]);
+
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
     setIsDragging(true);
+    initialThemeOnDrag.current = theme;
 
-    const deg = getAngleFromEvent(e.clientX, e.clientY);
-    const { h, m } = angleToTime(deg);
-    setHours(h);
-    setMinutes(m);
-    setIsTimeTraveller(true);
-    syncThemeWithTime(h);
+    const deg = getAngleFromCoords(e.clientX, e.clientY);
+    applyTimeAtAngle(deg, false);
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDragging) return;
-    const deg = getAngleFromEvent(e.clientX, e.clientY);
-    const { h, m } = angleToTime(deg);
-    setHours(h);
-    setMinutes(m);
-    setIsTimeTraveller(true);
-    syncThemeWithTime(h);
+    pendingCoords.current = { x: e.clientX, y: e.clientY };
+    if (!rafId.current) {
+      rafId.current = requestAnimationFrame(processDrag);
+    }
   };
 
   const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -135,9 +163,22 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
     try {
       e.currentTarget.releasePointerCapture(e.pointerId);
     } catch {
-      // Safely ignore pointer capture release if not captured
+      // Ignore
     }
     setIsDragging(false);
+
+    if (rafId.current) {
+      cancelAnimationFrame(rafId.current);
+      rafId.current = null;
+    }
+
+    // If theme flipped during drag or on direct click, launch the triangle animation on finish
+    if (currentTargetTheme.current !== initialThemeOnDrag.current) {
+      const isDark = currentTargetTheme.current === "dark";
+      executeThemeTransition(isDark, () => {
+        setTheme(currentTargetTheme.current, false);
+      });
+    }
   };
 
   // Reset back to actual real local time
@@ -147,16 +188,22 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
     setHours(h);
     setMinutes(m);
     setIsTimeTraveller(false);
-    syncThemeWithTime(h);
+
+    const shouldBeDark = h >= 18 || h < 6;
+    const targetTheme = shouldBeDark ? "dark" : "light";
+    if (theme !== targetTheme) {
+      executeThemeTransition(shouldBeDark, () => {
+        setTheme(targetTheme, false);
+      });
+    }
   };
 
   const formattedHours = String(hours).padStart(2, "0");
   const formattedMinutes = String(minutes).padStart(2, "0");
   const isDarkTarget = hours >= 18 || hours < 6;
 
-  // Dot position along the circle perimeter (radius = 13px)
-  const dialRadius = 13;
-  // In our coordinate system, 0 deg is Top, rotating clockwise
+  // Dot position along the circular wire perimeter (radius = 12.5px)
+  const dialRadius = 12.5;
   const rad = ((currentAngleDeg - 90) * Math.PI) / 180;
   const dotX = dialRadius * Math.cos(rad);
   const dotY = dialRadius * Math.sin(rad);
@@ -192,7 +239,7 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
         </div>
       </div>
 
-      {/* Circular Orbit Dial (Draggable Satellite) */}
+      {/* Circular Orbit Dial (Minimalist Wire Circle, Clean & Unshadowed) */}
       <div
         ref={dialRef}
         onPointerDown={handlePointerDown}
@@ -204,32 +251,25 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
             ? "Drag dot to travel time & shift theme (Click ↺ to reset)"
             : "Click or drag dot around the circle to change time & theme"
         }
-        className={`relative w-8 h-8 rounded-full border border-ink-primary/50 dark:border-ink-primary/60 flex items-center justify-center transition-all duration-150 touch-none ${
+        className={`relative w-8 h-8 rounded-full border border-ink-primary/25 dark:border-ink-primary/35 bg-transparent flex items-center justify-center transition-transform duration-100 touch-none ${
           isDragging
-            ? "cursor-grabbing ring-2 ring-accent-primary/60 scale-105"
-            : "cursor-grab hover:border-accent-primary hover:scale-102"
+            ? "cursor-grabbing scale-105"
+            : "cursor-grab hover:border-accent-primary/60 hover:scale-102"
         }`}
-        style={{
-          boxShadow: isDarkTarget
-            ? "0 0 10px rgba(232, 118, 90, 0.25) inset"
-            : "0 0 10px rgba(232, 176, 75, 0.2) inset",
-        }}
       >
-        {/* Subtle center crosshair / axis guide */}
-        <div className="w-1 h-1 rounded-full bg-ink-primary/20 pointer-events-none" />
-
-        {/* Orbiting Draggable Satellite Dot */}
+        {/* Orbiting Satellite Dot */}
         <div
+          ref={dotRef}
           className="absolute w-2.5 h-2.5 rounded-full pointer-events-none transition-transform duration-75 flex items-center justify-center"
           style={{
-            transform: `translate(${dotX}px, ${dotY}px)`,
+            transform: `translate3d(${dotX}px, ${dotY}px, 0)`,
           }}
         >
           <div
-            className={`w-2 h-2 rounded-full border ${
+            className={`w-2 h-2 rounded-full border transition-colors ${
               isDarkTarget
-                ? "bg-accent-primary border-accent-primary shadow-[0_0_8px_rgba(232,118,90,0.9)]"
-                : "bg-ink-primary border-bg-surface shadow-[0_0_6px_rgba(154,91,0,0.5)]"
+                ? "bg-accent-primary border-accent-primary shadow-[0_0_6px_rgba(232,118,90,0.85)]"
+                : "bg-ink-primary border-bg-surface shadow-[0_0_4px_rgba(26,25,24,0.4)]"
             } ${isDragging ? "scale-125" : ""}`}
           />
         </div>
