@@ -337,7 +337,7 @@ export default function Home() {
               className="border-y border-border bg-bg-surface py-2.5 overflow-hidden"
             >
               <div className="whitespace-nowrap font-mono text-xs text-gray-warm flex items-center justify-center gap-2">
-                <span>React · Next.js · TypeScript · FastAPI · FAISS — open source, top to bottom.</span>
+                <span>React · Next.js · TypeScript · FastAPI · RAG pipeline: BM25 + FAISS + cross-encoder re-ranking · Llama on Groq</span>
               </div>
             </motion.div>
 
@@ -347,12 +347,11 @@ export default function Home() {
                 How is this different from ChatGPT?
               </h2>
               <div className="text-sm sm:text-base text-gray-warm space-y-3 leading-relaxed">
-                <p>ChatGPT answers from memory. It sometimes makes things up.</p>
                 <p>
-                  Allcited answers from your document only. First it finds the right lines. Then it writes the answer from those lines.
+                  Allcited is a <strong className="text-ink-primary font-semibold">RAG system — Retrieval-Augmented Generation</strong>. When you ask a question, a real retrieval pipeline runs first: <strong className="text-ink-primary font-semibold">BM25</strong> (keyword search) and <strong className="text-ink-primary font-semibold">FAISS</strong> (semantic vector search) find candidate passages, and a <strong className="text-ink-primary font-semibold">cross-encoder re-ranker</strong> picks the best ones. Then the LLM writes its answer using <em>only those passages</em>.
                 </p>
                 <p>
-                  This method is called <strong className="text-ink-primary font-semibold">RAG — Retrieval-Augmented Generation</strong>. And it always shows you the lines it used.
+                  Chatbots answer from memory and sometimes invent facts. Allcited answers from retrieved text — and cites it.
                 </p>
               </div>
             </section>

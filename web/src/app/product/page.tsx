@@ -212,27 +212,62 @@ export default function ProductPage() {
             <h2 className="text-2xl sm:text-3xl font-semibold text-ink-primary font-display">
               What happens to your question
             </h2>
-            <p className="text-sm text-gray-warm">Seven steps. You can watch them all.</p>
+            <p className="text-sm text-gray-warm">
+              Seven stages. Real engineering, all of it inspectable in the trace viewer.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs font-mono">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 text-xs font-mono">
             {[
-              { num: "1", text: "Read the file — scanned pages too" },
-              { num: "2", text: "Split it into passages" },
-              { num: "3", text: "Search by words" },
-              { num: "4", text: "Search by meaning" },
-              { num: "5", text: "Keep the best passages" },
-              { num: "6", text: "Follow rule references" },
-              { num: "7", text: "Write the answer, with citations." },
+              {
+                num: "1",
+                name: "Ingest & OCR",
+                desc: "PyMuPDF reads the file; Tesseract reads scanned pages",
+              },
+              {
+                num: "2",
+                name: "Chunking",
+                desc: "~400-word passages, 15% overlap, so no sentence is cut",
+              },
+              {
+                num: "3",
+                name: "Hybrid retrieval",
+                desc: "BM25 (your words) + FAISS (your meaning), merged by Reciprocal Rank Fusion",
+              },
+              {
+                num: "4",
+                name: "Re-ranking",
+                desc: "a cross-encoder reads the top 25 with your question, keeps the best 4",
+              },
+              {
+                num: "5",
+                name: "Two-hop resolution",
+                desc: '"as per rule 63.7.4" → we fetch that rule\'s definition too',
+              },
+              {
+                num: "6",
+                name: "Grounded generation",
+                desc: "the LLM writes from the selected passages only, or refuses",
+              },
+              {
+                num: "7",
+                name: "Citation post-pass",
+                desc: "every [S1] marker verified against a real passage before streaming",
+              },
             ].map((step) => (
               <div
                 key={step.num}
-                className="p-3.5 rounded bg-bg-surface border border-border flex items-start gap-2.5"
+                className="p-4 rounded-interactive bg-bg-surface border border-border flex items-start gap-3 shadow-xs"
               >
-                <span className="w-5 h-5 rounded-full bg-accent-primary/10 border border-accent-primary/30 text-accent-primary font-bold flex items-center justify-center flex-shrink-0 text-[11px]">
+                <span className="w-6 h-6 rounded-full bg-accent-primary/10 border border-accent-primary/30 text-accent-primary font-bold flex items-center justify-center flex-shrink-0 text-xs">
                   {step.num}
                 </span>
-                <span className="text-ink-primary leading-snug">{step.text}</span>
+                <div className="space-y-1">
+                  <span className="text-ink-primary font-bold block">{step.name}</span>
+                  <span className="text-gray-warm text-[11px] leading-relaxed block font-sans">
+                    {step.desc}
+                  </span>
+                </div>
               </div>
             ))}
           </div>

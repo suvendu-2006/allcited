@@ -139,7 +139,11 @@ export function Upload({
       });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      setErrorMessage(msg);
+      if (msg === "Load failed" || msg === "Failed to fetch" || msg.toLowerCase().includes("networkerror")) {
+        setErrorMessage("Could not connect to the backend server. Please ensure the backend is running.");
+      } else {
+        setErrorMessage(msg);
+      }
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) {
@@ -190,7 +194,11 @@ export function Upload({
       });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      setErrorMessage(msg);
+      if (msg === "Load failed" || msg === "Failed to fetch" || msg.toLowerCase().includes("networkerror")) {
+        setErrorMessage("Could not connect to the backend server. Please ensure the backend is running.");
+      } else {
+        setErrorMessage(msg);
+      }
     } finally {
       setIsSubmittingUrl(false);
     }
