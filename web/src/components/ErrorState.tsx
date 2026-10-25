@@ -3,6 +3,9 @@
 import React, { useState } from "react";
 import { AlertCircle, RefreshCw, Copy, Check, Sparkles } from "lucide-react";
 import { Button } from "./ui/button";
+import { ERROR_MESSAGES } from "@/lib/copy";
+
+export { ERROR_MESSAGES };
 
 interface ErrorStateProps {
   code?: string;
@@ -12,19 +15,6 @@ interface ErrorStateProps {
   onOpenSettings?: () => void;
   onOpenUpgrade?: () => void;
 }
-
-export const ERROR_MESSAGES: Record<string, string> = {
-  doc_unreadable: "Couldn't read that file — corrupt or password-protected. Nothing was saved.",
-  doc_too_large: "That's past the size limit for your plan. (Free: 20 MB · Pro: 100 MB.)",
-  free_tier_busy: "Our free brain is swamped right now. Try again in a minute — or plug in your own key in Settings and skip the line.",
-  ollama_unreachable: "Can't reach your local Ollama. Is it running? (ollama serve)",
-  url_blocked: "That link points somewhere private — we don't fetch those. Safety thing.",
-  injection_flagged: "Heads up: this document contains text trying to give me instructions. I've treated it as data. The answer stands.",
-  plan_limit_reached: "That's a Pro move. Upgrade to keep going.",
-  session_expired: "This conversation's gone cold. Re-upload the document and we're back.",
-  offline: "You're offline. Your last conversation is still here — ask away when you're back.",
-  generic: "Something broke on our side. It's noted — try again, and if it repeats, the trace ID below helps us find it.",
-};
 
 export function getHumanError(code?: string, fallbackMessage?: string): string {
   if (code && ERROR_MESSAGES[code]) {
