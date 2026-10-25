@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
-import { ArrowLeft, Check, Sparkles, Loader2, Shield } from "lucide-react";
+import { Check, Sparkles, Loader2, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { Navbar } from "@/components/Navbar";
 
 export default function PricingPage() {
   const [currentPlan, setCurrentPlan] = useState<string>("free");
@@ -73,24 +72,7 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-bg-base text-ink-primary flex flex-col">
-      {/* Sticky Header */}
-      <header className="sticky top-0 z-40 w-full border-b border-border bg-bg-surface/80 backdrop-blur-md">
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-          <Link
-            href="/"
-            className="flex items-center text-xs font-medium text-gray-warm hover:text-ink-primary transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
-            Back to Allcited
-          </Link>
-          <div className="flex items-center gap-3">
-            <span className="font-mono text-[11px] px-2.5 py-0.5 rounded-full bg-bg-sunken border border-border text-gray-warm">
-              Plan: <strong className="text-accent-primary uppercase">{currentPlan}</strong>
-            </span>
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Main Container */}
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-12">

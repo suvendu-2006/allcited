@@ -1013,3 +1013,141 @@ Every §7 screen works against the live backend in all 4 states · wave transiti
 **Audited by:** Antigravity Build Agent  **Date:** 2026-10-25  **Time taken:** ~45m
 
 > A completed sign-off table belongs in the README under "Verification" — it's the receipt for the receipts project.
+
+---
+
+# §6 — AWARD-LEVEL FRONTEND REVAMP (v2 plan)
+
+> Triggered by the owner's review (2026-10-25): flat hero background, dead navigation, thin content, missing micro-animations, wave toggle replaced by a **web-mesh reveal**. This section **overrides** the parts of §3/§4 it names (see §6.8). Everything else in §3/§4 stands.
+
+## 6.0 The five findings → the five fixes
+
+| # | Finding | Fix | Section |
+|---|---|---|---|
+| 1 | Hero background flat, color combo weak | "Deep-Sea Aurora" hero: layered mesh gradients + film grain + cursor spotlight | §6.1 |
+| 2 | Nav buttons don't change the view; everything in one window | Real routes, page-transition animations, live URL/title/active-states | §6.2 |
+| 3 | Content thin; no tech mention; no micro-animations | Expanded copy (§4B), "Built with" strip (React/Next.js), full motion catalog on framer-motion | §6.3–6.4 |
+| 4 | Needs award-level *and* trust | Live inline demo on landing, public scorecard, trust badges — Awwwards criteria mapped | §6.6 |
+| 5 | Toggle animation must be a **web expanding from the center** | Web-mesh theme reveal (spokes + spiral cells filling outward) + toggle-logo slot for the owner's reference | §6.5 |
+
+## 6.1 Hero background v2 — "Deep-Sea Aurora"
+
+**Problem with v1:** flat `#06211D` + 0.65px dot-grid = technically correct, visually dead. Award heroes need *depth, light, and motion*.
+
+**The design — four stacked layers (dark mode):**
+
+| Layer | What | Spec |
+|---|---|---|
+| L1 Base | near-black petrol | `#041A16` (v2 hero base — deeper than `#06211D` for glow contrast) |
+| L2 Aurora | 3 blurred radial glows, slowly drifting | teal `#31C7A5` @ 14% (top-left, 60vmax), mint `#5AD46F` @ 8% (right, 45vmax), amber `#E8B04B` @ 6% (bottom, 35vmax); `filter: blur(90px)`; each drifts on its own 14–22s ease-in-out loop (translate ±6%) |
+| L3 Grain | SVG turbulence noise overlay | inline `<svg>` feTurbulence fractalNoise, opacity 4%, `mix-blend-mode: overlay` — kills gradient banding, adds print richness |
+| L4 Spotlight | cursor-following glow | radial-gradient 30vmax at pointer, teal @ 6%, 200ms lerp; disabled on touch + reduced-motion |
+
+**Light mode variant:** cream `#FAF8ED` base, same glows at **one-third opacity** (aurora wash, not aurora show), same grain. **Hero text:** bone `#F2EFE0` on dark / ink on light, Georgia serif headline unchanged (§3.3), now with a soft text-shadow glow from the aurora behind.
+
+**Contrast rule stays law:** text sits only over L1/L2 areas where measured contrast ≥ 4.5:1 — the aurora layers render *behind* a tested scrim gradient (transparent → base 55% at text zone).
+
+## 6.2 Navigation & pages v2 — real routes, real transitions
+
+**Problem:** "Product / How it works / The exam" buttons were decorative; Pricing/Shelf worked but everything visual lived on `/`. Clicking nav must *visibly change the world*.
+
+**New route map (Next.js App Router):**
+
+| Route | Content | Title |
+|---|---|---|
+| `/` | Hero + stats + live demo teaser (§6.6) | Allcited — Answers, with receipts. |
+| `/product` | the 6 feature cards, expanded (§4B), pipeline diagram with animated data-flow | Product — Allcited |
+| `/how-it-works` | 3-step story + the receipts walkthrough + format marquee | How it works — Allcited |
+| `/exam` | the real eval matrix table, per-question failures viewer, scorecard history | The exam — Allcited |
+| `/pricing` · `/library` · `/dev` | unchanged | — |
+
+**Behavior contract (the fix for "doesn't change the window"):**
+1. Every nav item is a real `<Link>` → URL changes, browser title changes, back/forward works, deep links work.
+2. **Page transitions:** `template.tsx` wraps pages in motion — exit (opacity 1→0, y 0→-8, 180ms) → enter (opacity 0→1, y 12→0, 280ms, `ease/enter`); content sections stagger in 60ms apart on first paint of each route.
+3. Active nav item gets the teal underline that grows left→right (120ms); hover on any nav item shifts text color 120ms + a 1px lift.
+4. Mobile: nav collapses to a full-screen overlay menu (staggered link entrance, 280ms), closed by Esc/swipe.
+
+## 6.3 Content density v2 — §4B copy additions (verbatim source)
+
+**Hero sub v2 (replaces §4 hero sub):**
+> Drop in a PDF, Word file, deck, spreadsheet, or a link. Ask real questions. Every claim comes stamped with the exact section it came from — click the stamp, read the original, decide for yourself.
+
+**Tech strip (new section under hero — mono, marquee):**
+> Built with React 18 · Next.js 14 · TypeScript · Tailwind · Framer Motion · FastAPI · FAISS · pgvector — open-source stack, no black boxes, every design token documented.
+
+**Feature card v2 format (each card: title + 2-sentence body + micro-visual):** sample for "Receipts on everything":
+> **Receipts on everything.** No answer without its source — every claim carries a stamp like `[S1] §4.2, p.23`, and one click drops you on the exact passage. If the document doesn't say it, we say so, plainly.
+> *(micro-visual: a mini answer with a citation chip that pulses and opens a source preview on loop)*
+
+**"The exam" landing teaser v2:**
+> We run a 46-question exam on every release — questions designed to break us: answers split across pages, cross-references that force a second lookup, trick phrasings, and things the document simply doesn't say. Our score is public, per-release, with every failure documented. When was the last time an AI product showed you its report card?
+
+**Formats marquee line:** `PDF · DOCX · PPTX · XLSX · MD · TXT · any URL — six doors into one library.`
+
+**Footer v2:** three columns (Product / Evidence / Company) + mono line: `Built with React, in the open. 46-question exam on every release. © 2026 Allcited.`
+
+## 6.4 Micro-animation system v2 — adopt `framer-motion` (v1 shipped without it)
+
+Add `framer-motion` to deps (the gap behind "no micro-animations"). Then implement the §4.2 catalog *fully*, plus:
+
+| Animation | Spec |
+|---|---|
+| Hero entrance | wordmark letters rise 16px, stagger 40ms, 420ms `ease/exit`; sub-line fades 120ms later; CTAs rise last |
+| Scroll reveals | every section: opacity 0→1 + y 24→0, once, viewport-200ms trigger, 320ms, stagger children 60ms |
+| Stat counters | roll 0→N on view, 900ms, mono tabular figures |
+| Magnetic CTAs | primary button translates toward cursor ≤6px (spring 300/25); resets on leave |
+| Citation chip loop (product page micro-visuals) | pulse → open preview → close, 4s loop |
+| Formats marquee | infinite translateX, 40s linear, pause on hover |
+| Page transitions | per §6.2 |
+| Streaming tokens / skeletons / stage line / upload wave-border | as §4.2 (verify implemented; finish gaps) |
+
+**Global rules:** all ambient loops pause on `document.hidden`; `prefers-reduced-motion` disables entrance/ambient (content appears instantly, transitions become 80ms fades); animation only on compositor-friendly props (transform/opacity) — no layout thrash.
+
+## 6.5 Theme toggle v2 — the WEB reveal (owner's requested animation)
+
+**Replaces §3.5's wave.** Owner's spec: from the toggle point, a **web expands** — spokes and spiral threads growing outward — and the site converts to the new theme through the web.
+
+**The Web Reveal — 4 phases, ~950ms total:**
+
+| Phase | Time | What happens |
+|---|---|---|
+| 1 · Bloom | 0–180ms | At the toggle's coordinates, a web *blooms*: 8–12 radial spokes draw outward (stroke-dashoffset, 140ms) + 1st spiral ring connects them |
+| 2 · Spread | 180–650ms | Concentric spiral rings expand outward (each ring = growing web cell); **the new theme is revealed inside the cells the web has passed** — implemented as View Transitions API: `::view-transition-new(root)` clipped by an animated clip-path whose radius grows with the web, while an SVG web overlay (spokes + spirals, 1.5px, accent color @ 60% opacity) draws on top |
+| 3 · Edge pass | 650–850ms | Web's outermost ring sweeps past the farthest viewport corner (radius = `hypot` from origin); aurora hero layers cross-fade to the new theme's palette |
+| 4 · Dissolve | 850–950ms | Web threads fade to 0 opacity (200ms); content settles (1px scale 0.998→1) |
+
+**Implementation notes:** one pre-generated SVG web path set (same command-count per ring for smooth morph), WAAPI-driven, zero per-frame JS for the theme itself; fallback (no View Transitions / reduced-motion): 120ms crossfade + web-bloom micro-animation on the toggle only. **A "webby" afterglow:** for 600ms after the switch, a faint web watermark (2% opacity) lingers in the hero background — the site feels "webby" post-toggle, per the owner's wording.
+
+**Toggle logo v2 — SLOT OPEN:** owner will share the reference design for the dark/light toggle icon. Slot: `ThemeToggleLogo.tsx` — SVG, accepts `theme` prop, expected to morph sun↔dark emblem (path morph 250ms spring) with a 90° rotation on click. Until the reference arrives, ship the accessible interim icon (sun/moon) — swap is a one-file change, no other component touches it.
+
+## 6.6 Trust layer (award-level *and* trustworthy — Awwwards criteria mapped)
+
+| Awwwards criterion | What we ship |
+|---|---|
+| Design 40% | Aurora hero, web toggle, motion catalog, goshuin serif + receipts identity |
+| Usability 30% | real routes, keyboard map, focus rings, reduced-motion, mobile overlay nav |
+| Creativity 20% | the web-mesh theme reveal; citations-as-stamps visual language |
+| Content 10% | §4B density, public scorecard, honest FAQ |
+
+**Trust artifacts on the landing:** (1) **Live mini-demo** — a preloaded handbook answers one canned question right on `/`, streaming with citations, no signup, no API key needed (cached result); (2) **Public scorecard chip** in the stats band linking to `/exam`; (3) **"Nothing stored" pledge** — three mono lines under the demo; (4) verification sign-off (§5) linked from the footer once keys are live and re-run.
+
+## 6.7 Revamp runbook (builder-executable, gates required)
+
+| Step | Do | Done when |
+|---|---|---|
+| R1 | add `framer-motion`; route split `/product` `/how-it-works` `/exam` per §6.2 | each route renders with its own title/URL; nav active-states live |
+| R2 | hero v2: 4 layers per §6.1 (base, aurora, grain, spotlight) in both themes | screenshots pass eyeball vs reference; contrast unit test over text zone ≥4.5:1; 60fps scroll on M1 |
+| R3 | page transitions + entrance choreography (§6.2/§6.4) | route change visibly transitions; reduced-motion respected |
+| R4 | micro-animation catalog complete (§6.4) incl. magnetic CTAs, counters, marquee, product-page micro-visuals | every §6.4 row demonstrable; `document.hidden` pauses loops |
+| R5 | web-mesh toggle (§6.5) + `ThemeToggleLogo` slot | toggle: web bloom→spread→dissolve both directions; fallback + reduced-motion paths tested; 60fps mid-transition |
+| R6 | §4B copy swap + tech strip + formats marquee + footer v2 | every §4B string verbatim in UI; React/Next.js mentioned |
+| R7 | trust layer: live mini-demo, scorecard chip, pledge (§6.6) | demo streams a cited answer on `/` with zero keys |
+| R8 | full pass: Lighthouse ≥90 ×3, axe clean, keyboard walkthrough, mobile viewport, Playwright updated for new routes | budgets green in CI; old nav-button tests replaced by route tests |
+| R9 | owner review with screen-recording of: aurora hero, route transitions, web toggle, demo | owner sign-off |
+
+## 6.8 Overrides vs §3/§4 (the only changes to the standing spec)
+
+1. §3.5 wave transition → **superseded by §6.5 web reveal** (wave code retired).
+2. §3.1/§3.2 hero usage: `bg/base` stays the app canvas; **hero sections use `#041A16`/`#FAF8ED` + aurora layers** per §6.1.
+3. §4 hero sub, exam teaser, footer → replaced by §4B versions; feature cards upgraded to title+2-sentence+micro-visual format.
+4. Everything else in §3/§4 — tokens, type system, seal-red citations, stage hues, error copy, refusals — **unchanged**.

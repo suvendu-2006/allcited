@@ -131,6 +131,17 @@
   z-index: 9999;
 }
 
+/* Webby Afterglow Watermark per §6.5 */
+[data-web-afterglow="true"] .hero-web-watermark {
+  opacity: 0.04 !important;
+  transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hero-web-watermark {
+  opacity: 0;
+  transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 /* Subtle Shimmer for Skeletons (warm tinted) */
 @keyframes warmShimmer {
   0% {

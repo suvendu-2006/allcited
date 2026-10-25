@@ -6,15 +6,17 @@ import { Chat } from "@/components/Chat";
 import { SourcePanel } from "@/components/SourcePanel";
 import { ModelSettings, ProviderConfig } from "@/components/ModelSettings";
 import { Citation } from "@/lib/sse";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { Navbar } from "@/components/Navbar";
+import { DeepSeaAurora } from "@/components/DeepSeaAurora";
+import { MagneticButton } from "@/components/MagneticButton";
+import { LiveMiniDemo } from "@/components/LiveMiniDemo";
 import { Button } from "@/components/ui/button";
 import {
   FileText,
   Settings,
-  Cloud,
-  Key,
-  Server,
+  Sparkles,
 } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function Home() {
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -35,14 +37,13 @@ export default function Home() {
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  // Rolling counter stats per §4
+  // Rolling counter stats per §4 (900ms count-up)
   const [statRecall, setStatRecall] = useState(0);
   const [statQuestions, setStatQuestions] = useState(0);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
   const workspaceRef = useRef<HTMLDivElement>(null);
 
-  // Animate stats band on mount per §4.1 (900ms count-up)
   useEffect(() => {
     let start = 0;
     const timer = setInterval(() => {
@@ -86,7 +87,6 @@ export default function Home() {
     }
     checkHealthAndInit();
 
-    // Browser only storage check
     if (typeof window !== "undefined") {
       const savedMode =
         (localStorage.getItem("allcited_provider_mode") as "groq" | "byok" | "ollama") ||
@@ -112,9 +112,12 @@ export default function Home() {
       const params = new URLSearchParams(window.location.search);
       const urlSessionId = params.get("session_id");
       const urlFilename = params.get("filename");
+      const urlWorkspace = params.get("workspace");
       if (urlSessionId) {
         setSessionId(urlSessionId);
         if (urlFilename) setDocumentName(decodeURIComponent(urlFilename));
+        setInWorkspace(true);
+      } else if (urlWorkspace === "true") {
         setInWorkspace(true);
       }
     }
@@ -167,7 +170,6 @@ Upon voluntary resignation or formal separation, accrued annual leave encashment
         setInWorkspace(true);
       }
     } catch {
-      // Mock session fallback if backend is unreachable
       setSessionId("sess_demo_handbook");
       setDocumentName("employee_handbook.md");
       setInWorkspace(true);
@@ -185,155 +187,48 @@ Upon voluntary resignation or formal separation, accrued annual leave encashment
     setInWorkspace(true);
   };
 
-  const scrollToSection = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth" });
-    }
-  };
+  // Headline wordmark letters for staggered animation per §6.4
+  const headlineWords = ["Answers,", "with", "receipts."];
 
   return (
     <div className="flex h-screen overflow-hidden bg-bg-base text-ink-primary font-sans">
-      {/* Main Workspace / Content Area */}
       <div className="flex-1 flex flex-col h-full min-w-0 overflow-y-auto">
-        {/* Sticky Glass Header per §7 */}
-        <header className="sticky top-0 z-40 w-full border-b border-border bg-bg-surface/85 backdrop-blur-md px-4 sm:px-6 h-14 flex items-center justify-between flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setInWorkspace(false)}
-              className="flex items-center gap-2 hover:opacity-85 transition-opacity text-left"
-            >
-              <span className="font-display text-lg font-bold tracking-tight text-ink-primary">
-                Allcited
-              </span>
-              <span className="font-mono text-[10px] uppercase tracking-wider px-1.5 py-0.2 rounded bg-accent-primary/10 text-accent-primary border border-accent-primary/20">
-                v1.0
-              </span>
-            </button>
+        {/* Navigation Bar per §6.2 */}
+        <Navbar apiConnected={apiConnected} onOpenSettings={() => setIsSettingsOpen(true)} />
 
-            {/* Nav links per §4 Landing */}
-            <nav className="hidden md:flex items-center gap-4 ml-4 text-xs font-medium text-gray-warm">
-              <button
-                type="button"
-                onClick={() => {
-                  setInWorkspace(false);
-                  setTimeout(() => scrollToSection("problem"), 100);
-                }}
-                className="hover:text-ink-primary transition-colors"
-              >
-                Product
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setInWorkspace(false);
-                  setTimeout(() => scrollToSection("how-it-works"), 100);
-                }}
-                className="hover:text-ink-primary transition-colors"
-              >
-                How it works
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setInWorkspace(false);
-                  setTimeout(() => scrollToSection("the-exam"), 100);
-                }}
-                className="hover:text-ink-primary transition-colors"
-              >
-                The exam
-              </button>
-              <Link href="/pricing" className="hover:text-ink-primary transition-colors">
-                Pricing
-              </Link>
-              <Link href="/library" className="hover:text-ink-primary transition-colors">
-                Shelf
-              </Link>
-              <Link href="/dev" className="hover:text-ink-primary transition-colors font-mono">
-                /dev
-              </Link>
-            </nav>
-          </div>
-
-          <div className="flex items-center gap-2.5">
-            {/* Quick Demo Handbook */}
-            {!sessionId && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={loadHandbookFixture}
-                className="text-xs h-8 gap-1 hidden sm:inline-flex"
-              >
-                <FileText className="w-3.5 h-3.5 text-accent-primary" />
-                <span>Try Demo Handbook</span>
-              </Button>
-            )}
-
-            {/* Model / Engine Config Trigger */}
-            <button
-              type="button"
-              onClick={() => setIsSettingsOpen(true)}
-              title="Who does the thinking?"
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono font-medium rounded-interactive border border-border bg-bg-surface hover:bg-bg-sunken text-ink-primary transition-colors"
-            >
-              {providerConfig.mode === "byok" ? (
-                <>
-                  <Key className="w-3.5 h-3.5 text-accent-hot" />
-                  <span className="hidden sm:inline">BYOK</span>
-                </>
-              ) : providerConfig.mode === "ollama" ? (
-                <>
-                  <Server className="w-3.5 h-3.5 text-accent-primary" />
-                  <span className="hidden sm:inline">Ollama</span>
-                </>
-              ) : (
-                <>
-                  <Cloud className="w-3.5 h-3.5 text-accent-primary" />
-                  <span className="hidden sm:inline">Free Tier</span>
-                </>
-              )}
-              <Settings className="w-3 h-3 text-ink-ghost ml-0.5" />
-            </button>
-
-            {/* Theme Toggle with Wave Transition per §5 */}
-            <ThemeToggle />
-
-            {/* Workspace Toggle or CTA */}
-            {!inWorkspace ? (
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => setInWorkspace(true)}
-                className="text-xs h-8"
-              >
-                Try it — no signup
-              </Button>
-            ) : (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setInWorkspace(false)}
-                className="text-xs h-8"
-              >
-                Overview
-              </Button>
-            )}
-
-            {/* Connection status indicator */}
-            <div className="flex items-center gap-1.5 pl-1" title={apiConnected ? "Backend online" : "Backend offline"}>
-              <span
-                className={`w-2 h-2 rounded-full ${
-                  apiConnected ? "bg-[#28C840] dark:bg-[#5AD46F] animate-pulse" : "bg-danger"
-                }`}
-              />
-            </div>
-          </div>
-        </header>
-
-        {/* Dynamic Content: Interactive Chat Workspace or Full Landing Page */}
+        {/* Dynamic View: Workspace Mode vs Full Award Landing Page */}
         {inWorkspace ? (
           <div className="flex-1 min-h-0 relative flex flex-col" ref={workspaceRef}>
+            {/* Top Workspace Bar */}
+            <div className="px-4 py-2 border-b border-border bg-bg-surface flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setInWorkspace(false)}
+                  className="text-xs h-7 gap-1"
+                >
+                  ← Back to Overview
+                </Button>
+                {documentName && (
+                  <span className="font-mono text-[11px] text-gray-warm border-l border-border pl-2">
+                    {documentName}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsSettingsOpen(true)}
+                  className="font-mono text-[11px] text-gray-warm hover:text-ink-primary flex items-center gap-1"
+                >
+                  <span>Engine: {providerConfig.mode}</span>
+                  <Settings className="w-3 h-3 text-ink-ghost" />
+                </button>
+              </div>
+            </div>
+
             <Chat
               sessionId={sessionId}
               documentName={documentName}
@@ -368,44 +263,102 @@ Upon voluntary resignation or formal separation, accrued annual leave encashment
             />
           </div>
         ) : (
-          /* Full Landing Page per §4 */
           <div className="flex-1 overflow-y-auto">
-            {/* Hero Section per §4 */}
-            <section className="dot-grid py-16 sm:py-24 px-4 sm:px-6 max-w-5xl mx-auto text-center relative">
-              <h1 className="font-editorial text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-ink-primary mb-6">
-                Answers, with receipts.
-              </h1>
-              <p className="text-base sm:text-lg text-gray-warm max-w-2xl mx-auto mb-8 leading-relaxed font-sans">
-                Drop in a PDF, Word file, deck, spreadsheet, or a link. Ask real questions. Every claim comes stamped with the exact section it came from.
-              </p>
+            {/* Hero Section with Deep-Sea Aurora Layers per §6.1 */}
+            <section className="relative min-h-[580px] sm:min-h-[640px] flex flex-col items-center justify-center text-center px-4 sm:px-6 py-20 overflow-hidden">
+              {/* Layer 1-4 Aurora Background */}
+              <DeepSeaAurora />
 
-              {/* CTAs per §4 */}
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 mb-8">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  onClick={() => setInWorkspace(true)}
-                  className="w-full sm:w-auto text-sm"
+              {/* Faint Web Watermark for afterglow per §6.5 */}
+              <div
+                className="hero-web-watermark absolute inset-0 pointer-events-none select-none bg-[radial-gradient(circle_at_center,rgba(49,199,165,0.06)_1px,transparent_1px)] bg-[size:48px_48px]"
+                aria-hidden="true"
+              />
+
+              <div className="relative z-10 max-w-4xl mx-auto space-y-6">
+                {/* Hero Headline with Staggered Entrance per §6.4 */}
+                <h1 className="font-editorial text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-ink-primary drop-shadow-xs">
+                  {headlineWords.map((word, idx) => (
+                    <motion.span
+                      key={word}
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        duration: 0.42,
+                        delay: idx * 0.04,
+                        ease: [0.22, 1, 0.36, 1],
+                      }}
+                      className="inline-block mr-3"
+                    >
+                      {word}
+                    </motion.span>
+                  ))}
+                </h1>
+
+                {/* Subtext per §6.3 / §4B */}
+                <motion.p
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.42, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
+                  className="text-base sm:text-lg text-gray-warm max-w-2xl mx-auto leading-relaxed font-sans"
                 >
-                  Open Allcited
-                </Button>
-                <Button
-                  variant="ferrari"
-                  onClick={() => scrollToSection("how-it-works")}
-                  className="py-2.5"
+                  Drop in a PDF, Word file, deck, spreadsheet, or a link. Ask real questions. Every claim comes stamped with the exact section it came from — click the stamp, read the original, decide for yourself.
+                </motion.p>
+
+                {/* Magnetic CTAs per §6.4 */}
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.42, delay: 0.24, ease: [0.22, 1, 0.36, 1] }}
+                  className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2"
                 >
-                  SEE HOW IT WORKS
-                </Button>
+                  <MagneticButton>
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      onClick={() => setInWorkspace(true)}
+                      className="w-full sm:w-auto text-sm shadow-md"
+                    >
+                      Open Allcited
+                    </Button>
+                  </MagneticButton>
+
+                  <Link href="/how-it-works">
+                    <Button variant="ferrari" className="py-2.5">
+                      SEE HOW IT WORKS
+                    </Button>
+                  </Link>
+
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={loadHandbookFixture}
+                    className="w-full sm:w-auto text-xs h-11"
+                  >
+                    <FileText className="w-3.5 h-3.5 text-accent-primary mr-1.5" />
+                    Load Sample Handbook
+                  </Button>
+                </motion.div>
+
+                {/* Trust Line (mono, ghost) per §4 */}
+                <p className="font-mono text-xs text-ink-ghost tracking-wide pt-2">
+                  No account needed · Sessions vanish when you leave · We publish our own test scores
+                </p>
               </div>
-
-              {/* Trust Line (mono, ghost) per §4 */}
-              <p className="font-mono text-xs text-ink-ghost tracking-wide">
-                No account needed · Sessions vanish when you leave · We publish our own test scores
-              </p>
             </section>
 
-            {/* Stats Band (rolling counters) per §4 */}
-            <section className="border-y border-border bg-bg-surface/50 py-10 px-4 sm:px-6">
+            {/* Tech Strip under Hero per §6.3 (Open-source Stack Marquee) */}
+            <div className="border-y border-border bg-bg-surface py-2.5 overflow-hidden">
+              <div className="whitespace-nowrap font-mono text-xs text-gray-warm flex items-center justify-center gap-2">
+                <span>⚡</span>
+                <strong className="text-ink-primary">Built with</strong>
+                <span>React 18 · Next.js 14 · TypeScript · Tailwind · Framer Motion · FastAPI · FAISS · pgvector</span>
+                <span className="text-ink-ghost">— open-source stack, no black boxes, every design token documented.</span>
+              </div>
+            </div>
+
+            {/* Stats Band with Rolling Counters & Scorecard Chip per §4 & §6.6 */}
+            <section className="border-b border-border bg-bg-surface/50 py-10 px-4 sm:px-6">
               <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-8 text-center sm:text-left">
                 <div className="space-y-1">
                   <div className="font-mono text-4xl sm:text-5xl font-bold text-ink-primary">
@@ -417,8 +370,17 @@ Upon voluntary resignation or formal separation, accrued annual leave encashment
                 </div>
 
                 <div className="space-y-1">
-                  <div className="font-mono text-4xl sm:text-5xl font-bold text-ink-primary">
-                    {statQuestions}
+                  <div className="flex items-center gap-2 justify-center sm:justify-start">
+                    <span className="font-mono text-4xl sm:text-5xl font-bold text-ink-primary">
+                      {statQuestions}
+                    </span>
+                    <Link
+                      href="/exam"
+                      className="font-mono text-[10px] px-2 py-0.5 rounded bg-accent-primary/10 text-accent-primary hover:bg-accent-primary/20 border border-accent-primary/30 inline-flex items-center gap-1"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      View Scorecard →
+                    </Link>
                   </div>
                   <p className="text-xs text-gray-warm leading-relaxed">
                     questions in the exam we run on ourselves before every deploy.
@@ -436,207 +398,65 @@ Upon voluntary resignation or formal separation, accrued annual leave encashment
               </div>
             </section>
 
-            {/* Problem Section per §4 */}
-            <section id="problem" className="py-16 sm:py-20 px-4 sm:px-6 max-w-4xl mx-auto">
-              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-ink-primary font-display mb-4">
-                Documents are where knowledge goes to hide.
-              </h2>
-              <p className="text-sm sm:text-base text-gray-warm leading-relaxed">
-                An 80-page handbook. You search &quot;leave&quot; and get 200 hits. The answer is in there — on page 23, third paragraph — and you&apos;ll never find it. So you ask a colleague, who guesses. Allcited is the colleague that doesn&apos;t guess.
-              </p>
-            </section>
-
-            {/* How It Works (3 steps) per §4 */}
-            <section id="how-it-works" className="py-16 px-4 sm:px-6 border-t border-border bg-bg-surface/30">
-              <div className="max-w-5xl mx-auto">
-                <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-ink-primary font-display mb-8 text-center sm:text-left">
-                  How it works
+            {/* Trust Layer: Live Inline Cited-Answer Mini-Demo per §6.6 */}
+            <section className="py-16 px-4 sm:px-6 max-w-4xl mx-auto space-y-6">
+              <div className="text-center space-y-2">
+                <span className="font-mono text-xs uppercase tracking-wider text-accent-primary">
+                  Interactive Preview
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-semibold text-ink-primary font-display">
+                  Experience Grounded Receipts Live
                 </h2>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  <div className="p-5 rounded-interactive border border-border bg-bg-surface space-y-2">
-                    <span className="font-mono text-xs font-semibold text-accent-primary">01</span>
-                    <h3 className="font-semibold text-sm text-ink-primary font-display">
-                      Drop it in.
-                    </h3>
-                    <p className="text-xs text-gray-warm leading-relaxed">
-                      Drag any document. We cut it into chunks, map its cross-references, and index every word and meaning.
-                    </p>
-                  </div>
-
-                  <div className="p-5 rounded-interactive border border-border bg-bg-surface space-y-2">
-                    <span className="font-mono text-xs font-semibold text-accent-primary">02</span>
-                    <h3 className="font-semibold text-sm text-ink-primary font-display">
-                      Ask like a human.
-                    </h3>
-                    <p className="text-xs text-gray-warm leading-relaxed">
-                      &quot;Can I carry my leaves forward?&quot; works better here than robot keywords. Vague is fine — we&apos;ll rephrase it for you.
-                    </p>
-                  </div>
-
-                  <div className="p-5 rounded-interactive border border-border bg-bg-surface space-y-2">
-                    <span className="font-mono text-xs font-semibold text-accent-primary">03</span>
-                    <h3 className="font-semibold text-sm text-ink-primary font-display">
-                      Follow the trail.
-                    </h3>
-                    <p className="text-xs text-gray-warm leading-relaxed">
-                      Every claim carries a stamp like <code className="font-mono text-[11px] text-accent-cite">[S1] §4.2, p.23</code>. Click it. Read the original yourself. That&apos;s the whole point.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* Features Grid (6 cards) per §4 */}
-            <section className="py-16 sm:py-20 px-4 sm:px-6 max-w-5xl mx-auto">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                <div className="p-5 rounded-interactive border border-border bg-bg-surface space-y-2">
-                  <h3 className="font-semibold text-sm text-ink-primary font-display">
-                    Receipts on everything
-                  </h3>
-                  <p className="text-xs text-gray-warm leading-relaxed">
-                    No answer without its source. If the document doesn&apos;t say it, we say so.
-                  </p>
-                </div>
-
-                <div className="p-5 rounded-interactive border border-border bg-bg-surface space-y-2">
-                  <h3 className="font-semibold text-sm text-ink-primary font-display">
-                    Words <em>and</em> meaning
-                  </h3>
-                  <p className="text-xs text-gray-warm leading-relaxed">
-                    Two search engines run on every question: one matches your words, one matches your intent. Together they miss almost nothing.
-                  </p>
-                </div>
-
-                <div className="p-5 rounded-interactive border border-border bg-bg-surface space-y-2">
-                  <h3 className="font-semibold text-sm text-ink-primary font-display">
-                    It reads the fine print
-                  </h3>
-                  <p className="text-xs text-gray-warm leading-relaxed">
-                    When an answer says &quot;as per rule 63.7.4,&quot; we go find rule 63.7.4. Automatically.
-                  </p>
-                </div>
-
-                <div className="p-5 rounded-interactive border border-border bg-bg-surface space-y-2">
-                  <h3 className="font-semibold text-sm text-ink-primary font-display">
-                    It shows its work
-                  </h3>
-                  <p className="text-xs text-gray-warm leading-relaxed">
-                    Every answer has a trace: what we searched, what we nearly picked, why we picked what we did.
-                  </p>
-                </div>
-
-                <div className="p-5 rounded-interactive border border-border bg-bg-surface space-y-2">
-                  <h3 className="font-semibold text-sm text-ink-primary font-display">
-                    Your key, your business
-                  </h3>
-                  <p className="text-xs text-gray-warm leading-relaxed">
-                    Bring your own AI key, or run everything on your own machine. Your call, your control.
-                  </p>
-                </div>
-
-                <div className="p-5 rounded-interactive border border-border bg-bg-surface space-y-2">
-                  <h3 className="font-semibold text-sm text-ink-primary font-display">
-                    It forgets on purpose
-                  </h3>
-                  <p className="text-xs text-gray-warm leading-relaxed">
-                    Sessions aren&apos;t stored. Close the tab, and it&apos;s gone. (Want to keep a document? That&apos;s the shelf — and that part&apos;s yours alone.)
-                  </p>
-                </div>
-              </div>
-            </section>
-
-            {/* The Exam Section per §4 */}
-            <section id="the-exam" className="py-16 px-4 sm:px-6 border-t border-border bg-bg-surface/50">
-              <div className="max-w-4xl mx-auto space-y-4">
-                <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-ink-primary font-display">
-                  We grade ourselves in public.
-                </h2>
-                <p className="text-sm text-gray-warm leading-relaxed">
-                  Most AI demos show you three questions that worked. We run a 46-question exam on every release — including questions designed to break us: answers split across pages, cross-references, trick phrasings, and things the document simply doesn&apos;t say. The scorecard is in the README. If we miss, it&apos;s written down.
+                <p className="text-xs sm:text-sm text-gray-warm max-w-md mx-auto">
+                  Click any citation stamp below to inspect the verbatim source receipt in real time.
                 </p>
-                <div className="pt-2">
-                  <Link href="/dev">
-                    <Button variant="ferrari">READ THE SCORECARD</Button>
-                  </Link>
-                </div>
               </div>
+
+              <LiveMiniDemo />
             </section>
 
-            {/* Pricing Preview per §4 */}
-            <section className="py-16 px-4 sm:px-6 max-w-4xl mx-auto text-center space-y-4">
-              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-ink-primary font-display">
-                Free to ask. Paid to go deep.
-              </h2>
-              <p className="text-sm text-gray-warm max-w-xl mx-auto leading-relaxed">
-                Asking questions is free, forever. Pro is for the heavy stuff — giant documents, precision mode, a shelf that keeps everything.
-              </p>
-              <div className="pt-2">
-                <Link href="/pricing">
-                  <Button variant="primary" size="default">
-                    See pricing
-                  </Button>
-                </Link>
-              </div>
+            {/* Formats Marquee per §6.3 */}
+            <section className="py-6 border-y border-border bg-bg-surface/30 text-center font-mono text-xs text-gray-warm">
+              <span>PDF · DOCX · PPTX · XLSX · MD · TXT · any URL</span>
+              <span className="text-ink-ghost ml-2">— six doors into one library.</span>
             </section>
 
-            {/* FAQ per §4 */}
-            <section className="py-16 px-4 sm:px-6 border-t border-border max-w-4xl mx-auto">
-              <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-ink-primary font-display mb-6">
-                Frequently asked questions
-              </h2>
-
-              <div className="space-y-4 text-xs">
-                <div className="p-4 rounded-interactive border border-border bg-bg-surface space-y-1">
-                  <h4 className="font-semibold text-sm text-ink-primary font-display">
-                    Where do my documents go?
-                  </h4>
-                  <p className="text-gray-warm leading-relaxed">
-                    Into memory for your session, then gone. Nothing hits a database unless you personally save it to your shelf.
-                  </p>
+            {/* Footer v2 (3 columns + open source pledge) per §6.3 */}
+            <footer className="border-t border-border bg-bg-surface/80 py-12 px-4 sm:px-6 text-xs text-gray-warm">
+              <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-8 mb-8">
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-sm text-ink-primary font-display">Product</h4>
+                  <ul className="space-y-1.5 font-mono text-xs">
+                    <li><Link href="/product" className="hover:text-ink-primary">Architecture</Link></li>
+                    <li><Link href="/how-it-works" className="hover:text-ink-primary">How It Works</Link></li>
+                    <li><Link href="/pricing" className="hover:text-ink-primary">Pricing (₹0 / ₹299)</Link></li>
+                    <li><Link href="/library" className="hover:text-ink-primary">Shelf (Library)</Link></li>
+                  </ul>
                 </div>
 
-                <div className="p-4 rounded-interactive border border-border bg-bg-surface space-y-1">
-                  <h4 className="font-semibold text-sm text-ink-primary font-display">
-                    How is this different from just using ChatGPT?
-                  </h4>
-                  <p className="text-gray-warm leading-relaxed">
-                    ChatGPT answers from what it already knows — and invents the rest. Allcited answers only from your document, or says it can&apos;t. You can check every claim in one click.
-                  </p>
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-sm text-ink-primary font-display">Evidence</h4>
+                  <ul className="space-y-1.5 font-mono text-xs">
+                    <li><Link href="/exam" className="hover:text-ink-primary">46-Question Exam Suite</Link></li>
+                    <li><Link href="/dev" className="hover:text-ink-primary">/dev Component Gallery</Link></li>
+                    <li><Link href="/exam" className="hover:text-ink-primary">Release Scorecard History</Link></li>
+                  </ul>
                 </div>
 
-                <div className="p-4 rounded-interactive border border-border bg-bg-surface space-y-1">
-                  <h4 className="font-semibold text-sm text-ink-primary font-display">
-                    Does it work in Hindi?
-                  </h4>
-                  <p className="text-gray-warm leading-relaxed">
-                    Ask in Hindi, Hinglish, or any mix. The document can be in any language we can read.
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-sm text-ink-primary font-display">Company</h4>
+                  <p className="text-xs text-gray-warm leading-relaxed">
+                    Allcited is built in the open. Every claim has a receipt; every deploy runs the exam.
                   </p>
-                </div>
-
-                <div className="p-4 rounded-interactive border border-border bg-bg-surface space-y-1">
-                  <h4 className="font-semibold text-sm text-ink-primary font-display">
-                    Scanned PDFs?
-                  </h4>
-                  <p className="text-gray-warm leading-relaxed">
-                    Yes, with OCR. Citations from scans are marked &quot;(OCR)&quot; so you know to double-check them.
-                  </p>
-                </div>
-
-                <div className="p-4 rounded-interactive border border-border bg-bg-surface space-y-1">
-                  <h4 className="font-semibold text-sm text-ink-primary font-display">
-                    What does it cost?
-                  </h4>
-                  <p className="text-gray-warm leading-relaxed">
-                    Asking: free. Pro: ₹299/month. That&apos;s it. No per-question nonsense.
+                  <p className="font-mono text-[11px] text-accent-primary">
+                    Zero telemetry · Ephemeral RAM only
                   </p>
                 </div>
               </div>
-            </section>
 
-            {/* Mono Footer per §4 */}
-            <footer className="py-8 border-t border-border text-center font-mono text-[11px] text-gray-warm">
-              Built in the open · 46-question exam on every release · © 2026 Allcited
+              <div className="pt-6 border-t border-border/60 text-center font-mono text-[11px] text-gray-warm">
+                Built with React, in the open. 46-question exam on every release. © 2026 Allcited.
+              </div>
             </footer>
           </div>
         )}

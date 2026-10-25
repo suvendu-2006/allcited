@@ -39,16 +39,19 @@ describe("Design System Tokens Contrast Assertion (§3.1 & §3.2)", () => {
 
   test("Dark 'Teal-Ink Night' Theme contrast meets WCAG AA standards", () => {
     const bgBase = "#06211D";
+    const bgHeroBase = "#041A16";
     const inkPrimary = "#F2EFE0";
     const accentPrimary = "#31C7A5";
     const accentCite = "#F08A75";
 
     const textRatio = getContrastRatio(inkPrimary, bgBase);
+    const heroTextRatio = getContrastRatio(inkPrimary, bgHeroBase);
     const primaryRatio = getContrastRatio(accentPrimary, bgBase);
     const citeRatio = getContrastRatio(accentCite, bgBase);
 
-    // Assert contrast levels per §3.2
+    // Assert contrast levels per §3.2 & §6.1
     assert.ok(textRatio >= 13.0, `Dark text contrast should be >= 13:1, got ${textRatio.toFixed(2)}`);
+    assert.ok(heroTextRatio >= 14.0, `Hero text contrast over L1 base should be >= 14:1, got ${heroTextRatio.toFixed(2)}`);
     assert.ok(primaryRatio >= 7.0, `Dark primary teal contrast should be >= 7:1, got ${primaryRatio.toFixed(2)}`);
     assert.ok(citeRatio >= 4.5, `Dark citation red contrast should be >= 4.5:1 (WCAG AA), got ${citeRatio.toFixed(2)}`);
   });
