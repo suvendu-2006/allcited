@@ -1334,3 +1334,6 @@ Add `framer-motion` to deps (the gap behind "no micro-animations"). Then impleme
 01 `citation post-pass` · 02 `BM25 + FAISS + RRF` · 03 `two-hop resolution` · 04 `trace viewer` · 05 `BYOK / Ollama` · 06 `in-memory index`
 
 **Supersession:** §4C/§4D stand everywhere EXCEPT the sections named above (landing RAG+strip, /product pipeline+card labels, /how-it-works full). `text.md` is the verbatim content map and must be kept in sync.
+
+## §4E addendum — Landing marquee → "proof ticker"
+The formats marquee (same line repeating) is replaced by a 10-item proof ticker: claims, real citation stamps in mono, and measured numbers — items listed verbatim in `text.md` § Landing / Proof ticker. Same motion spec (§6.4 marquee: 40s linear, pause on hover, ◆ separators in seal red). The formats line survives as one item in the rotation, not the whole strip.

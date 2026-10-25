@@ -46,8 +46,8 @@
 - Privacy checks (under the demo, with ✓):
   Your file is deleted when you leave · Your own key stays in your browser · We never look at your files
 
-### Section: Formats (marquee)
-- Text: We read PDF · Word · PowerPoint · Excel · Markdown · web links
+### Section: Proof ticker (marquee — rotate these 10 items, seal-red ◆ separators, ~40s loop, pause on hover)
+- Every claim, cited ◆ [S1] 2.1 Leave Policy · p.23 ◆ 87% passage accuracy — measured, public ◆ [S2] Rule 63.7.4 · p.45 ◆ 46-question exam on every release ◆ 7-stage pipeline, fully inspectable ◆ Refuses when the answer isn't in your document ◆ BM25 + FAISS + cross-encoder re-ranking ◆ Nothing saved without your say-so ◆ We read PDF · Word · PowerPoint · Excel · Markdown · web links
 
 ---
 

@@ -64,16 +64,13 @@ export function Navbar({ onOpenSettings, isInApp }: NavbarProps) {
         </nav>
       </div>
 
-      {/* Center: Brand Logo Allcited v1.0 per §4D verbatim */}
+      {/* Center: Brand Logo */}
       <Link
         href="/"
-        className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 hover:opacity-85 transition-opacity"
+        className="absolute left-1/2 -translate-x-1/2 flex items-center hover:opacity-85 transition-opacity"
       >
         <span className="font-handwriting text-3xl sm:text-4xl text-ink-primary tracking-wide -rotate-2">
           Allcited.
-        </span>
-        <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-bg-sunken border border-border text-gray-warm tracking-wider uppercase font-semibold">
-          v1.0
         </span>
       </Link>
 

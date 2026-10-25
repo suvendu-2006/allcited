@@ -15,6 +15,19 @@ import { Footer } from "@/components/Footer";
 import { motion, useMotionValue, useSpring } from "framer-motion";
 import { Star } from "lucide-react";
 
+const PROOF_TICKER_ITEMS = [
+  { text: "Every claim, cited", isStamp: false },
+  { text: "[S1] 2.1 Leave Policy · p.23", isStamp: true },
+  { text: "87% passage accuracy — measured, public", isStamp: false },
+  { text: "[S2] Rule 63.7.4 · p.45", isStamp: true },
+  { text: "46-question exam on every release", isStamp: false },
+  { text: "7-stage pipeline, fully inspectable", isStamp: false },
+  { text: "Refuses when the answer isn't in your document", isStamp: false },
+  { text: "BM25 + FAISS + cross-encoder re-ranking", isStamp: false },
+  { text: "Nothing saved without your say-so", isStamp: false },
+  { text: "We read PDF · Word · PowerPoint · Excel · Markdown · web links", isStamp: false },
+];
+
 export default function Home() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [documentName, setDocumentName] = useState<string | null>(null);
@@ -395,25 +408,24 @@ export default function Home() {
               <LiveMiniDemo />
             </section>
 
-            {/* Section: Formats (marquee) per text.md verbatim */}
-            <section className="py-5 border-y border-border bg-bg-surface/30 overflow-hidden relative select-none">
-              <motion.div
-                className="flex items-center gap-8 whitespace-nowrap font-mono text-xs text-gray-warm tracking-wider hover:[animation-play-state:paused]"
-                animate={{ x: ["0%", "-50%"] }}
-                transition={{
-                  repeat: Infinity,
-                  repeatType: "loop",
-                  duration: 36,
-                  ease: "linear",
-                }}
-              >
-                {[...Array(4)].map((_, i) => (
-                  <span key={i} className="inline-flex items-center gap-6">
-                    <span className="text-ink-primary font-medium">We read PDF · Word · PowerPoint · Excel · Markdown · web links</span>
-                    <span className="text-accent-primary">◆</span>
+            {/* Section: Proof ticker (marquee — rotate these 10 items, seal-red ◆ separators, ~40s loop, pause on hover) per text.md verbatim */}
+            <section className="py-4 border-y border-border bg-bg-surface/40 overflow-hidden relative select-none group">
+              <div className="animate-proof-ticker items-center gap-6 whitespace-nowrap will-change-transform">
+                {[...PROOF_TICKER_ITEMS, ...PROOF_TICKER_ITEMS].map((item, idx) => (
+                  <span key={idx} className="inline-flex items-center gap-6">
+                    {item.isStamp ? (
+                      <span className="font-mono text-xs text-ink-primary font-semibold px-2 py-0.5 rounded bg-bg-sunken border border-border/70">
+                        {item.text}
+                      </span>
+                    ) : (
+                      <span className="text-ink-primary font-medium text-xs tracking-wide">
+                        {item.text}
+                      </span>
+                    )}
+                    <span className="text-accent-primary text-xs select-none font-bold">◆</span>
                   </span>
                 ))}
-              </motion.div>
+              </div>
             </section>
 
             {/* Shared Footer per text.md */}

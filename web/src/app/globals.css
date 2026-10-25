@@ -241,3 +241,23 @@
     background-position: 0 -24px, 24px 0, 100% 24px, -24px 100%;
   }
 }
+
+@keyframes proofTicker {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-proof-ticker {
+  display: flex;
+  width: max-content;
+  animation: proofTicker 40s linear infinite;
+}
+
+.animate-proof-ticker:hover,
+.group:hover .animate-proof-ticker {
+  animation-play-state: paused;
+}
