@@ -183,7 +183,10 @@ async def test_stream_answer_pipeline_graph_expansion_integration():
 
     events = []
     async for sse in stream_answer_pipeline(
-        session, "What does the Notice Period require?", question_id="q_graph_test"
+        session,
+        "What does the Notice Period require?",
+        question_id="q_graph_test",
+        preferred_provider="stub",
     ):
         events.append(sse)
 

@@ -22,19 +22,19 @@ export function StageChip({
     switch (stage) {
       case "searching":
         return isActive
-          ? "border-[#2D62FF] dark:border-[#6E97FF] bg-[#2D62FF]/15 dark:bg-[#6E97FF]/25 text-ink-primary dark:text-[#6E97FF]"
+          ? "border-status-retrieve bg-status-retrieve/15 text-ink-primary dark:text-status-retrieve"
           : "border-transparent text-ink-ghost";
       case "reranking":
         return isActive
-          ? "border-[#FF5F57] dark:border-[#FF8177] bg-[#FF5F57]/15 dark:bg-[#FF8177]/25 text-ink-primary dark:text-[#FF8177]"
+          ? "border-status-rerank bg-status-rerank/15 text-ink-primary dark:text-status-rerank"
           : "border-transparent text-ink-ghost";
       case "twohop":
         return isActive
-          ? "border-[#FEBC2E] dark:border-[#FCC64B] bg-[#FEBC2E]/15 dark:bg-[#FCC64B]/25 text-ink-primary dark:text-[#FCC64B]"
+          ? "border-status-twohop bg-status-twohop/15 text-ink-primary dark:text-status-twohop"
           : "border-transparent text-ink-ghost";
       case "caching":
         return isActive
-          ? "border-[#28C840] dark:border-[#5AD46F] bg-[#28C840]/15 dark:bg-[#5AD46F]/25 text-ink-primary dark:text-[#5AD46F]"
+          ? "border-status-cache bg-status-cache/15 text-ink-primary dark:text-status-cache"
           : "border-transparent text-ink-ghost";
       case "composing":
         return isActive

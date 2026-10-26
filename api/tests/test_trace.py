@@ -56,7 +56,7 @@ def test_question_trace_roundtrip(tmp_path: Path):
     query = "What is the mandatory advance notice period for voluntary resignation?"
     ask_res = client.post(
         "/v1/query",
-        json={"session_id": session_id, "query": query},
+        json={"session_id": session_id, "query": query, "preferred_provider": "stub"},
     )
     assert ask_res.status_code == 200
 
@@ -145,11 +145,22 @@ def test_trace_write_failure_resilience(tmp_path: Path):
     )
     session_id = upload_res.json()["session_id"]
 
+    real_open = open
+
+    def mock_trace_open_failure(file, *args, **kwargs):
+        if "trace" in str(file):
+            raise IOError("Disk write simulated failure")
+        return real_open(file, *args, **kwargs)
+
     # Mock open inside record_trace to simulate disk failure
-    with patch("builtins.open", side_effect=IOError("Disk write simulated failure")):
+    with patch("builtins.open", side_effect=mock_trace_open_failure):
         ask_res = client.post(
             "/v1/query",
-            json={"session_id": session_id, "query": "When are safety goggles required?"},
+            json={
+                "session_id": session_id,
+                "query": "When are safety goggles required?",
+                "preferred_provider": "stub",
+            },
         )
     # Query must succeed despite disk write failure
     assert ask_res.status_code == 200

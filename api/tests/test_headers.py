@@ -104,7 +104,7 @@ def test_fixture_indexes_with_headers_and_answers_paraphrase():
     paraphrase_query = "How much advance heads-up is needed before an employee can quit?"
     ask_res = client.post(
         "/v1/query",
-        json={"session_id": session_id, "query": paraphrase_query},
+        json={"session_id": session_id, "query": paraphrase_query, "preferred_provider": "stub"},
     )
     assert ask_res.status_code == 200
 

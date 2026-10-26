@@ -116,20 +116,14 @@ def test_twohop_expansion_cap_and_deduplication():
     assert len(chunk_ids) == len(set(chunk_ids)), "Duplicate chunk IDs found in results"
 
 
-def test_twohop_gate_scenario_on_handbook_pdf():
+def test_twohop_gate_scenario_on_handbook_pdf(session_handbook):
     """
     Done when gate: 'as per rule 63.7.4 …' question returns the definition chunk
     alongside the mentioning chunk — the exact P3 scenario from the plan.
     """
-    fixture_path = Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "handbook.pdf"
-    assert fixture_path.exists(), f"Fixture missing at {fixture_path}"
-
-    blocks = parse_pdf(str(fixture_path), source_name="handbook.pdf")
-    chunks = chunk_blocks(blocks)
-    ref_map = build_reference_map(chunks)
-
-    doc_index = DocumentIndex()
-    doc_index.build(chunks)
+    chunks = session_handbook.chunks
+    ref_map = session_handbook.ref_map
+    doc_index = session_handbook.doc_index
 
     query = "as per rule 63.7.4 how is leave settled on departure?"
 

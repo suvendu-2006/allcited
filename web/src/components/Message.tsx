@@ -127,7 +127,7 @@ export function Message({ message, onCitationClick }: MessageProps) {
   return (
     <div className="flex justify-start animate-fade-in w-full">
       <div className="flex gap-3 w-full">
-        <div className="w-6 h-6 rounded bg-bg-sunken border border-border text-[#CC5A3F] dark:text-[#E8765A] flex items-center justify-center flex-shrink-0 text-[11px] font-mono font-bold select-none mt-1 shadow-2xs">
+        <div className="w-6 h-6 rounded bg-bg-sunken border border-border text-accent-primary flex items-center justify-center flex-shrink-0 text-[11px] font-mono font-bold select-none mt-1 shadow-2xs">
           A
         </div>
 
@@ -152,9 +152,9 @@ export function Message({ message, onCitationClick }: MessageProps) {
           )}
 
           {isOffTopic ? (
-            <div className="p-4 rounded-interactive border border-border bg-bg-surface border-l-[3px] border-l-[#CC5A3F] dark:border-l-[#E8765A] text-ink-primary shadow-xs space-y-1.5 animate-fade-in">
+            <div className="p-4 rounded-interactive border border-border bg-bg-surface border-l-[3px] border-l-accent-primary text-ink-primary shadow-xs space-y-1.5 animate-fade-in">
               <div className="flex items-center gap-2">
-                <ShieldAlert className="w-4 h-4 text-[#CC5A3F] dark:text-[#E8765A] flex-shrink-0" />
+                <ShieldAlert className="w-4 h-4 text-accent-primary flex-shrink-0" />
                 <h3 className="font-semibold text-sm font-display text-ink-primary">
                   I only answer from your document.
                 </h3>
@@ -164,9 +164,9 @@ export function Message({ message, onCitationClick }: MessageProps) {
               </p>
             </div>
           ) : isNotInDoc ? (
-            <div className="p-4 rounded-interactive border border-border bg-bg-surface border-l-[3px] border-l-[#CC5A3F] dark:border-l-[#E8765A] text-ink-primary shadow-xs space-y-1.5 animate-fade-in">
+            <div className="p-4 rounded-interactive border border-border bg-bg-surface border-l-[3px] border-l-accent-primary text-ink-primary shadow-xs space-y-1.5 animate-fade-in">
               <div className="flex items-center gap-2">
-                <ShieldAlert className="w-4 h-4 text-[#CC5A3F] dark:text-[#E8765A] flex-shrink-0" />
+                <ShieldAlert className="w-4 h-4 text-accent-primary flex-shrink-0" />
                 <h3 className="font-semibold text-sm font-display text-ink-primary">
                   Honestly? This document doesn&apos;t say.
                 </h3>
@@ -212,7 +212,7 @@ export function Message({ message, onCitationClick }: MessageProps) {
                   title="Unhelpful 👎"
                   className={`p-1 rounded-[4px] transition-colors cursor-pointer ${
                     feedback === "down"
-                      ? "text-[#CC5A3F] bg-[#CC5A3F]/10"
+                      ? "text-accent-primary bg-accent-primary/10"
                       : "text-ink-ghost hover:text-ink-primary hover:bg-bg-sunken"
                   }`}
                 >
@@ -224,10 +224,10 @@ export function Message({ message, onCitationClick }: MessageProps) {
                   message.model?.toLowerCase().includes("nvidia") ||
                   message.model?.toLowerCase().includes("llama-3.2-11b")) && (
                   <span
-                    className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono bg-[#76B900]/10 text-[#76B900] border border-[#76B900]/30 font-semibold"
+                    className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono bg-accent-cite/10 text-accent-cite border border-accent-cite/30 font-semibold"
                     title="Answered by NVIDIA NIM Cloud Fallback Brain"
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#76B900]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-accent-cite" />
                     NVIDIA NIM
                   </span>
                 )}

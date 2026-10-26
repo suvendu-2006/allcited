@@ -150,6 +150,11 @@ class QueryRequest(BaseModel):
         description="Preferred provider: groq, byok, or ollama",
         examples=["groq"],
     )
+    preferred_provider: Optional[str] = Field(
+        None,
+        description="Alias for preferred provider",
+        examples=["stub"],
+    )
 
 
 class SummarizeRequest(BaseModel):

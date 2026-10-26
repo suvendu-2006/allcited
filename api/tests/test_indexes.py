@@ -23,21 +23,12 @@ def test_embed_and_hash_cache():
     assert manager.cache_size == 2
 
 
-def test_indexes_fixture_top1_both_engines():
+def test_indexes_fixture_top1_both_engines(session_handbook):
     """
     Gate check: Build index over fixture chunks; searching a known phrase
     returns its own chunk as top-1 in both engines.
     """
-    fixture_path = Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "handbook.pdf"
-    assert fixture_path.exists()
-
-    blocks = parse_pdf(str(fixture_path), source_name="handbook.pdf")
-    chunks = chunk_blocks(blocks, doc_id="handbook_fixture", target_tokens=250, overlap_ratio=0.15)
-    assert len(chunks) >= 3
-
-    # Build the document index
-    doc_index = DocumentIndex()
-    doc_index.build(chunks)
+    doc_index = session_handbook.doc_index
 
     # Known phrase from chunk 1:
     phrase = "This employee handbook sets out the official terms, rules, and conditions governing all full-time"

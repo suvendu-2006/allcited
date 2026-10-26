@@ -46,23 +46,19 @@ def test_bundle_chunks_grouping():
     assert bundles[2].chunk_range == "Chunks 21-25"
 
 
-def test_mapreduce_gate_summarize_whole_document():
+def test_mapreduce_gate_summarize_whole_document(session_handbook):
     """
     Done when gate: 'summarize the whole document in 800 words' produces
     a sectioned summary citing chunk ranges; token count within budget.
     """
     client = TestClient(app)
-
-    fixture_path = Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "handbook.pdf"
-    assert fixture_path.exists()
-
-    with open(fixture_path, "rb") as f:
-        ingest_resp = client.post("/v1/ingest", files={"file": ("handbook.pdf", f, "application/pdf")})
-    assert ingest_resp.status_code == 200
-    session_id = ingest_resp.json()["session_id"]
+    session_id = session_handbook.session_id
 
     # 1. Test dedicated /v1/summarize endpoint
-    resp = client.post("/v1/summarize", json={"session_id": session_id, "target_words": 800})
+    resp = client.post(
+        "/v1/summarize",
+        json={"session_id": session_id, "target_words": 800, "provider": "stub"},
+    )
     assert resp.status_code == 200
     assert "text/event-stream" in resp.headers["content-type"]
 
@@ -94,7 +90,11 @@ def test_mapreduce_gate_summarize_whole_document():
     # 2. Test /v1/query routing to DOC_WIDE
     query_resp = client.post(
         "/v1/query",
-        json={"session_id": session_id, "query": "summarize the whole document in 800 words"},
+        json={
+            "session_id": session_id,
+            "query": "summarize the whole document in 800 words",
+            "preferred_provider": "stub",
+        },
     )
     assert query_resp.status_code == 200
     q_events = parse_sse_events(query_resp.text)

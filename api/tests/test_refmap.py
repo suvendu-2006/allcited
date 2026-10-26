@@ -40,16 +40,11 @@ def test_reference_extraction_valid():
     assert "standard:iso-27001" in ref_ids
 
 
-def test_handbook_fixture_reference_mapping():
+def test_handbook_fixture_reference_mapping(session_handbook):
     """
     Gate check: On the fixture, >=4 real cross-references are mapped.
     """
-    fixture_path = Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "handbook.pdf"
-    assert fixture_path.exists()
-
-    blocks = parse_pdf(str(fixture_path), source_name="handbook.pdf")
-    chunks = chunk_blocks(blocks, doc_id="handbook", target_tokens=300, overlap_ratio=0.15)
-    ref_map = build_reference_map(chunks)
+    ref_map = session_handbook.ref_map
 
     # Check mapped references across definitions and mentions
     all_mapped_keys = set(ref_map.definitions.keys()).union(set(ref_map.mentions.keys()))

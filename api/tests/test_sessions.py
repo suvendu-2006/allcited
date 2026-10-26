@@ -76,17 +76,22 @@ def test_five_eyeball_questions_retrieve_sensible_chunks():
     """
     Gate check: 5 eyeball questions through a debug REPL / test retrieve sensible top-4s.
     """
-    fixture_path = Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "handbook.pdf"
-    with open(fixture_path, "rb") as f:
-        res = client.post(
-            "/v1/ingest",
-            files={"file": ("handbook.pdf", f, "application/pdf")},
-        )
-    assert res.status_code == 200
-    session_id = res.json()["session_id"]
-
     from app.sessions import get_session_store
-    session = get_session_store().get_session(session_id)
+    store = get_session_store()
+    shared = store.get_session("sess_shared_handbook")
+    if shared:
+        session_id = shared.session_id
+    else:
+        fixture_path = Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "handbook.pdf"
+        with open(fixture_path, "rb") as f:
+            res = client.post(
+                "/v1/ingest",
+                files={"file": ("handbook.pdf", f, "application/pdf")},
+            )
+        assert res.status_code == 200
+        session_id = res.json()["session_id"]
+
+    session = store.get_session(session_id)
     assert session is not None
 
     questions_and_expected = [

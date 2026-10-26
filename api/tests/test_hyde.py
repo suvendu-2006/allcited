@@ -164,7 +164,12 @@ async def test_stream_answer_pipeline_hyde_integration():
     )
 
     events = []
-    async for sse in stream_answer_pipeline(session, "How many PTO hours per month?", question_id="q_hyde_test"):
+    async for sse in stream_answer_pipeline(
+        session,
+        "How many PTO hours per month?",
+        question_id="q_hyde_test",
+        preferred_provider="stub",
+    ):
         events.append(sse)
 
     # Verify retrieve event has hyde_enabled: true

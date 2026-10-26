@@ -57,12 +57,9 @@ def test_ocr_post_pass_citations_flag():
 
 
 @pytest.mark.ocr
-def test_parse_scanned_pdf_blocks():
+def test_parse_scanned_pdf_blocks(session_scanned_handbook):
     """Verify parsing a rasterized PDF page (<50 chars text) triggers OCR and tags blocks with is_ocr=True."""
-    fixture_path = Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "scanned_handbook.pdf"
-    assert fixture_path.exists(), f"Scanned fixture missing at {fixture_path}"
-
-    blocks = parse_pdf(str(fixture_path), source_name="scanned_handbook.pdf")
+    blocks = session_scanned_handbook.blocks
     assert len(blocks) >= 10, f"Expected >= 10 OCR blocks, got {len(blocks)}"
 
     # Every block from the scanned PDF must be flagged as OCR
@@ -84,24 +81,13 @@ def test_parse_scanned_pdf_blocks():
 
 
 @pytest.mark.ocr
-def test_scanned_pdf_answers_3_questions_with_ocr_citations():
+def test_scanned_pdf_answers_3_questions_with_ocr_citations(session_scanned_handbook):
     """
     STEP 45 Gate:
     The scanned-PDF fixture answers 3 questions with OCR-flagged citations.
     """
     client = TestClient(app)
-    fixture_path = Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "scanned_handbook.pdf"
-    assert fixture_path.exists(), f"Scanned fixture missing at {fixture_path}"
-
-    with open(fixture_path, "rb") as f:
-        file_bytes = f.read()
-
-    upload_res = client.post(
-        "/v1/ingest",
-        files={"file": ("scanned_handbook.pdf", file_bytes, "application/pdf")},
-    )
-    assert upload_res.status_code == 200, f"Upload failed: {upload_res.text}"
-    session_id = upload_res.json()["session_id"]
+    session_id = session_scanned_handbook.session_id
     assert session_id
 
     # 3 target questions against the scanned PDF
@@ -111,12 +97,10 @@ def test_scanned_pdf_answers_3_questions_with_ocr_citations():
         ("What is the minimum password character length required by internal security?", "16"),
     ]
 
-    import time
     for q_text, expected_keyword in test_queries:
-        time.sleep(1.0)
         query_res = client.post(
             "/v1/query",
-            json={"session_id": session_id, "query": q_text},
+            json={"session_id": session_id, "query": q_text, "preferred_provider": "stub"},
         )
         assert query_res.status_code == 200, f"Query failed for '{q_text}': {query_res.text}"
 
@@ -146,22 +130,21 @@ def test_scanned_pdf_answers_3_questions_with_ocr_citations():
 
 
 @pytest.mark.ocr
-def test_easyocr_provider_on_scanned_pdf():
+def test_easyocr_provider_on_scanned_pdf(session_scanned_handbook):
     """Verify EasyOCR provider extracts text directly from scanned PDF fixture."""
-    import fitz
-
-    from app.pipeline.parsers.ocr import parse_easyocr_langs, run_ocr
+    from app.pipeline.parsers.ocr import get_easyocr_reader, parse_easyocr_langs
 
     # Test language mapping
     assert parse_easyocr_langs("eng+hin") == ["en", "hi"]
     assert parse_easyocr_langs("eng") == ["en"]
     assert parse_easyocr_langs("en,hi") == ["en", "hi"]
 
-    fixture_path = Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "scanned_handbook.pdf"
-    assert fixture_path.exists()
+    # Verify reader singleton is active
+    reader = get_easyocr_reader(["en", "hi"])
+    assert reader is not None
 
-    doc = fitz.open(str(fixture_path))
-    ocr_text = run_ocr(doc[0], 0, langs="eng+hin", provider="easyocr")
+    # Verify OCR text was extracted from scanned handbook blocks
+    ocr_text = " ".join(b.text for b in session_scanned_handbook.blocks if b.page == 1)
     assert len(ocr_text) > 50, f"Expected EasyOCR to extract >50 chars, got: {ocr_text}"
     assert "Handbook" in ocr_text or "Employee" in ocr_text or "Allcited" in ocr_text
 

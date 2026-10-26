@@ -92,9 +92,16 @@ class SessionStore:
 
     def _evict_lru_if_needed(self):
         if len(self._sessions) >= MAX_SESSIONS:
-            # Sort by last_accessed ascending
-            oldest_sid = min(self._sessions.keys(), key=lambda sid: self._sessions[sid].last_accessed)
-            del self._sessions[oldest_sid]
+            candidates = [
+                sid for sid in self._sessions
+                if not (sid.startswith("sess_shared") or sid.startswith("sess_scanned"))
+            ]
+            if candidates:
+                oldest_sid = min(candidates, key=lambda sid: self._sessions[sid].last_accessed)
+                del self._sessions[oldest_sid]
+            else:
+                oldest_sid = min(self._sessions.keys(), key=lambda sid: self._sessions[sid].last_accessed)
+                del self._sessions[oldest_sid]
 
     def create_session_from_bytes(
         self,

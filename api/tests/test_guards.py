@@ -140,7 +140,7 @@ def test_e2e_fixture_doc_with_injection_neutralized_and_cited():
     query = "What attack payload was documented in Incident INC-404?"
     ask_res = client.post(
         "/v1/query",
-        json={"session_id": session_id, "query": query},
+        json={"session_id": session_id, "query": query, "preferred_provider": "stub"},
     )
     assert ask_res.status_code == 200
 

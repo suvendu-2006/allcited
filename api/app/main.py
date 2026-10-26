@@ -798,7 +798,7 @@ async def query_document(
     byok_key = request.byok_key or x_byok_key
     byok_base_url = request.byok_base_url or x_byok_base_url
     byok_model = request.byok_model or x_byok_model
-    preferred_provider = request.provider or x_provider
+    preferred_provider = request.provider or request.preferred_provider or x_provider
 
     return StreamingResponse(
         stream_answer_pipeline(
@@ -852,7 +852,7 @@ async def summarize_document(
     byok_key = request.byok_key or x_byok_key
     byok_base_url = request.byok_base_url or x_byok_base_url
     byok_model = request.byok_model or x_byok_model
-    preferred_provider = request.provider or x_provider
+    preferred_provider = request.provider or request.preferred_provider or x_provider
 
     from app.pipeline.mapreduce import stream_mapreduce_summary
 

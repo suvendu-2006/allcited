@@ -149,11 +149,11 @@ export function SourcePanel({
                   className={`p-3.5 rounded-interactive text-xs transition-all duration-120 cursor-pointer bg-bg-sunken border-t-0 border-r-0 border-b-0 ${
                     isTwoHop
                       ? isSelected
-                        ? "border-l-[3px] border-l-[#FEBC2E] dark:border-l-[#FCC64B] -translate-y-[1px] shadow-sm ring-1 ring-[#FEBC2E]/30"
-                        : "border-l-[3px] border-l-[#FEBC2E]/70 dark:border-l-[#FCC64B]/70 hover:border-l-[#FEBC2E]"
+                        ? "border-l-[3px] border-l-status-twohop -translate-y-[1px] shadow-sm ring-1 ring-status-twohop/30"
+                        : "border-l-[3px] border-l-status-twohop/70 hover:border-l-status-twohop"
                       : isSelected
-                      ? "border-l-[3px] border-l-[#CC5A3F] dark:border-l-[#E8765A] -translate-y-[1px] shadow-sm ring-1 ring-[#CC5A3F]/30 dark:ring-[#E8765A]/40"
-                      : "border-l-[3px] border-l-[#CC5A3F]/70 dark:border-l-[#E8765A]/70 hover:border-l-[#CC5A3F] dark:hover:border-l-[#E8765A]"
+                      ? "border-l-[3px] border-l-accent-primary -translate-y-[1px] shadow-sm ring-1 ring-accent-primary/30"
+                      : "border-l-[3px] border-l-accent-primary/70 hover:border-l-accent-primary"
                   }`}
                 >
                   {/* Header: [S#] + section · page + copy */}
@@ -162,8 +162,8 @@ export function SourcePanel({
                       <span
                         className={`font-mono font-semibold text-[11px] ${
                           isTwoHop
-                            ? "text-[#8F5B00] dark:text-[#FCC64B]"
-                            : "text-[#CC5A3F] dark:text-[#E8765A]"
+                            ? "text-status-twohop"
+                            : "text-accent-primary"
                         }`}
                       >
                         [{cleanLabel}]
@@ -194,7 +194,7 @@ export function SourcePanel({
                   </div>
 
                   {isTwoHop && (
-                    <div className="mb-2 text-[11px] font-mono text-[#8F5B00] dark:text-[#FCC64B] flex items-center gap-1">
+                    <div className="mb-2 text-[11px] font-mono text-status-twohop flex items-center gap-1">
                       <Sparkles className="w-3 h-3 flex-shrink-0" />
                       <span>{c.added_reason || "Cross-referenced passage"}</span>
                     </div>

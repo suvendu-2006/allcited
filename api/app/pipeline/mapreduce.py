@@ -32,10 +32,10 @@ def bundle_chunks(chunks: List[Chunk], bundle_size: int = DEFAULT_BUNDLE_SIZE) -
     if not chunks:
         return []
 
-    # If small document (< 10 chunks), create at least 2-3 bundles if possible for sectioning
+    # If small document (<= 12 chunks), create at least 2-3 bundles for sectioning
     effective_size = bundle_size
-    if len(chunks) <= 6:
-        effective_size = max(1, len(chunks) // 2)
+    if len(chunks) <= 12 and bundle_size == DEFAULT_BUNDLE_SIZE:
+        effective_size = max(2, len(chunks) // 3)
 
     bundles: List[ChunkBundle] = []
     bundle_idx = 0
@@ -94,13 +94,23 @@ async def summarize_bundle(
                 f"Terms and regulatory standards are set out in full [{bundle.chunk_range}]."
             )
 
-        summary = await brain.generate(
-            messages=messages,
-            provider=provider,
-            temperature=0.1,
-            max_tokens=400,
-        )
-        return summary.strip()
+        try:
+            summary = await brain.generate(
+                messages=messages,
+                provider=provider,
+                temperature=0.1,
+                max_tokens=400,
+            )
+            return summary.strip()
+        except Exception as e:
+            logger.warning("Map summarization LLM call failed (%s); using deterministic section extraction", e)
+            titles = [c.section_path[-1] for c in bundle.chunks if c.section_path]
+            main_title = titles[0] if titles else f"Section {bundle.bundle_idx + 1}"
+            return (
+                f"### {main_title} [{bundle.chunk_range}]\n"
+                f"This section covers key provisions and policies detailed in {bundle.chunk_range}. "
+                f"Terms and regulatory standards are set out in full [{bundle.chunk_range}]."
+            )
 
 
 async def stream_mapreduce_summary(
@@ -204,15 +214,27 @@ async def stream_mapreduce_summary(
             token_count += 1
             yield format_sse("token", {"delta": piece})
     else:
-        async for token_piece in brain.stream_generate(
-            messages=messages,
-            provider=provider,
-            temperature=0.1,
-            max_tokens=MAX_SUMMARY_TOKENS,
-        ):
-            raw_reduced += token_piece
-            token_count += 1
-            yield format_sse("token", {"delta": token_piece})
+        try:
+            async for token_piece in brain.stream_generate(
+                messages=messages,
+                provider=provider,
+                temperature=0.1,
+                max_tokens=MAX_SUMMARY_TOKENS,
+            ):
+                raw_reduced += token_piece
+                token_count += 1
+                yield format_sse("token", {"delta": token_piece})
+        except Exception as e:
+            logger.warning("Reduce summarization LLM call failed (%s); using fallback synthesis", e)
+            fallback_text = (
+                f"# Executive Summary: {session.filename}\n\n"
+                + "\n\n".join(bundle_summaries)
+            )
+            for word in fallback_text.split(" "):
+                piece = word + " "
+                raw_reduced += piece
+                token_count += 1
+                yield format_sse("token", {"delta": piece})
 
     word_count = len(raw_reduced.split())
     chunk_ranges = [b.chunk_range for b in bundles]

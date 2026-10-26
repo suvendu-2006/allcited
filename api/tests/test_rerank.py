@@ -7,16 +7,9 @@ from app.pipeline.rerank import Reranker
 from app.pipeline.retrieve import hybrid_retrieve
 
 
-def test_reranker_flag_off_path():
+def test_reranker_flag_off_path(session_handbook):
     """Verify that when disabled, the re-ranker safely returns the initial ranking order."""
-    fixture_path = Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "handbook.pdf"
-    assert fixture_path.exists()
-
-    blocks = parse_pdf(str(fixture_path), source_name="handbook.pdf")
-    chunks = chunk_blocks(blocks, doc_id="handbook", target_tokens=250)
-
-    doc_index = DocumentIndex()
-    doc_index.build(chunks)
+    doc_index = session_handbook.doc_index
 
     candidates = hybrid_retrieve(doc_index, "sick leave doctor certificate", top_k=6)
     assert len(candidates) >= 2
@@ -32,18 +25,11 @@ def test_reranker_flag_off_path():
         assert res.rerank_rank == i + 1
 
 
-def test_reranker_ranking_improvement_on_debug_questions():
+def test_reranker_ranking_improvement_on_debug_questions(session_handbook):
     """
     Gate check: On the 5 debug questions, reranked top-4 changes >=1 ranking for the better.
     """
-    fixture_path = Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "handbook.pdf"
-    assert fixture_path.exists()
-
-    blocks = parse_pdf(str(fixture_path), source_name="handbook.pdf")
-    chunks = chunk_blocks(blocks, doc_id="handbook", target_tokens=250)
-
-    doc_index = DocumentIndex()
-    doc_index.build(chunks)
+    doc_index = session_handbook.doc_index
 
     debug_questions = [
         "What form must be submitted for sick leave longer than two days?",

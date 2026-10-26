@@ -92,7 +92,11 @@ def test_pipeline_run_logs_and_records_prompt_hash(caplog):
     with caplog.at_level(logging.INFO):
         ask_res = client.post(
             "/v1/query",
-            json={"session_id": session_id, "query": "What must employees comply with?"},
+            json={
+                "session_id": session_id,
+                "query": "What must employees comply with?",
+                "preferred_provider": "stub",
+            },
         )
     assert ask_res.status_code == 200
 

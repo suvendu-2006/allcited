@@ -247,7 +247,11 @@ async def stream_answer_pipeline(
 
     cache = get_semantic_cache()
     t_cache = time.perf_counter()
-    cache_lookup_model = provider.model
+    cache_lookup_model = (
+        provider.model
+        if (getattr(provider, "is_byok", False) or provider.provider_type in ("ollama", "byok", "stub"))
+        else None
+    )
     cached_hit = cache.get(session.session_id, query, model=cache_lookup_model)
     latencies["cache_ms"] = round((time.perf_counter() - t_cache) * 1000, 2)
 
@@ -531,12 +535,17 @@ async def stream_answer_pipeline(
         cleaned_answer += " (Note: answered using best available sources)"
 
     # Store in semantic cache
+    stored_model = (
+        actual_model
+        if (getattr(provider, "is_byok", False) or provider.provider_type in ("ollama", "byok", "stub"))
+        else None
+    )
     cache.set(
         session_id=session.session_id,
         query=query,
         answer=cleaned_answer,
         citations=[c.model_dump() for c in citations],
-        model=actual_model,
+        model=stored_model,
         refused=is_refusal,
         filename=getattr(session, "filename", None),
     )

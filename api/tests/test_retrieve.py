@@ -26,7 +26,7 @@ def test_reciprocal_rank_fusion_math():
     assert abs(merged[1].rrf_score - expected_score) < 1e-6
 
 
-def test_hybrid_retrieval_p2_and_p4_scenarios():
+def test_hybrid_retrieval_p2_and_p4_scenarios(session_handbook):
     """
     Gate check:
     1. Keyword-only question ('Form HR-702') ranks right via BM25 side
@@ -34,14 +34,7 @@ def test_hybrid_retrieval_p2_and_p4_scenarios():
        ranks right via vector side
     3. Merged result top-4 contains the right chunk for both.
     """
-    fixture_path = Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "handbook.pdf"
-    assert fixture_path.exists()
-
-    blocks = parse_pdf(str(fixture_path), source_name="handbook.pdf")
-    chunks = chunk_blocks(blocks, doc_id="handbook", target_tokens=250, overlap_ratio=0.15)
-
-    doc_index = DocumentIndex()
-    doc_index.build(chunks)
+    doc_index = session_handbook.doc_index
 
     # 1. Keyword-only query (P4 scenario: exact ID "Form HR-702")
     keyword_query = "Form HR-702"

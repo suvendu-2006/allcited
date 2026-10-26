@@ -220,9 +220,9 @@ export function TraceViewer({
 
                 {/* Step 2: Retrieve */}
                 <div className="relative">
-                  <div className="absolute -left-6 top-1 w-2.5 h-2.5 rounded-full bg-[#2D62FF] dark:bg-[#6E97FF] border-2 border-bg-surface" />
+                  <div className="absolute -left-6 top-1 w-2.5 h-2.5 rounded-full bg-status-retrieve border-2 border-bg-surface" />
                   <div className="font-mono text-[12px] bg-bg-sunken p-2.5 border border-border rounded-none">
-                    <span className="text-[#2D62FF] dark:text-[#6E97FF] font-semibold">retrieve:</span>{" "}
+                    <span className="text-status-retrieve font-semibold">retrieve:</span>{" "}
                     <span className="text-ink-primary">
                       {trace.retrieved_count} candidates · best score {(trace.top_rerank_score || 0.71).toFixed(2)}
                     </span>
@@ -234,9 +234,9 @@ export function TraceViewer({
 
                 {/* Step 3: Rerank */}
                 <div className="relative">
-                  <div className="absolute -left-6 top-1 w-2.5 h-2.5 rounded-full bg-[#FF5F57] dark:bg-[#FF8177] border-2 border-bg-surface" />
+                  <div className="absolute -left-6 top-1 w-2.5 h-2.5 rounded-full bg-status-rerank border-2 border-bg-surface" />
                   <div className="font-mono text-[12px] bg-bg-sunken p-2.5 border border-border rounded-none">
-                    <span className="text-[#FF5F57] dark:text-[#FF8177] font-semibold">rerank:</span>{" "}
+                    <span className="text-status-rerank font-semibold">rerank:</span>{" "}
                     <span className="text-ink-primary">
                       kept {trace.reranked_count}, dropped {droppedCount}
                     </span>
@@ -248,9 +248,9 @@ export function TraceViewer({
 
                 {/* Step 4: Two-Hop */}
                 <div className="relative">
-                  <div className="absolute -left-6 top-1 w-2.5 h-2.5 rounded-full bg-[#FEBC2E] dark:bg-[#FCC64B] border-2 border-bg-surface" />
+                  <div className="absolute -left-6 top-1 w-2.5 h-2.5 rounded-full bg-status-twohop border-2 border-bg-surface" />
                   <div className="font-mono text-[12px] bg-bg-sunken p-2.5 border border-border rounded-none">
-                    <span className="text-[#8F5B00] dark:text-[#FCC64B] font-semibold">two-hop:</span>{" "}
+                    <span className="text-status-twohop font-semibold">two-hop:</span>{" "}
                     <span className="text-ink-primary">
                       +{trace.two_hop_count} (rule 63.7.4)
                     </span>
@@ -271,7 +271,7 @@ export function TraceViewer({
                     <span className="text-gray-warm text-[11px] block mt-0.5">
                       provider: {trace.provider || "groq"} / {trace.model || "llama-3.3-70b"}
                       {trace.provider === "nvidia" && (
-                        <span className="ml-2 text-[10px] text-[#76B900] font-semibold">[NVIDIA NIM Failover]</span>
+                        <span className="ml-2 text-[10px] text-accent-cite font-semibold">[NVIDIA NIM Failover]</span>
                       )}
                     </span>
                   </div>

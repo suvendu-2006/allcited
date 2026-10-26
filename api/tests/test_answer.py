@@ -104,7 +104,7 @@ def test_post_pass_refusal_returns_zero_citations():
     assert len(citations2) == 0
 
 
-def test_sse_endpoint_three_live_gate_checks():
+def test_sse_endpoint_three_live_gate_checks(session_handbook):
     """
     Done when gate: 3 live checks in browser/curl:
     1. Normal cited answer (answers with [S#] and citations payload).
@@ -112,16 +112,7 @@ def test_sse_endpoint_three_live_gate_checks():
     3. Absent-question answers 'Not covered in this document.'
     """
     client = TestClient(app)
-
-    # Ingest fixture
-    fixture_path = Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "handbook.pdf"
-    assert fixture_path.exists(), f"Fixture missing at {fixture_path}"
-
-    with open(fixture_path, "rb") as f:
-        ingest_resp = client.post("/v1/ingest", files={"file": ("handbook.pdf", f, "application/pdf")})
-
-    assert ingest_resp.status_code == 200, f"Ingest failed: {ingest_resp.text}"
-    session_id = ingest_resp.json()["session_id"]
+    session_id = session_handbook.session_id
 
     # -------------------------------------------------------------
     # LIVE CHECK 1: Normal cited answer

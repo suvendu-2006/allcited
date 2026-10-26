@@ -167,3 +167,6 @@ Segfault: FIXED ✓ (suite completes). Env keys: ALL present ✓. Stale docs: de
 **CI hygiene:** suite must return under 3 min — reuse a session-scoped ingested index fixture for e2e tests instead of per-test ingest; keep pytest-timeout; consider a `@pytest.mark.slow` marker for OCR/scanned tests.
 
 Gate: 0 failures · full suite < 3 min · digital ingest < 5 s · `OCR engaged` = no for digital docs, yes for scanned.
+
+## FIX 15 — Green badge + hardcoded hexes on chat screen (found during FIX 12 crosscheck, 2026-10-25)
+`Message.tsx:227` renders a chip in `#76B900` (NVIDIA green) — violates the zero-green law on the chat screen (§6.1/§6.8) and uses a hardcoded hex instead of a token. Also `Message.tsx:130` uses raw hexes (`#CC5A3F`/`#E8765A`) where `accent-*` tokens belong (right values, wrong implementation). Do: identify what the green badge represents (engine/provider badge?) → restyle with `accent-*`/`status-*` tokens or remove; replace all raw palette hexes in components with tokens; add a gate: `grep -rn "#[0-9A-Fa-f]\{6\}" web/src/components | grep -vE "tailwind|tokens"` ≈ 0 (token usage only).

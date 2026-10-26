@@ -41,7 +41,7 @@ export function CitationChip({ citation, isPinned = false, onClick }: CitationCh
             : "active:scale-95"
         } ${
           isTwoHop
-            ? "bg-[#FEBC2E]/15 dark:bg-[#FCC64B]/20 text-[#8F5B00] dark:text-[#FCC64B] border border-[#FEBC2E]/40"
+            ? "bg-status-twohop/15 dark:bg-status-twohop/20 text-status-twohop border border-status-twohop/40"
             : isOcr
             ? "bg-amber-100/70 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800"
             : "bg-accent-cite/10 dark:bg-accent-cite/20 text-accent-cite dark:text-accent-cite border border-accent-cite/30 dark:border-accent-cite/40"
