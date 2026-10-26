@@ -358,7 +358,12 @@ class BrainClient:
                         continue
                     break
 
-                # Client error (400, 401, 403, 404): fail fast without retrying
+                # Model not found on provider: fall through to fallback models immediately
+                if response.status_code == 404:
+                    last_error = LLMClientError(response.status_code, response.text[:200], provider.provider_type)
+                    break
+
+                # Client error (400, 401, 403): fail fast without retrying
                 raise LLMClientError(response.status_code, response.text[:200], provider.provider_type)
 
             except (httpx.TimeoutException, httpx.NetworkError) as e:
@@ -368,9 +373,9 @@ class BrainClient:
                     continue
                 break
 
-        # Fallback to faster/lighter models on Groq if current model hits 429
+        # Fallback to faster/lighter models on Groq if current model hits 429 or 404
         if provider.provider_type == "groq" and last_error and (
-            isinstance(last_error, LLMClientError) and last_error.status_code == 429
+            isinstance(last_error, LLMClientError) and last_error.status_code in (404, 429)
         ):
             candidate_models = ["qwen/qwen3.8-27b", "openai/gpt-oss-20b", "openai/gpt-oss-120b"]
             for fb_model in candidate_models:
@@ -537,6 +542,13 @@ class BrainClient:
                                 continue
                             break
 
+                        # Model not found on provider: fall through to fallback models immediately
+                        if response.status_code == 404:
+                            err_bytes = await response.aread()
+                            err_msg = err_bytes.decode("utf-8", errors="replace")[:200]
+                            last_error = LLMClientError(response.status_code, err_msg, provider.provider_type)
+                            break
+
                         err_bytes = await response.aread()
                         raise LLMClientError(
                             response.status_code,
@@ -550,9 +562,9 @@ class BrainClient:
                     continue
                 break
 
-        # Fallback to faster/lighter models on Groq if current model hits 429
+        # Fallback to faster/lighter models on Groq if current model hits 429 or 404
         if provider.provider_type == "groq" and last_error and (
-            isinstance(last_error, LLMClientError) and last_error.status_code == 429
+            isinstance(last_error, LLMClientError) and last_error.status_code in (404, 429)
         ):
             candidate_models = ["qwen/qwen3.8-27b", "openai/gpt-oss-20b", "openai/gpt-oss-120b"]
             for fb_model in candidate_models:

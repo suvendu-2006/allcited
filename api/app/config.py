@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     NVIDIA_BASE_URL: str = Field(default="https://integrate.api.nvidia.com/v1", description="Base URL for NVIDIA NIM")
     NVIDIA_MODEL: str = Field(default="meta/llama-3.2-11b-vision-instruct", description="NVIDIA fallback model")
     OLLAMA_BASE_URL: str = Field(default="http://localhost:11434", description="Base URL for local Ollama")
-    DEFAULT_LLM_MODEL: str = Field(default="llama-3.3-70b-versatile", description="Default LLM model name")
+    DEFAULT_LLM_MODEL: str = Field(default="qwen/qwen3.8-27b", description="Default LLM model name")
 
     # Pipeline & Tuning settings (Plan §9)
     CACHE_THRESHOLD: float = Field(default=0.96, ge=0.0, le=1.0, description="Cosine similarity threshold for semantic cache")
