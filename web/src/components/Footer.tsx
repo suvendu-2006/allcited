@@ -19,22 +19,22 @@ export function Footer() {
             </span>
             <ul className="space-y-2">
               <li>
-                <Link href="/product" className="text-gray-warm hover:text-ink-primary transition-colors">
+                <Link href="/product" className="footer-link">
                   Product
                 </Link>
               </li>
               <li>
-                <Link href="/how-it-works" className="text-gray-warm hover:text-ink-primary transition-colors">
+                <Link href="/how-it-works" className="footer-link">
                   How it works
                 </Link>
               </li>
               <li>
-                <Link href="/pricing" className="text-gray-warm hover:text-ink-primary transition-colors">
+                <Link href="/pricing" className="footer-link">
                   Pricing
                 </Link>
               </li>
               <li>
-                <Link href="/library" className="text-gray-warm hover:text-ink-primary transition-colors">
+                <Link href="/library" className="footer-link">
                   Shelf
                 </Link>
               </li>
@@ -48,12 +48,12 @@ export function Footer() {
             </span>
             <ul className="space-y-2">
               <li>
-                <Link href="/exam" className="text-gray-warm hover:text-ink-primary transition-colors">
+                <Link href="/exam" className="footer-link">
                   The exam
                 </Link>
               </li>
               <li>
-                <Link href="/exam#history" className="text-gray-warm hover:text-ink-primary transition-colors">
+                <Link href="/exam#history" className="footer-link">
                   Release history
                 </Link>
               </li>
@@ -71,14 +71,14 @@ export function Footer() {
                   href="https://github.com/suvendu-2006/allcited"
                   target="_blank"
                   rel="noreferrer"
-                  className="text-gray-warm hover:text-ink-primary transition-colors"
+                  className="footer-link"
                 >
                   GitHub
                 </a>
               </li>
               <li>
-                <Link href="/dev" className="text-gray-warm hover:text-ink-primary transition-colors">
-                  Component gallery (/dev)
+                <Link href="/dev" className="footer-link">
+                  Component gallery
                 </Link>
               </li>
             </ul>

@@ -498,3 +498,72 @@
   color: var(--ink-ghost) !important;
 }
 
+/* ==========================================================================
+   §4.2 Addendum: Footer 'Receipt Underline' Hover & Lift Animation
+   Pure CSS per spec:
+   - ScaleX origin-swap (draws left→right on hover/focus, exits right→left on unhover)
+   - Seal-red 2px underline (var(--accent-primary))
+   - 1px lift (120ms ease/exit: cubic-bezier(.22, 1, .36, 1))
+   - Focus-visible parity (:focus-visible has identical behavior)
+   - Reduced-motion fallback (color transition only, no scaleX / translateY)
+   - Column headers & bottom mono line stay static (do not have .footer-link)
+   ========================================================================== */
+
+.footer-link {
+  position: relative;
+  display: inline-block;
+  color: var(--gray-warm);
+  text-decoration: none;
+  transform: translateY(0);
+  transition:
+    color 120ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 120ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.footer-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 100%;
+  height: 2px;
+  background-color: var(--accent-primary);
+  transform: scaleX(0);
+  transform-origin: right center;
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+
+.footer-link:hover,
+.footer-link:focus-visible {
+  color: var(--ink-primary);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.footer-link:hover::after,
+.footer-link:focus-visible::after {
+  transform: scaleX(1);
+  transform-origin: left center;
+  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .footer-link {
+    transform: none !important;
+    transition: color 120ms ease !important;
+  }
+  .footer-link:hover,
+  .footer-link:focus-visible {
+    transform: none !important;
+  }
+  .footer-link::after,
+  .footer-link:hover::after,
+  .footer-link:focus-visible::after {
+    display: none !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+

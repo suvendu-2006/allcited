@@ -1434,3 +1434,6 @@ Landing (public) ──▶ "Try it free / Open Allcited" ──▶ AUTH SCREEN
 
 ## Gate
 Entering the workspace always shows the auth screen first · "Continue without login" reaches chat in one click, no dead ends · no "no signup"/"no account needed" strings remain anywhere · guest upgrade path (guest → sign-in → shelf) works without losing the loaded document.
+
+## §4.2 addendum — Footer link hover ("receipt underline")
+All footer links (Product · How it works · Pricing · Shelf · The exam · Release history · GitHub · Component gallery) get the signature hover: text `gray→ink/primary` + 2px seal-red underline drawing left→right (160ms) + 1px lift (120ms `ease/exit`); exit draws right→left (200ms) via transform-origin swap; `:focus-visible` parity; reduced-motion = color only; headers and mono footer line stay static. Pure CSS (`.footer-link::after` scaleX origin-swap — spec'd in chat, no JS). Column headers/bottom line never animate.
