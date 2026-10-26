@@ -306,19 +306,44 @@
 
 .dark .cl-socialButtonsBlockButton,
 .dark .cl-socialButtonsIconButton {
-  background-color: var(--bg-surface) !important;
+  background-color: var(--bg-sunken) !important;
   border-color: var(--border) !important;
   color: var(--ink-primary) !important;
 }
 
 .dark .cl-socialButtonsBlockButton:hover,
 .dark .cl-socialButtonsIconButton:hover {
-  background-color: var(--bg-sunken) !important;
+  background-color: var(--bg-surface) !important;
   border-color: var(--ink-primary) !important;
 }
 
-.dark .cl-socialButtonsProviderIcon {
-  filter: brightness(1.25) contrast(1.15);
+/* Ensure monochrome social icons (GitHub, X, Twitter, Apple) are crisp, bright and clearly visible in dark mode */
+.dark .cl-providerIcon__github,
+.dark .cl-providerIcon__x,
+.dark .cl-providerIcon__twitter,
+.dark .cl-providerIcon__apple,
+.dark .cl-socialButtonsProviderIcon__github,
+.dark .cl-socialButtonsProviderIcon__x,
+.dark .cl-socialButtonsProviderIcon__twitter,
+.dark .cl-socialButtonsProviderIcon__apple,
+.dark [data-provider="github"] img,
+.dark [data-provider="github"] svg,
+.dark [data-provider="x"] img,
+.dark [data-provider="x"] svg,
+.dark [data-provider="twitter"] img,
+.dark [data-provider="twitter"] svg,
+.dark [data-provider="apple"] img,
+.dark [data-provider="apple"] svg,
+.dark .cl-socialButtonsIconButton:not([data-provider="google"]) img,
+.dark .cl-socialButtonsIconButton:not([data-provider="google"]) svg,
+.dark .cl-socialButtonsBlockButton:not([data-provider="google"]) img,
+.dark .cl-socialButtonsBlockButton:not([data-provider="google"]) svg {
+  filter: invert(1) brightness(1.8) contrast(1.2) !important;
+}
+
+.dark .cl-socialButtonsIconButton:not([data-provider="google"]) svg path,
+.dark .cl-socialButtonsBlockButton:not([data-provider="google"]) svg path {
+  fill: #EFEAD9 !important;
 }
 
 .dark .cl-formFieldInput {

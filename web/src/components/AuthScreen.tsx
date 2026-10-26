@@ -43,9 +43,19 @@ export function AuthScreen({ onContinueAsGuest, onBackToHome }: AuthScreenProps)
           )}
         </div>
 
-        <Link href="/" className="font-handwriting text-2xl text-ink-primary -rotate-2 select-none">
-          Allcited.
-        </Link>
+        {onBackToHome ? (
+          <button
+            type="button"
+            onClick={onBackToHome}
+            className="font-handwriting text-2xl text-ink-primary -rotate-2 select-none hover:opacity-90 transition-opacity cursor-pointer"
+          >
+            Allcited.
+          </button>
+        ) : (
+          <Link href="/" className="font-handwriting text-2xl text-ink-primary -rotate-2 select-none hover:opacity-90 transition-opacity">
+            Allcited.
+          </Link>
+        )}
 
         <div className="w-16" aria-hidden="true" />
       </header>
@@ -84,10 +94,13 @@ export function AuthScreen({ onContinueAsGuest, onBackToHome }: AuthScreenProps)
                   card: "bg-bg-surface border border-border shadow-md rounded-interactive p-6 w-full text-ink-primary overflow-hidden",
                   headerTitle: "text-ink-primary font-display font-semibold text-xl",
                   headerSubtitle: "text-gray-warm text-xs",
-                  socialButtonsBlockButton: "border border-border bg-bg-surface hover:bg-bg-sunken text-ink-primary text-xs h-10 transition-colors shadow-2xs",
+                  socialButtonsBlockButton: "border border-border bg-bg-sunken hover:bg-bg-surface text-ink-primary text-xs h-10 transition-colors shadow-2xs",
                   socialButtonsBlockButtonText: "text-ink-primary font-medium",
-                  socialButtonsIconButton: "border border-border bg-bg-surface hover:bg-bg-sunken text-ink-primary transition-colors shadow-2xs",
-                  socialButtonsProviderIcon: "brightness-125 contrast-125",
+                  socialButtonsIconButton: "border border-border bg-bg-sunken hover:bg-bg-surface text-ink-primary transition-colors shadow-2xs",
+                  providerIcon__apple: isDark ? { filter: "invert(1) brightness(1.8)" } : {},
+                  providerIcon__github: isDark ? { filter: "invert(1) brightness(1.8)" } : {},
+                  providerIcon__x: isDark ? { filter: "invert(1) brightness(1.8)" } : {},
+                  providerIcon__twitter: isDark ? { filter: "invert(1) brightness(1.8)" } : {},
                   formButtonPrimary: "bg-accent-primary hover:opacity-90 text-white text-xs font-medium h-10 shadow-xs transition-opacity rounded-interactive",
                   formFieldInput: "bg-bg-sunken border border-border text-ink-primary placeholder:text-gray-warm text-xs rounded-interactive focus:border-accent-primary focus:ring-1 focus:ring-accent-primary",
                   formFieldLabel: "text-xs text-ink-primary font-medium",

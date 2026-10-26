@@ -197,6 +197,16 @@ export default function Home() {
           isInApp={inWorkspace}
           onOpenSettings={() => setIsSettingsOpen(true)}
           onOpenWorkspace={() => setInWorkspace(true)}
+          onGoHome={() => {
+            setInWorkspace(false);
+            if (typeof window !== "undefined") {
+              const url = new URL(window.location.href);
+              url.searchParams.delete("workspace");
+              url.searchParams.delete("session_id");
+              url.searchParams.delete("filename");
+              window.history.pushState({}, "", url.pathname);
+            }
+          }}
         />
 
         {/* Dynamic View: Workspace Mode vs Full Award Landing Page */}

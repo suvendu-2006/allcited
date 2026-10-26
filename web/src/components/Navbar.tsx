@@ -11,11 +11,12 @@ import { Settings } from "lucide-react";
 interface NavbarProps {
   onOpenSettings?: () => void;
   onOpenWorkspace?: () => void;
+  onGoHome?: () => void;
   apiConnected?: boolean;
   isInApp?: boolean;
 }
 
-export function Navbar({ onOpenSettings, onOpenWorkspace, isInApp }: NavbarProps) {
+export function Navbar({ onOpenSettings, onOpenWorkspace, onGoHome, isInApp }: NavbarProps) {
   const pathname = usePathname();
   const isAppView = isInApp || pathname === "/exam" || pathname === "/library" || pathname === "/dev";
 
@@ -70,7 +71,13 @@ export function Navbar({ onOpenSettings, onOpenWorkspace, isInApp }: NavbarProps
       {/* Center: Brand Logo */}
       <Link
         href="/"
-        className="group absolute left-1/2 -translate-x-1/2 flex items-center hover:opacity-90 transition-opacity"
+        onClick={(e) => {
+          if (onGoHome) {
+            e.preventDefault();
+            onGoHome();
+          }
+        }}
+        className="group absolute left-1/2 -translate-x-1/2 flex items-center hover:opacity-90 transition-opacity cursor-pointer"
       >
         <span className="font-handwriting text-3xl sm:text-4xl text-ink-primary tracking-wide -rotate-2 inline-block transition-transform duration-200 ease-out group-hover:scale-105 group-hover:-rotate-1">
           Allcited.
