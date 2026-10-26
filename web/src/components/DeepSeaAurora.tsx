@@ -1,70 +1,39 @@
 "use client";
 
 import React from "react";
-import { motion, useReducedMotion } from "framer-motion";
 import { HeroCubesCanvas } from "./HeroCubesCanvas";
 
 /**
  * Screenpipe Authentic Isometric Hero Background
- * Directly matching the user's Multi-Agent project:
- * - L1 Base: Warm Ink #0D0C0B (dark) / Paper #F5F2EA (light).
- * - Screenpipe 3D Isometric Cube Tessellation Canvas with kinetic waves & pointer reaction.
- * - Subtle ambient warm ember atmospheric under-glows.
- * - Vignette scrim guaranteeing pristine contrast.
+ * Directly matching Screenpipe (Image 2):
+ * - Clean neutral canvas: #F6F6F3 with subtle studio radial illumination (#FAFAFA center to #EDEDEA edges)
+ * - Pure monochromatic isometric 3D cube relief with top-face white specular highlights
+ * - Zero colored blobs (no orange/amber contamination)
  */
 export function EmberAurora() {
-  const shouldReduceMotion = useReducedMotion();
-
   return (
     <div
       aria-hidden="true"
       className="absolute inset-0 overflow-hidden pointer-events-none select-none z-0"
     >
-      {/* L1: Base Warm-Ink / Paper (#0D0C0B dark / #F5F2EA light) */}
-      <div className="absolute inset-0 bg-[#F5F2EA] dark:bg-[#0D0C0B] transition-colors duration-500" />
+      {/* L1: Clean Neutral Studio Canvas matching Screenpipe */}
+      <div
+        className="absolute inset-0 transition-colors duration-500 bg-[#F6F6F3] dark:bg-[#0D0C0B]"
+        style={{
+          background:
+            "radial-gradient(ellipse 100% 85% at 50% 35%, #FAFBFB 0%, #F6F6F3 40%, #EEEEEC 100%)",
+        }}
+      />
+      <div
+        className="hidden dark:block absolute inset-0 transition-colors duration-500"
+        style={{
+          background:
+            "radial-gradient(ellipse 95% 80% at 50% 38%, #141312 0%, #0D0C0B 50%, #080807 100%)",
+        }}
+      />
 
-      {/* Screenpipe Authentic Isometric Cube Tessellation Canvas from Multi-Agent */}
+      {/* Screenpipe Authentic Isometric Cube Tessellation Canvas */}
       <HeroCubesCanvas />
-
-      {/* Subtle Ambient Ember Glows Underneath */}
-      {/* Glow 1: Vermillion (#E8765A) Top-Left */}
-      <motion.div
-        animate={
-          shouldReduceMotion
-            ? undefined
-            : {
-                x: ["-4%", "3%", "-2%", "-4%"],
-                y: ["-3%", "4%", "-1%", "-3%"],
-              }
-        }
-        transition={{
-          duration: 18,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-        className="absolute -top-[12vmax] -left-[10vmax] w-[55vmax] h-[55vmax] rounded-full blur-[100px] opacity-[0.03] dark:opacity-[0.08] bg-[#E8765A] will-change-transform"
-      />
-
-      {/* Glow 2: Amber (#E8B04B) Right */}
-      <motion.div
-        animate={
-          shouldReduceMotion
-            ? undefined
-            : {
-                x: ["3%", "-4%", "2%", "3%"],
-                y: ["4%", "-3%", "3%", "4%"],
-              }
-        }
-        transition={{
-          duration: 22,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-        className="absolute top-[8vmax] -right-[12vmax] w-[45vmax] h-[45vmax] rounded-full blur-[100px] opacity-[0.02] dark:opacity-[0.05] bg-[#E8B04B] will-change-transform"
-      />
-
-      {/* Scrim Gradient to guarantee WCAG AA contrast over text zone */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-bg-base/10 to-bg-base pointer-events-none" />
     </div>
   );
 }

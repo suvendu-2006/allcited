@@ -23,11 +23,9 @@ export function HeroCubesCanvas() {
     let animId = 0;
 
     let isDark = false;
-    let monoRgb: [number, number, number] = [26, 25, 24];
 
     const updateColors = () => {
       isDark = document.documentElement.classList.contains("dark");
-      monoRgb = isDark ? [239, 234, 217] : [26, 25, 24];
     };
 
     updateColors();
@@ -90,7 +88,6 @@ export function HeroCubesCanvas() {
         curY += (mouseY - curY) * 0.08;
       }
 
-      const [rVal, gVal, bVal] = monoRgb;
       const cols = Math.ceil(width / h) + 2;
       const rows = Math.ceil(height / 51) + 2;
 
@@ -108,13 +105,38 @@ export function HeroCubesCanvas() {
             : 0;
           const k = clamp01((wave + pointerWave * 0.8 + 1) / 2);
 
-          const yDist = clamp01(1 - distCenter / (0.85 * Math.max(width, height)));
-          const baseAlpha = isDark ? 0.02 : 0.012;
-          const faceAlphas = [
-            lerp(baseAlpha, baseAlpha * 3.2, k),
-            lerp(baseAlpha * 3.2, baseAlpha, k),
-            baseAlpha * 1.8 + baseAlpha * k,
-          ];
+          // 3 isometric faces per cube (directly matching Screenpipe):
+          // face 0: Top face (diamond) -> catches light from above (brightest highlight)
+          // face 1: Right face -> shadow face (darkest)
+          // face 2: Left face -> ambient mid-tone
+          let fill0: string, fill1: string, fill2: string, strokeStyle: string;
+
+          if (!isDark) {
+            // Screenpipe Light Mode (Image 2):
+            // Top face is bright pure white highlight (relieved against off-white canvas)
+            const topAlpha = lerp(0.85, 1.0, k);
+            fill0 = `rgba(255, 255, 255, ${topAlpha})`;
+            // Right face has subtle shadow (~RGB 238)
+            const rightAlpha = lerp(0.015, 0.03, k);
+            fill1 = `rgba(0, 0, 0, ${rightAlpha})`;
+            // Left face has soft ambient tint (~RGB 243)
+            const leftAlpha = lerp(0.005, 0.012, k);
+            fill2 = `rgba(0, 0, 0, ${leftAlpha})`;
+            // Clean crisp subtle light-gray stroke
+            const strokeAlpha = lerp(0.04, 0.065, k);
+            strokeStyle = `rgba(0, 0, 0, ${strokeAlpha})`;
+          } else {
+            // Screenpipe Dark Mode:
+            const topAlpha = lerp(0.045, 0.085, k);
+            fill0 = `rgba(255, 255, 255, ${topAlpha})`;
+            const rightAlpha = lerp(0.01, 0.022, k);
+            fill1 = `rgba(255, 255, 255, ${rightAlpha})`;
+            const leftAlpha = lerp(0.02, 0.045, k);
+            fill2 = `rgba(255, 255, 255, ${leftAlpha})`;
+            strokeStyle = `rgba(255, 255, 255, ${lerp(0.065, 0.095, k)})`;
+          }
+
+          const faceFills = [fill0, fill1, fill2];
 
           for (let f = 0; f < 3; f++) {
             const face = faces[f];
@@ -127,11 +149,10 @@ export function HeroCubesCanvas() {
               else ctx.lineTo(px, py);
             }
             ctx.closePath();
-            ctx.fillStyle = `rgba(${rVal},${gVal},${bVal},${faceAlphas[f]})`;
+            ctx.fillStyle = faceFills[f];
             ctx.fill();
             ctx.lineWidth = 0.75;
-            const strokeAlpha = (isDark ? 0.08 : 0.055) + 0.04 * yDist;
-            ctx.strokeStyle = `rgba(${rVal},${gVal},${bVal},${strokeAlpha})`;
+            ctx.strokeStyle = strokeStyle;
             ctx.stroke();
           }
         }
@@ -166,20 +187,20 @@ export function HeroCubesCanvas() {
 
   return (
     <>
-      {/* 3D Isometric Tessellation Canvas - Pure Neutral Monochromatic Grid */}
+      {/* 3D Isometric Tessellation Canvas - Pure Screenpipe Monochromatic Relief */}
       <canvas
         ref={canvasRef}
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-0 opacity-80 dark:opacity-75"
+        className="pointer-events-none absolute inset-0 z-0 opacity-100"
         style={{ display: "block", width: "100%", height: "100%" }}
       />
-      {/* Soft edge vignette to smoothly blend into the section borders */}
+      {/* Soft edge vignette to smoothly blend into edges */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-0 opacity-40 dark:opacity-60"
+        className="pointer-events-none absolute inset-0 z-0 opacity-25 dark:opacity-60"
         style={{
           background:
-            "radial-gradient(ellipse 85% 75% at 50% 50%, transparent 35%, var(--bg-base) 100%)",
+            "radial-gradient(ellipse 95% 85% at 50% 38%, transparent 55%, rgba(220, 220, 216, 0.4) 100%)",
         }}
       />
     </>
