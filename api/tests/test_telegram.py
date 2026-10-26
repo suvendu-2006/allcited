@@ -283,7 +283,6 @@ def test_telegram_error_event_handling():
 def test_telegram_markdown_fallback_on_parse_error():
     """Verify TelegramClient falls back to plain text when Telegram API rejects Markdown entities."""
     import httpx
-    import pytest
 
     # Create client with dummy token
     tg = TelegramClient(token="dummy_token")

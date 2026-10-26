@@ -1,9 +1,5 @@
-from pathlib import Path
 
-from app.pipeline.chunker import chunk_blocks
 from app.pipeline.embed import EmbeddingManager
-from app.pipeline.indexes import DocumentIndex
-from app.pipeline.parsers.pdf import parse_pdf
 
 
 def test_embed_and_hash_cache():

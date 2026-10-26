@@ -1,5 +1,4 @@
 import json
-from pathlib import Path
 from typing import List
 
 from fastapi.testclient import TestClient

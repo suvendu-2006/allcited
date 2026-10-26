@@ -8,7 +8,6 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.pipeline.answer import post_pass_citations
 from app.pipeline.chunker import Chunk, chunk_blocks
-from app.pipeline.parsers.pdf import parse_pdf
 from app.pipeline.twohop import TwoHopChunk
 
 
