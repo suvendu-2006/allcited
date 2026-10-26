@@ -9,85 +9,38 @@ interface InteractiveOrbitClockProps {
 }
 
 /**
- * Interactive Orbit Clock & Time Controller
+ * Interactive Orbit Theme Dial
  * - 60fps/120fps hardware-accelerated draggable satellite dot on circular wire orbit.
- * - Smoothly updates time in real-time as user drags around the 24-hour cycle.
- * - While dragging: silently flips theme classes without stutter or layout lag.
- * - On release / click: triggers the crisp screen-center triangle transition if theme changed.
- * - Label indicates "LOCAL TIME" or "TIME TRAVELLER" (with ↺ reset).
+ * - Minimalist, pure circular orbit dial without text clutter (no time numbers, no label).
+ * - Dragging around the circle switches theme:
+ *     Top (0°) / Day -> Light Theme
+ *     Bottom (180°) / Night -> Dark Theme
+ * - Direct click toggles between light and dark themes with the equilateral triangle transition.
  */
 export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockProps) {
   const { theme, setTheme } = useTheme();
-  const dialRef = useRef<HTMLDivElement>(null);
+  const dialRef = useRef<HTMLButtonElement>(null);
   const dotRef = useRef<HTMLDivElement>(null);
 
-  // Time state: hours and minutes
-  const [hours, setHours] = useState<number>(11);
-  const [minutes, setMinutes] = useState<number>(30);
-  const [isTimeTraveller, setIsTimeTraveller] = useState<boolean>(false);
+  const [currentAngle, setCurrentAngle] = useState<number>(theme === "dark" ? 180 : 0);
   const [isDragging, setIsDragging] = useState<boolean>(false);
 
-  // Real local time reference
-  const realTimeRef = useRef<{ h: number; m: number }>({ h: 11, m: 30 });
-  const isTimeTravellerRef = useRef(false);
-  isTimeTravellerRef.current = isTimeTraveller;
-
-  // Track theme at start of drag to know if it flipped
   const initialThemeOnDrag = useRef<"light" | "dark">(theme);
   const currentTargetTheme = useRef<"light" | "dark">(theme);
 
-  // Animation frame throttle ref
   const rafId = useRef<number | null>(null);
   const pendingCoords = useRef<{ x: number; y: number } | null>(null);
+  const pointerStartPos = useRef<{ x: number; y: number; time: number } | null>(null);
 
-  // Initialize and run real-time clock tick
+  // Sync angle when theme changes externally
   useEffect(() => {
-    const updateRealTime = () => {
-      const now = new Date();
-      const h = now.getHours();
-      const m = now.getMinutes();
-      realTimeRef.current = { h, m };
+    if (!isDragging) {
+      setCurrentAngle(theme === "dark" ? 180 : 0);
+      currentTargetTheme.current = theme;
+    }
+  }, [theme, isDragging]);
 
-      if (!isTimeTravellerRef.current) {
-        setHours(h);
-        setMinutes(m);
-      }
-    };
-
-    updateRealTime();
-    const interval = setInterval(updateRealTime, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Update theme ref when theme prop updates
-  useEffect(() => {
-    currentTargetTheme.current = theme;
-  }, [theme]);
-
-  /**
-   * 24-Hour Cycle Angle Mapping:
-   * 12:00 Noon (brightest day) = 0° (Top, 12 o'clock)
-   * 18:00 Sunset = 90° (Right, 3 o'clock)
-   * 00:00 Midnight = 180° (Bottom, 6 o'clock)
-   * 06:00 Sunrise = 270° (Left, 9 o'clock)
-   * Daytime: 06:00 to 17:59 -> Light theme
-   * Nighttime: 18:00 to 05:59 -> Dark theme
-   */
-  const totalMinutes = hours * 60 + minutes;
-  const offsetFromNoon = (totalMinutes - 720 + 1440) % 1440;
-  const currentAngleDeg = (offsetFromNoon / 1440) * 360;
-
-  // Convert an angle in degrees [0, 360) to hours and minutes
-  const angleToTime = useCallback((deg: number) => {
-    const normalized = (deg % 360 + 360) % 360;
-    const minsFromNoon = Math.round((normalized / 360) * 1440);
-    const finalMinutes = (minsFromNoon + 720) % 1440;
-    const h = Math.floor(finalMinutes / 60);
-    const m = finalMinutes % 60;
-    return { h, m };
-  }, []);
-
-  // Compute angle from event client coordinates relative to dial center
+  // Compute angle from client coordinates relative to dial center
   const getAngleFromCoords = useCallback((clientX: number, clientY: number) => {
     if (!dialRef.current) return 0;
     const rect = dialRef.current.getBoundingClientRect();
@@ -102,33 +55,22 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
     return deg;
   }, []);
 
-  // Apply time and theme smoothly during drag (silent class switch)
-  const applyTimeAtAngle = useCallback(
-    (deg: number, triggerAnimation = false) => {
-      const { h, m } = angleToTime(deg);
-      setHours(h);
-      setMinutes(m);
-      setIsTimeTraveller(true);
-
-      const shouldBeDark = h >= 18 || h < 6;
+  const applyThemeAtAngle = useCallback(
+    (deg: number) => {
+      setCurrentAngle(deg);
+      // Top half (270° to 90°) is Light; Bottom half (90° to 270°) is Dark
+      const shouldBeDark = deg >= 90 && deg < 270;
       const targetTheme = shouldBeDark ? "dark" : "light";
 
       if (currentTargetTheme.current !== targetTheme) {
         currentTargetTheme.current = targetTheme;
-        if (triggerAnimation) {
-          executeThemeTransition(shouldBeDark, () => {
-            setTheme(targetTheme, false);
-          });
-        } else {
-          // Direct silent switch while dragging to preserve 60/120fps fluid drag
-          setTheme(targetTheme, false);
-        }
+        // Direct silent switch while dragging to preserve 60/120fps fluid drag
+        setTheme(targetTheme, false);
       }
     },
-    [angleToTime, setTheme]
+    [setTheme]
   );
 
-  // Process dragging via requestAnimationFrame
   const processDrag = useCallback(() => {
     if (!pendingCoords.current) {
       rafId.current = null;
@@ -136,21 +78,27 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
     }
     const { x, y } = pendingCoords.current;
     const deg = getAngleFromCoords(x, y);
-    applyTimeAtAngle(deg, false);
+    applyThemeAtAngle(deg);
     rafId.current = null;
-  }, [getAngleFromCoords, applyTimeAtAngle]);
+  }, [getAngleFromCoords, applyThemeAtAngle]);
 
-  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.currentTarget.setPointerCapture(e.pointerId);
-    setIsDragging(true);
+  const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+    pointerStartPos.current = { x: e.clientX, y: e.clientY, time: Date.now() };
     initialThemeOnDrag.current = theme;
+    currentTargetTheme.current = theme;
+
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // Ignore
+    }
+    setIsDragging(true);
 
     const deg = getAngleFromCoords(e.clientX, e.clientY);
-    applyTimeAtAngle(deg, false);
+    applyThemeAtAngle(deg);
   };
 
-  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+  const handlePointerMove = (e: React.PointerEvent<HTMLButtonElement>) => {
     if (!isDragging) return;
     pendingCoords.current = { x: e.clientX, y: e.clientY };
     if (!rafId.current) {
@@ -158,7 +106,7 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
     }
   };
 
-  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+  const handlePointerUp = (e: React.PointerEvent<HTMLButtonElement>) => {
     if (!isDragging) return;
     try {
       e.currentTarget.releasePointerCapture(e.pointerId);
@@ -172,8 +120,22 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
       rafId.current = null;
     }
 
-    // If theme flipped during drag or on direct click, launch the triangle animation on finish
-    if (currentTargetTheme.current !== initialThemeOnDrag.current) {
+    const start = pointerStartPos.current;
+    const isClick =
+      start &&
+      Math.hypot(e.clientX - start.x, e.clientY - start.y) < 6 &&
+      Date.now() - start.time < 300;
+
+    if (isClick) {
+      // Simple click -> toggle theme
+      const nextTheme = theme === "dark" ? "light" : "dark";
+      const isDark = nextTheme === "dark";
+      executeThemeTransition(isDark, () => {
+        setTheme(nextTheme, false);
+        setCurrentAngle(isDark ? 180 : 0);
+      });
+    } else if (currentTargetTheme.current !== initialThemeOnDrag.current) {
+      // Drag flipped theme -> trigger triangle transition
       const isDark = currentTargetTheme.current === "dark";
       executeThemeTransition(isDark, () => {
         setTheme(currentTargetTheme.current, false);
@@ -181,80 +143,29 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
     }
   };
 
-  // Reset back to actual real local time
-  const resetToRealTime = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    const { h, m } = realTimeRef.current;
-    setHours(h);
-    setMinutes(m);
-    setIsTimeTraveller(false);
-
-    const shouldBeDark = h >= 18 || h < 6;
-    const targetTheme = shouldBeDark ? "dark" : "light";
-    if (theme !== targetTheme) {
-      executeThemeTransition(shouldBeDark, () => {
-        setTheme(targetTheme, false);
-      });
-    }
-  };
-
-  const formattedHours = String(hours).padStart(2, "0");
-  const formattedMinutes = String(minutes).padStart(2, "0");
-  const isDarkTarget = hours >= 18 || hours < 6;
-
-  // Dot position along the circular wire perimeter (radius = 12.5px)
+  // Dot position along circular perimeter (radius = 12.5px)
   const dialRadius = 12.5;
-  const rad = ((currentAngleDeg - 90) * Math.PI) / 180;
+  const rad = ((currentAngle - 90) * Math.PI) / 180;
   const dotX = dialRadius * Math.cos(rad);
   const dotY = dialRadius * Math.sin(rad);
 
+  const isDarkTarget = currentAngle >= 90 && currentAngle < 270;
+
   return (
-    <div className={`flex items-center gap-3 select-none ${className}`}>
-      {/* Time Digits & State Label */}
-      <div className="flex flex-col text-right leading-tight">
-        {isTimeTraveller ? (
-          <button
-            type="button"
-            onClick={resetToRealTime}
-            title="Click to reset to real local time"
-            className="group flex items-center justify-end gap-1 font-mono text-[9px] uppercase tracking-[0.14em] text-accent-primary font-bold hover:underline transition-all"
-          >
-            <span>TIME TRAVELLER</span>
-            <span className="text-[10px] group-hover:rotate-180 transition-transform duration-300">
-              ↺
-            </span>
-          </button>
-        ) : (
-          <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-gray-warm">
-            LOCAL TIME
-          </span>
-        )}
-
-        <div className="font-mono text-[11px] font-bold text-ink-primary tracking-wider tabular-nums flex items-center justify-end gap-1">
-          <span>{formattedHours}</span>
-          <span className={isTimeTraveller ? "text-accent-primary animate-pulse" : "opacity-70"}>
-            .
-          </span>
-          <span>{formattedMinutes}</span>
-        </div>
-      </div>
-
-      {/* Circular Orbit Dial (Minimalist Wire Circle, Clean & Unshadowed) */}
-      <div
+    <div className={`flex items-center select-none ${className}`}>
+      <button
         ref={dialRef}
+        type="button"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
-        title={
-          isTimeTraveller
-            ? "Drag dot to travel time & shift theme (Click ↺ to reset)"
-            : "Click or drag dot around the circle to change time & theme"
-        }
-        className={`relative w-8 h-8 rounded-full border border-ink-primary/25 dark:border-ink-primary/35 bg-transparent flex items-center justify-center transition-transform duration-100 touch-none ${
+        title={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+        aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+        className={`relative w-8 h-8 rounded-full border border-ink-primary/25 dark:border-ink-primary/35 bg-transparent flex items-center justify-center transition-transform duration-100 touch-none cursor-pointer ${
           isDragging
             ? "cursor-grabbing scale-105"
-            : "cursor-grab hover:border-accent-primary/60 hover:scale-102"
+            : "cursor-grab hover:border-accent-primary/60 hover:scale-105 active:scale-95"
         }`}
       >
         {/* Orbiting Satellite Dot */}
@@ -273,7 +184,7 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
             } ${isDragging ? "scale-125" : ""}`}
           />
         </div>
-      </div>
+      </button>
     </div>
   );
 }
