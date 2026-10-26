@@ -112,18 +112,18 @@ export function HeroCubesCanvas() {
           let fill0: string, fill1: string, fill2: string, strokeStyle: string;
 
           if (!isDark) {
-            // Screenpipe Light Mode (Image 2):
-            // Top face is bright pure white highlight (relieved against off-white canvas)
-            const topAlpha = lerp(0.85, 1.0, k);
+            // Light Mode: Exact isometric tumbling cubes matching dark mode geometry
+            const topAlpha = lerp(0.75, 0.95, k);
             fill0 = `rgba(255, 255, 255, ${topAlpha})`;
-            // Right face has subtle shadow (~RGB 238)
-            const rightAlpha = lerp(0.015, 0.03, k);
+            // Right face subtle shadow
+            const rightAlpha = lerp(0.02, 0.045, k);
             fill1 = `rgba(0, 0, 0, ${rightAlpha})`;
-            // Left face has soft ambient tint (~RGB 243)
-            const leftAlpha = lerp(0.005, 0.012, k);
+            // Left face ambient tint
+            const leftAlpha = lerp(0.008, 0.02, k);
             fill2 = `rgba(0, 0, 0, ${leftAlpha})`;
-            // Clean crisp subtle light-gray stroke
-            const strokeAlpha = lerp(0.04, 0.065, k);
+            // Clean crisp subtle stroke matching dark mode grid fidelity
+            const yDist = clamp01(1 - distCenter / (0.85 * Math.max(width, height)));
+            const strokeAlpha = 0.065 + 0.035 * yDist;
             strokeStyle = `rgba(0, 0, 0, ${strokeAlpha})`;
           } else {
             // Restored Dark Mode: Warm Ink & Paper palette (#EF EAD9 / Warm Paper)

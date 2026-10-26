@@ -8,32 +8,31 @@ interface InteractiveOrbitClockProps {
 }
 
 /**
- * 24-Hour Cycle Angle Mapping:
- * 12:00 Noon = 0° (Top, 12 o'clock)
- * 18:00 Sunset = 90° (Right, 3 o'clock)
- * 00:00 Midnight = 180° (Bottom, 6 o'clock)
- * 06:00 Sunrise = 270° (Left, 9 o'clock)
+ * Standard 12-Hour Clock Angle Mapping:
+ * 12:00 = 0° (Top, 12 o'clock)
+ * 03:00 = 90° (Right, 3 o'clock)
+ * 06:00 = 180° (Bottom, 6 o'clock)
+ * 09:00 = 270° (Left, 9 o'clock)
  */
 function angleToTime(deg: number) {
   const normalized = ((deg % 360) + 360) % 360;
-  const minsFromNoon = Math.round((normalized / 360) * 1440);
-  const finalMinutes = (minsFromNoon + 720) % 1440;
-  const h = Math.floor(finalMinutes / 60);
-  const m = finalMinutes % 60;
+  const totalMinutes = Math.round((normalized / 360) * 720) % 720;
+  const rawH = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  const h = rawH === 0 ? 12 : rawH;
   return { h, m };
 }
 
 function timeToAngle(h: number, m: number) {
-  const totalMinutes = h * 60 + m;
-  const offsetFromNoon = (totalMinutes - 720 + 1440) % 1440;
-  return (offsetFromNoon / 1440) * 360;
+  const hour12 = h % 12;
+  return ((hour12 + m / 60) / 12) * 360;
 }
 
 function isNearRealTime(h: number, m: number, realH: number, realM: number) {
-  const targetTotal = h * 60 + m;
-  const realTotal = realH * 60 + realM;
+  const targetTotal = ((h % 12) * 60 + m) % 720;
+  const realTotal = ((realH % 12) * 60 + realM) % 720;
   const diff = Math.abs(targetTotal - realTotal);
-  const circularDiff = Math.min(diff, 1440 - diff);
+  const circularDiff = Math.min(diff, 720 - diff);
   return circularDiff <= 10; // within 10 minutes of real time
 }
 
@@ -52,7 +51,6 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
   const isTimeTravellerRef = useRef(false);
   isTimeTravellerRef.current = isTimeTraveller;
 
-  const currentTargetTheme = useRef<"light" | "dark">(theme);
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
   const hasMovedRef = useRef(false);
 
@@ -98,40 +96,17 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
       setHours(h);
       setMinutes(m);
       setIsTimeTraveller(false);
-
-      const shouldBeDark = h >= 18 || h < 6;
-      const targetTheme = shouldBeDark ? "dark" : "light";
-      if (theme !== targetTheme) {
-        setTheme(targetTheme, false);
-      }
     },
-    [theme, setTheme]
+    []
   );
 
-  // Toggle time travel on direct click/tap of the dot or circle
+  // Toggle theme on direct click/tap of the dot or circle
   const toggleTimeTravel = useCallback(() => {
-    // If currently dark, flip to light; if light, flip to dark
     const nextDark = theme !== "dark";
-    const real = realTimeRef.current;
-    const realIsDark = real.h >= 18 || real.h < 6;
-
-    if (nextDark === realIsDark) {
-      // Returning to the theme corresponding to real local time: restore real time!
-      setHours(real.h);
-      setMinutes(real.m);
-      setIsTimeTraveller(false);
-    } else {
-      // Traveling away from real local time to opposite theme
-      const travelHours = nextDark ? 0 : 12;
-      setHours(travelHours);
-      setMinutes(0);
-      setIsTimeTraveller(true);
-    }
-
     setTheme(nextDark ? "dark" : "light", false);
   }, [theme, setTheme]);
 
-  // Apply time and theme based on dial angle
+  // Apply time based on dial angle
   const applyTimeAtAngle = useCallback(
     (deg: number) => {
       const { h, m } = angleToTime(deg);
@@ -148,16 +123,8 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
         setMinutes(m);
         setIsTimeTraveller(true);
       }
-
-      const shouldBeDark = h >= 18 || h < 6;
-      const targetTheme = shouldBeDark ? "dark" : "light";
-
-      if (currentTargetTheme.current !== targetTheme) {
-        currentTargetTheme.current = targetTheme;
-        setTheme(targetTheme, false);
-      }
     },
-    [setTheme]
+    []
   );
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -208,7 +175,7 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
   };
 
   const currentAngleDeg = timeToAngle(hours, minutes);
-  const isDarkTarget = hours >= 18 || hours < 6;
+  const isDark = theme === "dark";
 
   // Dot position along the circular wire perimeter (radius = 12.5px)
   const dialRadius = 12.5;
@@ -260,7 +227,7 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
         >
           <div
             className={`w-2 h-2 rounded-full border transition-colors ${
-              isDarkTarget
+              isDark
                 ? "bg-accent-primary border-accent-primary shadow-[0_0_6px_rgba(232,118,90,0.85)]"
                 : "bg-ink-primary border-bg-surface shadow-[0_0_4px_rgba(26,25,24,0.4)]"
             } ${isDragging ? "scale-125" : ""}`}

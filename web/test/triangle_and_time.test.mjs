@@ -20,45 +20,50 @@ describe('Equilateral Triangle Geometry & Non-scaling Stroke', () => {
   });
 });
 
-describe('Interactive Orbit Clock 24-Hour Angle & Day/Night Mapping', () => {
+describe('Interactive Orbit Clock 12-Hour Angle & Position Mapping', () => {
   function angleToTime(deg) {
-    const normalized = (deg % 360 + 360) % 360;
-    const minsFromNoon = Math.round((normalized / 360) * 1440);
-    const finalMinutes = (minsFromNoon + 720) % 1440;
-    const h = Math.floor(finalMinutes / 60);
-    const m = finalMinutes % 60;
+    const normalized = ((deg % 360) + 360) % 360;
+    const totalMinutes = Math.round((normalized / 360) * 720) % 720;
+    const rawH = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+    const h = rawH === 0 ? 12 : rawH;
     return { h, m };
   }
 
-  function isNight(h) {
-    return h >= 18 || h < 6;
+  function timeToAngle(h, m) {
+    const hour12 = h % 12;
+    return ((hour12 + m / 60) / 12) * 360;
   }
 
-  it('Top (0 deg) maps to 12:00 (Noon, Day/Light)', () => {
+  it('Top (0 deg) maps to 12:00', () => {
     const { h, m } = angleToTime(0);
     assert.strictEqual(h, 12);
     assert.strictEqual(m, 0);
-    assert.strictEqual(isNight(h), false);
   });
 
-  it('Right (90 deg) maps to 18:00 (Sunset, Night/Dark)', () => {
+  it('Right (90 deg) maps to 03:00 (3 o\'clock position)', () => {
     const { h, m } = angleToTime(90);
-    assert.strictEqual(h, 18);
+    assert.strictEqual(h, 3);
     assert.strictEqual(m, 0);
-    assert.strictEqual(isNight(h), true);
   });
 
-  it('Bottom (180 deg) maps to 00:00 (Midnight, Night/Dark)', () => {
+  it('Time 3:13 maps directly to 3 o\'clock position (96.5 deg)', () => {
+    const deg = timeToAngle(3, 13);
+    assert.strictEqual(Math.round(deg * 10) / 10, 96.5);
+    const { h, m } = angleToTime(deg);
+    assert.strictEqual(h, 3);
+    assert.strictEqual(m, 13);
+  });
+
+  it('Bottom (180 deg) maps to 06:00 (6 o\'clock position)', () => {
     const { h, m } = angleToTime(180);
-    assert.strictEqual(h, 0);
-    assert.strictEqual(m, 0);
-    assert.strictEqual(isNight(h), true);
-  });
-
-  it('Left (270 deg) maps to 06:00 (Sunrise, Day/Light)', () => {
-    const { h, m } = angleToTime(270);
     assert.strictEqual(h, 6);
     assert.strictEqual(m, 0);
-    assert.strictEqual(isNight(h), false);
+  });
+
+  it('Left (270 deg) maps to 09:00 (9 o\'clock position)', () => {
+    const { h, m } = angleToTime(270);
+    assert.strictEqual(h, 9);
+    assert.strictEqual(m, 0);
   });
 });
