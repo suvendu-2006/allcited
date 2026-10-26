@@ -92,4 +92,36 @@ describe('Interactive Orbit Clock 12-Hour Angle & Position Mapping', () => {
     assert.strictEqual(h, 21);
     assert.strictEqual(m, 0);
   });
+
+  it('Continuous delta rotation advances time and transitions across 6:00 AM sunrise and 6:00 PM sunset', () => {
+    // Start at 4:00 AM (Night / Dark)
+    let totalMinutes = 4 * 60; // 240 min
+    assert.strictEqual(isNight(Math.floor(totalMinutes / 60)), true);
+
+    // Rotate clockwise by +60 deg -> +120 minutes -> 6:00 AM (Sunrise -> Light)
+    const deltaDeg1 = 60;
+    totalMinutes = (totalMinutes + deltaDeg1 * 2) % 1440;
+    assert.strictEqual(totalMinutes, 360); // 6:00 AM
+    assert.strictEqual(isNight(Math.floor(totalMinutes / 60)), false);
+
+    // Rotate clockwise by another +360 deg -> +720 minutes -> 6:00 PM (Sunset -> Dark)
+    const deltaDeg2 = 360;
+    totalMinutes = (totalMinutes + deltaDeg2 * 2) % 1440;
+    assert.strictEqual(totalMinutes, 1080); // 18:00 (6:00 PM)
+    assert.strictEqual(isNight(Math.floor(totalMinutes / 60)), true);
+
+    // Rotate counter-clockwise by -60 deg -> -120 minutes -> 4:00 PM (Light)
+    const deltaDeg3 = -60;
+    totalMinutes = (totalMinutes + deltaDeg3 * 2) % 1440;
+    assert.strictEqual(totalMinutes, 960); // 16:00 (4:00 PM)
+    assert.strictEqual(isNight(Math.floor(totalMinutes / 60)), false);
+  });
+
+  it('InteractiveOrbitClock source code contains zero title tooltips', async () => {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const src = fs.readFileSync(path.resolve('src/components/ui/InteractiveOrbitClock.tsx'), 'utf-8');
+    assert.strictEqual(src.includes('title='), false, 'Should have zero title attributes to prevent browser tooltips');
+    assert.ok(src.includes('aria-label="Orbit clock theme switcher"'));
+  });
 });

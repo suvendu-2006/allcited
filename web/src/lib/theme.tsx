@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 
 type Theme = "light" | "dark";
 
@@ -41,7 +41,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setMounted(true);
   }, []);
 
-  const applyThemeClasses = (nextTheme: Theme) => {
+  const applyThemeClasses = useCallback((nextTheme: Theme) => {
     setThemeState(nextTheme);
     sessionStorage.setItem("allcited_theme_manual", "true");
     localStorage.setItem("allcited_theme", nextTheme);
@@ -50,17 +50,23 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     } else {
       document.documentElement.classList.remove("dark");
     }
-  };
+  }, []);
 
-  const setTheme = (nextTheme: Theme) => {
-    if (nextTheme === theme) return;
+  const setTheme = useCallback((nextTheme: Theme) => {
+    if (typeof document !== "undefined") {
+      const isCurrentlyDark = document.documentElement.classList.contains("dark");
+      if (isCurrentlyDark === (nextTheme === "dark")) return;
+    }
     applyThemeClasses(nextTheme);
-  };
+  }, [applyThemeClasses]);
 
-  const toggleTheme = () => {
-    const nextTheme: Theme = theme === "dark" ? "light" : "dark";
+  const toggleTheme = useCallback(() => {
+    const isCurrentlyDark = typeof document !== "undefined"
+      ? document.documentElement.classList.contains("dark")
+      : theme === "dark";
+    const nextTheme: Theme = isCurrentlyDark ? "light" : "dark";
     applyThemeClasses(nextTheme);
-  };
+  }, [applyThemeClasses, theme]);
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>

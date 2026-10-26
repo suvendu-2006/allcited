@@ -14,20 +14,6 @@ interface InteractiveOrbitClockProps {
  * 06:00 = 180° (Bottom, 6 o'clock)
  * 09:00 = 270° (Left, 9 o'clock)
  */
-function angleToTime(deg: number, isPM: boolean) {
-  const normalized = ((deg % 360) + 360) % 360;
-  const totalMinutes12 = Math.round((normalized / 360) * 720) % 720;
-  const rawH = Math.floor(totalMinutes12 / 60);
-  const m = totalMinutes12 % 60;
-  let h24: number;
-  if (isPM) {
-    h24 = rawH === 0 ? 12 : rawH + 12;
-  } else {
-    h24 = rawH === 0 ? 0 : rawH;
-  }
-  return { h: h24, m };
-}
-
 function timeToAngle(h: number, m: number) {
   const hour12 = h % 12;
   return ((hour12 + m / 60) / 12) * 360;
@@ -51,16 +37,15 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
   const [isTimeTraveller, setIsTimeTraveller] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
 
-  // Live real time reference
+  // Live real time reference & total minutes accumulator (0..1439)
   const realTimeRef = useRef<{ h: number; m: number }>({ h: 12, m: 0 });
+  const totalMinutesRef = useRef<number>(12 * 60);
   const isTimeTravellerRef = useRef(false);
   isTimeTravellerRef.current = isTimeTraveller;
 
-  const isPmRef = useRef(false);
   const lastAngleRef = useRef(0);
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
   const hasMovedRef = useRef(false);
-  const currentTargetTheme = useRef<"light" | "dark">(theme);
 
   // Real-time clock tick: updates live time when not time-travelling
   useEffect(() => {
@@ -73,7 +58,7 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
       if (!isTimeTravellerRef.current) {
         setHours(h);
         setMinutes(m);
-        isPmRef.current = h >= 12;
+        totalMinutesRef.current = h * 60 + m;
       }
     };
 
@@ -93,7 +78,7 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
 
     const rad = Math.atan2(dy, dx);
     let deg = (rad * 180) / Math.PI;
-    deg = (deg + 90 + 360) % 360; // 0 deg is Top
+    deg = (deg + 90 + 360) % 360; // 0 deg is Top (12 o'clock)
     return deg;
   }, []);
 
@@ -104,7 +89,7 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
       const { h, m } = realTimeRef.current;
       setHours(h);
       setMinutes(m);
-      isPmRef.current = h >= 12;
+      totalMinutesRef.current = h * 60 + m;
       setIsTimeTraveller(false);
       if (typeof window !== "undefined") {
         sessionStorage.removeItem("allcited_theme_manual");
@@ -112,57 +97,51 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
 
       const shouldBeDark = h >= 18 || h < 6;
       const targetTheme = shouldBeDark ? "dark" : "light";
-      if (theme !== targetTheme) {
-        currentTargetTheme.current = targetTheme;
-        setTheme(targetTheme, false);
-      }
+      setTheme(targetTheme, false);
     },
-    [theme, setTheme]
+    [setTheme]
   );
 
   // Toggle theme on direct click/tap of the dot or circle
   const toggleTheme = useCallback(() => {
     const nextDark = theme !== "dark";
     const targetTheme = nextDark ? "dark" : "light";
-    currentTargetTheme.current = targetTheme;
     setTheme(targetTheme, false);
 
-    // Synchronize hours to match the toggled theme (flip AM/PM if out of theme phase)
-    if (nextDark) {
-      if (hours >= 6 && hours < 18) {
-        setHours((prev) => (prev + 12) % 24);
-        isPmRef.current = !isPmRef.current;
-      }
-    } else {
-      if (hours >= 18 || hours < 6) {
-        setHours((prev) => (prev + 12) % 24);
-        isPmRef.current = !isPmRef.current;
-      }
-    }
-  }, [theme, setTheme, hours]);
+    // Synchronize clock time by 12 hours (flip Day <-> Night while keeping dot angle aligned)
+    const newTotal = (totalMinutesRef.current + 720) % 1440;
+    totalMinutesRef.current = newTotal;
+    const h = Math.floor(newTotal / 60);
+    const m = Math.floor(newTotal % 60);
+    setHours(h);
+    setMinutes(m);
+    setIsTimeTraveller(true);
+  }, [theme, setTheme]);
 
-  // Apply time and theme dynamically as the dot rotates
-  const applyTimeAtAngle = useCallback(
-    (deg: number) => {
-      // Check for crossing 12 o'clock boundary (0 deg) to flip AM/PM
-      const prev = lastAngleRef.current;
-      if (prev > 300 && deg < 60) {
-        // Clockwise crossing 12 o'clock
-        isPmRef.current = !isPmRef.current;
-      } else if (prev < 60 && deg > 300) {
-        // Counter-clockwise crossing 12 o'clock
-        isPmRef.current = !isPmRef.current;
-      }
-      lastAngleRef.current = deg;
+  // Apply continuous rotational movement to clock time
+  const applyRotationDelta = useCallback(
+    (currentAngle: number) => {
+      // Calculate shortest angular delta (-180 to +180)
+      let deltaDeg = currentAngle - lastAngleRef.current;
+      while (deltaDeg > 180) deltaDeg -= 360;
+      while (deltaDeg < -180) deltaDeg += 360;
+      lastAngleRef.current = currentAngle;
 
-      const { h, m } = angleToTime(deg, isPmRef.current);
+      // In a 12-hour clock face: 360° = 720 minutes => 1° = 2 minutes
+      const deltaMinutes = deltaDeg * 2;
+      let newTotal = (totalMinutesRef.current + deltaMinutes) % 1440;
+      if (newTotal < 0) newTotal += 1440;
+      totalMinutesRef.current = newTotal;
+
+      const h = Math.floor(newTotal / 60);
+      const m = Math.floor(newTotal % 60);
+
       const real = realTimeRef.current;
       const nearReal = isNearRealTime(h, m, real.h, real.m);
 
       if (nearReal) {
         setHours(real.h);
         setMinutes(real.m);
-        isPmRef.current = real.h >= 12;
         setIsTimeTraveller(false);
       } else {
         setHours(h);
@@ -170,18 +149,22 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
         setIsTimeTraveller(true);
       }
 
-      // DYNAMIC THEME SWITCH ON ROTATION
-      const shouldBeDark = h >= 18 || h < 6;
-      const targetTheme = shouldBeDark ? "dark" : "light";
-      if (currentTargetTheme.current !== targetTheme) {
-        currentTargetTheme.current = targetTheme;
-        setTheme(targetTheme, false);
-      }
+      // Authentic Clock Theme: 6:00 AM to 6:00 PM is Day (Light), 6:00 PM to 6:00 AM is Night (Dark)
+      const isNight = h >= 18 || h < 6;
+      const targetTheme = isNight ? "dark" : "light";
+      setTheme(targetTheme, false);
     },
     [setTheme]
   );
 
+  const applyRotationDeltaRef = useRef(applyRotationDelta);
+  applyRotationDeltaRef.current = applyRotationDelta;
+
+  const toggleThemeRef = useRef(toggleTheme);
+  toggleThemeRef.current = toggleTheme;
+
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.preventDefault();
     pointerStartRef.current = { x: e.clientX, y: e.clientY };
     hasMovedRef.current = false;
     lastAngleRef.current = getAngleFromCoords(e.clientX, e.clientY);
@@ -200,7 +183,7 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
 
       if (hasMovedRef.current) {
         const deg = getAngleFromCoords(moveEvent.clientX, moveEvent.clientY);
-        applyTimeAtAngle(deg);
+        applyRotationDeltaRef.current(deg);
       }
     };
 
@@ -215,7 +198,7 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
       setIsDragging(false);
 
       if (!wasDragging) {
-        toggleTheme();
+        toggleThemeRef.current();
       }
     };
 
@@ -240,7 +223,7 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
         <button
           type="button"
           onClick={resetToRealTime}
-          title="Time traveller active · Click to return to local time"
+          aria-label="Time traveller active. Click to return to local time"
           className="group flex items-center justify-end gap-1 font-mono text-[8.5px] sm:text-[9px] uppercase tracking-[0.1em] sm:tracking-[0.14em] text-accent-primary font-bold hover:underline transition-all cursor-pointer flex-shrink-0 animate-fade-in"
         >
           <span>TIME TRAVELLER</span>
@@ -250,16 +233,12 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
         </button>
       )}
 
-      {/* Circular Orbit Dial (Minimalist Wire Circle with Microanimations) */}
+      {/* Circular Orbit Dial (Minimalist Wire Circle with Microanimations - No Title Tooltips) */}
       <div
         ref={dialRef}
         data-testid="orbit-clock-dial"
         onPointerDown={handlePointerDown}
-        title={
-          isTimeTraveller
-            ? "Time travel active. Drag dot to rotate time & shift theme (Click ↺ to reset)"
-            : "Click dot to toggle theme or drag around circle to shift theme"
-        }
+        aria-label="Orbit clock theme switcher"
         className={`relative w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-ink-primary/25 dark:border-ink-primary/35 bg-transparent flex items-center justify-center transition-all duration-200 touch-none cursor-pointer flex-shrink-0 ${
           isDragging
             ? "cursor-grabbing scale-110 border-accent-primary/80 shadow-[0_0_8px_rgba(232,118,90,0.3)]"
