@@ -1,7 +1,6 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { executeThemeTransition } from "@/components/ThemeTransitionOverlay";
 
 type Theme = "light" | "dark";
 
@@ -46,22 +45,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const setTheme = (nextTheme: Theme, animate = true) => {
+  const setTheme = (nextTheme: Theme) => {
     if (nextTheme === theme) return;
-    if (animate) {
-      executeThemeTransition(nextTheme === "dark", (isDark) => {
-        applyThemeClasses(isDark ? "dark" : "light");
-      });
-    } else {
-      applyThemeClasses(nextTheme);
-    }
+    applyThemeClasses(nextTheme);
   };
 
   const toggleTheme = () => {
     const nextTheme: Theme = theme === "dark" ? "light" : "dark";
-    executeThemeTransition(nextTheme === "dark", (isDark) => {
-      applyThemeClasses(isDark ? "dark" : "light");
-    });
+    applyThemeClasses(nextTheme);
   };
 
   return (

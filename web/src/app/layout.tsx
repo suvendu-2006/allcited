@@ -5,7 +5,6 @@ import { dark } from "@clerk/themes";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/lib/theme";
-import { ThemeTransitionOverlay } from "@/components/ThemeTransitionOverlay";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -89,7 +88,6 @@ export default function RootLayout({
       >
         <body className="antialiased min-h-screen bg-bg-base text-ink-primary selection:bg-accent-primary/20 selection:text-ink-primary">
           <ThemeProvider>
-            <ThemeTransitionOverlay />
             {children}
           </ThemeProvider>
         </body>

@@ -28,7 +28,7 @@ export function Navbar({ onOpenSettings, onOpenWorkspace, onGoHome, isInApp }: N
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full border-b border-border bg-bg-surface/90 backdrop-blur-md px-4 sm:px-8 h-16 flex items-center justify-between flex-shrink-0 transition-colors select-none">
+      <header className="sticky top-0 z-40 w-full border-b border-border bg-bg-surface/90 backdrop-blur-md px-3 sm:px-8 h-16 flex items-center justify-between flex-shrink-0 transition-colors select-none">
         {/* Left: Desktop navigation links (hidden on mobile) */}
         <div className="hidden md:flex items-center gap-6">
           <nav className="flex items-center gap-5 text-xs font-mono text-gray-warm">
@@ -84,7 +84,7 @@ export function Navbar({ onOpenSettings, onOpenWorkspace, onGoHome, isInApp }: N
               onGoHome();
             }
           }}
-          className="group md:absolute md:left-1/2 md:-translate-x-1/2 flex items-center hover:opacity-90 transition-opacity cursor-pointer"
+          className="group md:absolute md:left-1/2 md:-translate-x-1/2 flex items-center hover:opacity-90 transition-opacity cursor-pointer flex-shrink-0"
         >
           <span className="font-handwriting text-2xl sm:text-3xl md:text-4xl text-ink-primary tracking-wide -rotate-2 inline-block transition-transform duration-200 ease-out group-hover:scale-105 group-hover:-rotate-1">
             Allcited.
@@ -92,8 +92,8 @@ export function Navbar({ onOpenSettings, onOpenWorkspace, onGoHome, isInApp }: N
         </Link>
 
         {/* Right: Theme Toggle Dial + Auth + Settings + Mobile Menu Button */}
-        <div className="flex items-center gap-2 sm:gap-3.5">
-          {/* Theme Toggle Orbit Dial (Compact, no text clutter) */}
+        <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
+          {/* Theme Toggle Orbit Dial */}
           <InteractiveOrbitClock />
 
           {/* In-App Settings Button */}
@@ -103,9 +103,9 @@ export function Navbar({ onOpenSettings, onOpenWorkspace, onGoHome, isInApp }: N
               onClick={onOpenSettings}
               title="Model Settings & Provider Config"
               aria-label="Open model settings"
-              className="group/settings w-8 h-8 flex items-center justify-center rounded-interactive border border-border bg-bg-surface hover:bg-bg-sunken text-ink-primary hover:text-accent-primary transition-all duration-150 shadow-xs active:scale-95 cursor-pointer"
+              className="group/settings w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-interactive border border-border bg-bg-surface hover:bg-bg-sunken text-ink-primary hover:text-accent-primary transition-all duration-150 shadow-xs active:scale-95 cursor-pointer flex-shrink-0"
             >
-              <Settings className="w-4 h-4 text-ink-primary group-hover/settings:rotate-45 group-hover/settings:text-accent-primary transition-transform duration-200 ease-out" aria-hidden="true" />
+              <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-ink-primary group-hover/settings:rotate-45 group-hover/settings:text-accent-primary transition-transform duration-200 ease-out" aria-hidden="true" />
             </button>
           )}
 
@@ -114,15 +114,15 @@ export function Navbar({ onOpenSettings, onOpenWorkspace, onGoHome, isInApp }: N
             <SignInButton mode="modal">
               <button
                 type="button"
-                className="text-xs font-mono text-gray-warm hover:text-ink-primary transition-colors px-2 py-1 cursor-pointer"
+                className="text-[11px] sm:text-xs font-mono text-gray-warm hover:text-ink-primary transition-colors px-1.5 sm:px-2 py-1 cursor-pointer whitespace-nowrap"
               >
                 Sign in
               </button>
             </SignInButton>
           </SignedOut>
           <SignedIn>
-            <div className="flex items-center">
-              <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-7 h-7" } }} />
+            <div className="flex items-center flex-shrink-0">
+              <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-6 h-6 sm:w-7 sm:h-7" } }} />
             </div>
           </SignedIn>
 
@@ -151,12 +151,12 @@ export function Navbar({ onOpenSettings, onOpenWorkspace, onGoHome, isInApp }: N
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
             aria-expanded={isMobileMenuOpen}
-            className="md:hidden w-8 h-8 flex items-center justify-center rounded-interactive border border-border bg-bg-surface hover:bg-bg-sunken text-ink-primary transition-all duration-150 shadow-xs active:scale-95 cursor-pointer"
+            className="md:hidden w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-interactive border border-border bg-bg-surface hover:bg-bg-sunken text-ink-primary transition-all duration-150 shadow-xs active:scale-95 cursor-pointer flex-shrink-0"
           >
             {isMobileMenuOpen ? (
-              <X className="w-4 h-4 text-ink-primary" />
+              <X className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-ink-primary" />
             ) : (
-              <Menu className="w-4 h-4 text-ink-primary" />
+              <Menu className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-ink-primary" />
             )}
           </button>
         </div>
