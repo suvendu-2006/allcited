@@ -44,7 +44,7 @@ export function LiveMiniDemo() {
       {/* Demo box header */}
       <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border/70">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-[#28C840] dark:bg-[#5AD46F] animate-pulse" />
+          <span className="w-2 h-2 rounded-full bg-status-cache animate-pulse" />
           <span className="font-mono text-xs font-semibold text-ink-primary">
             Sample: Employee Handbook
           </span>
@@ -54,7 +54,7 @@ export function LiveMiniDemo() {
           type="button"
           onClick={runDemoStream}
           disabled={isStreaming}
-          className="inline-flex items-center gap-1.5 font-mono text-xs text-accent-primary hover:underline disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 font-mono text-xs text-accent-primary hover:underline hover:scale-105 active:scale-95 transition-all duration-120 cursor-pointer disabled:opacity-50"
         >
           <span className={isStreaming ? "animate-spin inline-block" : ""}>↻</span>
           <span>Replay</span>

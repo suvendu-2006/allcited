@@ -240,7 +240,7 @@ export default function Home() {
                     <button
                       type="button"
                       onClick={handleSaveToShelf}
-                      className={`font-mono text-[11px] flex items-center gap-1 px-2.5 py-1 rounded border transition-colors cursor-pointer ${
+                      className={`font-mono text-[11px] flex items-center gap-1 px-2.5 py-1 rounded border transition-all duration-150 ease-out cursor-pointer hover:-translate-y-[0.5px] hover:shadow-2xs active:translate-y-0 active:scale-95 ${
                         isSaved
                           ? "border-accent-primary/40 bg-accent-primary/10 text-accent-primary font-semibold"
                           : "border-border/80 hover:border-accent-primary hover:bg-bg-sunken text-ink-primary"
@@ -253,10 +253,10 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={() => setIsSettingsOpen(true)}
-                    className="font-mono text-[11px] text-gray-warm hover:text-ink-primary flex items-center gap-1.5 px-2 py-1 rounded border border-border/60 hover:bg-bg-sunken cursor-pointer"
+                    className="group/engine font-mono text-[11px] text-gray-warm hover:text-ink-primary flex items-center gap-1.5 px-2 py-1 rounded border border-border/60 hover:border-ink-primary/30 hover:bg-bg-sunken hover:-translate-y-[0.5px] active:translate-y-0 active:scale-95 transition-all duration-150 ease-out cursor-pointer"
                   >
                     <span>Engine: {providerConfig.mode}</span>
-                    <Settings className="w-3.5 h-3.5 text-accent-primary" />
+                    <Settings className="w-3.5 h-3.5 text-accent-primary transition-transform duration-200 ease-out group-hover/engine:rotate-45" />
                   </button>
                 </div>
               </div>

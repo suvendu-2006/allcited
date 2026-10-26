@@ -4,24 +4,24 @@ import { cn } from "@/lib/utils"
 import { ArrowRight } from "lucide-react"
 
 const buttonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center rounded-interactive text-sm font-medium transition-all duration-120 outline-none select-none active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-accent-primary",
+  "inline-flex shrink-0 items-center justify-center rounded-interactive text-sm font-medium transition-all duration-150 ease-out outline-none select-none active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-accent-primary motion-reduce:transform-none motion-reduce:transition-none",
   {
     variants: {
       variant: {
         default:
-          "bg-accent-primary text-primary-foreground hover:brightness-95 shadow-sm",
+          "bg-accent-primary text-primary-foreground hover:brightness-95 hover:-translate-y-[1px] hover:shadow-sm active:translate-y-0 shadow-xs",
         primary:
-          "bg-accent-primary text-primary-foreground hover:brightness-95 shadow-sm",
+          "bg-accent-primary text-primary-foreground hover:brightness-95 hover:-translate-y-[1px] hover:shadow-sm active:translate-y-0 shadow-xs",
         outline:
-          "border border-border bg-bg-surface text-ink-primary hover:bg-bg-sunken",
+          "border border-border bg-bg-surface text-ink-primary hover:bg-bg-sunken hover:border-ink-primary/30 hover:-translate-y-[1px] hover:shadow-xs active:translate-y-0",
         secondary:
-          "bg-bg-sunken text-ink-primary hover:bg-bg-surface border border-border/60",
+          "bg-bg-sunken text-ink-primary hover:bg-bg-surface hover:-translate-y-[1px] hover:shadow-xs active:translate-y-0 border border-border/60",
         ghost:
-          "bg-transparent text-ink-primary hover:bg-bg-sunken hover:text-ink-primary",
+          "bg-transparent text-ink-primary hover:bg-bg-sunken hover:text-ink-primary active:scale-[0.97]",
         ferrari:
-          "bg-transparent text-ink-primary uppercase tracking-widest text-xs font-semibold hover:text-accent-primary group flex items-center gap-1.5",
+          "bg-transparent text-ink-primary uppercase tracking-widest text-xs font-semibold hover:text-accent-primary flex items-center gap-1.5 active:scale-[0.98]",
         destructive:
-          "bg-danger/10 text-danger hover:bg-danger/20 border border-danger/20",
+          "bg-danger/10 text-danger hover:bg-danger/20 hover:-translate-y-[1px] active:translate-y-0 border border-danger/20",
         link: "text-accent-primary underline-offset-4 hover:underline p-0 h-auto",
       },
       size: {
@@ -48,13 +48,13 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, showArrow = false, children, ...props }, ref) => {
     return (
       <button
-        className={cn(buttonVariants({ variant, size, className }))}
+        className={cn("group", buttonVariants({ variant, size, className }))}
         ref={ref}
         {...props}
       >
         {children}
         {(variant === "ferrari" || showArrow) && (
-          <ArrowRight className="w-3.5 h-3.5 transition-transform duration-120 group-hover:translate-x-2" />
+          <ArrowRight className="w-3.5 h-3.5 transition-transform duration-150 ease-out group-hover:translate-x-1" />
         )}
       </button>
     )

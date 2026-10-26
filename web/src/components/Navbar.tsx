@@ -26,7 +26,7 @@ export function Navbar({ onOpenSettings, onOpenWorkspace, isInApp }: NavbarProps
         <nav className="flex items-center gap-3 sm:gap-5 text-xs font-mono text-gray-warm">
           <Link
             href="/product"
-            className={`hover:text-ink-primary transition-colors ${
+            className={`hover:text-ink-primary hover:-translate-y-[0.5px] transition-all duration-150 ${
               pathname === "/product" ? "text-ink-primary font-semibold" : ""
             }`}
           >
@@ -34,7 +34,7 @@ export function Navbar({ onOpenSettings, onOpenWorkspace, isInApp }: NavbarProps
           </Link>
           <Link
             href="/how-it-works"
-            className={`hover:text-ink-primary transition-colors ${
+            className={`hover:text-ink-primary hover:-translate-y-[0.5px] transition-all duration-150 ${
               pathname === "/how-it-works" ? "text-ink-primary font-semibold" : ""
             }`}
           >
@@ -42,7 +42,7 @@ export function Navbar({ onOpenSettings, onOpenWorkspace, isInApp }: NavbarProps
           </Link>
           <Link
             href="/exam"
-            className={`hover:text-ink-primary transition-colors ${
+            className={`hover:text-ink-primary hover:-translate-y-[0.5px] transition-all duration-150 ${
               pathname === "/exam" ? "text-ink-primary font-semibold" : ""
             }`}
           >
@@ -50,7 +50,7 @@ export function Navbar({ onOpenSettings, onOpenWorkspace, isInApp }: NavbarProps
           </Link>
           <Link
             href="/pricing"
-            className={`hover:text-ink-primary transition-colors ${
+            className={`hover:text-ink-primary hover:-translate-y-[0.5px] transition-all duration-150 ${
               pathname === "/pricing" ? "text-ink-primary font-semibold" : ""
             }`}
           >
@@ -58,7 +58,7 @@ export function Navbar({ onOpenSettings, onOpenWorkspace, isInApp }: NavbarProps
           </Link>
           <Link
             href="/library"
-            className={`hover:text-ink-primary transition-colors hidden md:inline-block ${
+            className={`hover:text-ink-primary hover:-translate-y-[0.5px] transition-all duration-150 hidden md:inline-block ${
               pathname === "/library" ? "text-ink-primary font-semibold" : ""
             }`}
           >
@@ -70,9 +70,9 @@ export function Navbar({ onOpenSettings, onOpenWorkspace, isInApp }: NavbarProps
       {/* Center: Brand Logo */}
       <Link
         href="/"
-        className="absolute left-1/2 -translate-x-1/2 flex items-center hover:opacity-85 transition-opacity"
+        className="group absolute left-1/2 -translate-x-1/2 flex items-center hover:opacity-90 transition-opacity"
       >
-        <span className="font-handwriting text-3xl sm:text-4xl text-ink-primary tracking-wide -rotate-2">
+        <span className="font-handwriting text-3xl sm:text-4xl text-ink-primary tracking-wide -rotate-2 inline-block transition-transform duration-200 ease-out group-hover:scale-105 group-hover:-rotate-1">
           Allcited.
         </span>
       </Link>
@@ -89,9 +89,9 @@ export function Navbar({ onOpenSettings, onOpenWorkspace, isInApp }: NavbarProps
             onClick={onOpenSettings}
             title="Model Settings & Provider Config"
             aria-label="Open model settings"
-            className="w-8 h-8 flex items-center justify-center rounded-interactive border border-border bg-bg-surface hover:bg-bg-hover text-ink-primary hover:text-accent-primary transition-all shadow-sm active:scale-95 cursor-pointer"
+            className="group/settings w-8 h-8 flex items-center justify-center rounded-interactive border border-border bg-bg-surface hover:bg-bg-sunken text-ink-primary hover:text-accent-primary transition-all duration-150 shadow-xs active:scale-95 cursor-pointer"
           >
-            <Settings className="w-4 h-4 text-ink-primary" aria-hidden="true" />
+            <Settings className="w-4 h-4 text-ink-primary group-hover/settings:rotate-45 group-hover/settings:text-accent-primary transition-transform duration-200 ease-out" aria-hidden="true" />
           </button>
         )}
 

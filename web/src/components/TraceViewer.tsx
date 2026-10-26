@@ -152,16 +152,16 @@ export function TraceViewer({
                 type="button"
                 onClick={handleCopyId}
                 aria-label="Copy trace ID"
-                className="font-mono text-[10px] text-gray-warm hover:text-ink-primary inline-flex items-center gap-1 border border-border px-1.5 py-0.5 rounded-[4px]"
+                className="font-mono text-[10px] text-gray-warm hover:text-ink-primary inline-flex items-center gap-1 border border-border px-1.5 py-0.5 rounded-[4px] transition-all duration-120 hover:scale-105 active:scale-95 cursor-pointer"
               >
                 {copiedId ? (
                   <>
-                    <Check className="w-2.5 h-2.5 text-accent-primary" />
+                    <Check className="w-2.5 h-2.5 text-accent-primary animate-in zoom-in-75 duration-150" />
                     <span>copied</span>
                   </>
                 ) : (
                   <>
-                    <Copy className="w-2.5 h-2.5" />
+                    <Copy className="w-2.5 h-2.5 transition-transform duration-120" />
                     <span>{questionId.slice(0, 8)}</span>
                   </>
                 )}
@@ -179,7 +179,7 @@ export function TraceViewer({
             type="button"
             onClick={onClose}
             aria-label="Close trace viewer"
-            className="p-1 rounded-[4px] text-ink-ghost hover:text-ink-primary hover:bg-bg-sunken transition-colors"
+            className="p-1 rounded-[4px] text-ink-ghost hover:text-ink-primary hover:bg-bg-sunken transition-all duration-150 ease-out hover:rotate-90 active:scale-90 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>

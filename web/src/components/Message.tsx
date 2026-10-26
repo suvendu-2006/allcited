@@ -127,7 +127,7 @@ export function Message({ message, onCitationClick }: MessageProps) {
   return (
     <div className="flex justify-start animate-fade-in w-full">
       <div className="flex gap-3 w-full">
-        <div className="w-6 h-6 rounded bg-bg-sunken border border-border text-accent-primary flex items-center justify-center flex-shrink-0 text-[11px] font-mono font-bold select-none mt-1 shadow-2xs">
+        <div className="w-6 h-6 rounded bg-bg-sunken border border-border text-accent-primary flex items-center justify-center flex-shrink-0 text-[11px] font-mono font-bold select-none mt-1 shadow-2xs transition-transform duration-150 hover:scale-105">
           A
         </div>
 
@@ -197,26 +197,26 @@ export function Message({ message, onCitationClick }: MessageProps) {
                   onClick={() => handleFeedback(1)}
                   aria-label="Thumbs up"
                   title="Helpful 👍"
-                  className={`p-1 rounded-[4px] transition-colors cursor-pointer ${
+                  className={`p-1 rounded-[4px] transition-all duration-150 ease-out cursor-pointer active:scale-90 hover:scale-110 ${
                     feedback === "up"
-                      ? "text-accent-primary bg-accent-primary/10"
+                      ? "text-accent-primary bg-accent-primary/10 ring-1 ring-accent-primary/30 scale-105"
                       : "text-ink-ghost hover:text-ink-primary hover:bg-bg-sunken"
                   }`}
                 >
-                  <ThumbsUp className="w-3.5 h-3.5" />
+                  <ThumbsUp className={`w-3.5 h-3.5 transition-transform duration-150 ${feedback === "up" ? "scale-110" : ""}`} />
                 </button>
                 <button
                   type="button"
                   onClick={() => handleFeedback(-1)}
                   aria-label="Thumbs down"
                   title="Unhelpful 👎"
-                  className={`p-1 rounded-[4px] transition-colors cursor-pointer ${
+                  className={`p-1 rounded-[4px] transition-all duration-150 ease-out cursor-pointer active:scale-90 hover:scale-110 ${
                     feedback === "down"
-                      ? "text-accent-primary bg-accent-primary/10"
+                      ? "text-accent-primary bg-accent-primary/10 ring-1 ring-accent-primary/30 scale-105"
                       : "text-ink-ghost hover:text-ink-primary hover:bg-bg-sunken"
                   }`}
                 >
-                  <ThumbsDown className="w-3.5 h-3.5" />
+                  <ThumbsDown className={`w-3.5 h-3.5 transition-transform duration-150 ${feedback === "down" ? "scale-110" : ""}`} />
                 </button>
 
                 {/* Explicit indicator when NVIDIA NIM answered as failover brain */}
@@ -224,10 +224,10 @@ export function Message({ message, onCitationClick }: MessageProps) {
                   message.model?.toLowerCase().includes("nvidia") ||
                   message.model?.toLowerCase().includes("llama-3.2-11b")) && (
                   <span
-                    className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono bg-accent-cite/10 text-accent-cite border border-accent-cite/30 font-semibold"
+                    className="ml-2 inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded text-[10px] font-mono bg-accent-cite/10 text-accent-cite border border-accent-cite/30 font-semibold transition-all hover:bg-accent-cite/15"
                     title="Answered by NVIDIA NIM Cloud Fallback Brain"
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-accent-cite" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-accent-cite animate-pulse" />
                     NVIDIA NIM
                   </span>
                 )}
@@ -237,10 +237,10 @@ export function Message({ message, onCitationClick }: MessageProps) {
               <button
                 type="button"
                 onClick={() => setShowTrace(true)}
-                className="flex items-center gap-1 text-[11px] text-accent-primary hover:underline font-medium transition-colors cursor-pointer"
+                className="group flex items-center gap-1.5 text-[11px] text-accent-primary hover:underline font-medium transition-colors cursor-pointer"
               >
-                <Sparkles className="w-3.5 h-3.5 text-accent-primary" />
-                <span>Why this answer?</span>
+                <Sparkles className="w-3.5 h-3.5 text-accent-primary transition-transform duration-200 ease-out group-hover:rotate-45 group-hover:scale-110" />
+                <span className="transition-transform duration-150 group-hover:translate-x-0.5">Why this answer?</span>
               </button>
             </div>
           )}

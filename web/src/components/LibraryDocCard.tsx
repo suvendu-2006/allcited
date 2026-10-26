@@ -32,12 +32,12 @@ export function LibraryDocCard({
   });
 
   return (
-    <div className="p-4 rounded-interactive border border-border bg-bg-surface hover:bg-bg-sunken/30 transition-all duration-120 flex flex-col justify-between shadow-xs group">
+    <div className="p-4 rounded-interactive border border-border bg-bg-surface hover:bg-bg-sunken/40 hover:-translate-y-1 hover:shadow-md hover:border-ink-primary/30 transition-all duration-200 ease-out flex flex-col justify-between shadow-xs group motion-reduce:transform-none">
       <div>
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-[6px] bg-bg-sunken border border-border flex items-center justify-center text-accent-primary">
-              <FileText className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-[6px] bg-bg-sunken border border-border flex items-center justify-center text-accent-primary transition-all duration-200 group-hover:scale-105 group-hover:border-accent-primary/40">
+              <FileText className="w-4 h-4 transition-transform duration-200 group-hover:scale-105" />
             </div>
             <h4 className="font-semibold text-sm text-ink-primary font-display truncate max-w-[200px]" title={doc.filename}>
               {doc.filename}
@@ -48,7 +48,7 @@ export function LibraryDocCard({
             onClick={() => onRemove(doc)}
             disabled={isRemoving}
             title="Remove document"
-            className="text-ink-ghost hover:text-danger p-1 rounded transition-colors disabled:opacity-40"
+            className="text-ink-ghost hover:text-danger p-1 rounded transition-all duration-150 hover:scale-110 active:scale-90 disabled:opacity-40 cursor-pointer"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
@@ -67,7 +67,7 @@ export function LibraryDocCard({
           className="text-xs h-7 gap-1 hover:border-accent-primary"
         >
           <span>Ask about this</span>
-          <ArrowRight className="w-3 h-3 text-accent-primary" />
+          <ArrowRight className="w-3 h-3 text-accent-primary transition-transform duration-150 group-hover:translate-x-1" />
         </Button>
       </div>
     </div>

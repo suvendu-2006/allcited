@@ -89,9 +89,9 @@ export function Composer({
           <button
             type="button"
             onClick={onAbort}
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-[6px] bg-danger text-white text-xs font-medium hover:brightness-110 active:scale-95 transition-all shadow-xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-[6px] bg-danger text-white text-xs font-medium hover:brightness-110 hover:scale-105 active:scale-95 transition-all duration-150 shadow-xs cursor-pointer motion-reduce:transform-none"
           >
-            <Square className="w-3 h-3 fill-current" />
+            <Square className="w-3 h-3 fill-current animate-pulse" />
             <span>Stop answering</span>
           </button>
         ) : (
@@ -100,9 +100,9 @@ export function Composer({
             onClick={handleSubmit}
             disabled={!input.trim() || disabled}
             aria-label="Send question"
-            className="w-8 h-8 rounded-interactive bg-accent-primary text-primary-foreground flex items-center justify-center hover:brightness-95 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-xs"
+            className="group w-8 h-8 rounded-interactive bg-accent-primary text-primary-foreground flex items-center justify-center hover:brightness-95 hover:scale-105 hover:shadow-sm active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none transition-all duration-150 motion-reduce:transform-none cursor-pointer"
           >
-            <ArrowUp className="w-4 h-4" />
+            <ArrowUp className="w-4 h-4 transition-transform duration-150 ease-out group-hover:-translate-y-0.5" />
           </button>
         )}
       </div>

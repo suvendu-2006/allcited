@@ -223,7 +223,7 @@ export function Upload({
           <button
             type="button"
             onClick={() => setSuccessInfo(null)}
-            className="text-ink-ghost hover:text-ink-primary text-xs font-mono ml-2 p-0.5 rounded cursor-pointer"
+            className="text-ink-ghost hover:text-ink-primary text-xs font-mono ml-2 p-0.5 rounded cursor-pointer transition-transform duration-120 hover:scale-110 active:scale-90"
             aria-label="Dismiss banner"
           >
             <X className="w-3.5 h-3.5" />
@@ -240,7 +240,7 @@ export function Upload({
           <button
             type="button"
             onClick={() => setErrorMessage(null)}
-            className="text-ink-ghost hover:text-ink-primary text-xs font-mono ml-2 p-0.5 rounded cursor-pointer"
+            className="text-ink-ghost hover:text-ink-primary text-xs font-mono ml-2 p-0.5 rounded cursor-pointer transition-transform duration-120 hover:scale-110 active:scale-90"
             aria-label="Dismiss error"
           >
             <X className="w-3.5 h-3.5" />
@@ -259,7 +259,7 @@ export function Upload({
             setIsUrlMode(!isUrlMode);
             setErrorMessage(null);
           }}
-          className="text-xs text-accent-primary hover:underline font-medium inline-flex items-center gap-1"
+          className="text-xs text-accent-primary hover:underline font-medium inline-flex items-center gap-1 transition-all duration-150 hover:translate-x-0.5 active:scale-95"
         >
           {isUrlMode ? "Upload file instead" : "Paste a URL instead"}
         </button>
@@ -308,10 +308,10 @@ export function Upload({
             }
           }}
           onClick={() => !isUploading && fileInputRef.current?.click()}
-          className={`relative rounded-interactive p-6 text-center cursor-pointer transition-all duration-200 bg-bg-surface ${
+          className={`group relative rounded-interactive p-6 text-center cursor-pointer transition-all duration-200 ease-out bg-bg-surface motion-reduce:transform-none ${
             isDragging
-              ? "waving-border bg-accent-primary/5 scale-[1.01]"
-              : "border border-dashed border-border hover:border-accent-primary/60 hover:bg-bg-sunken/40"
+              ? "waving-border bg-accent-primary/5 scale-[1.01] shadow-sm"
+              : "border border-dashed border-border hover:border-accent-primary/60 hover:bg-bg-sunken/40 hover:-translate-y-0.5 hover:shadow-xs active:translate-y-0"
           } ${isUploading ? "pointer-events-none opacity-90" : ""}`}
         >
           <input
@@ -342,8 +342,8 @@ export function Upload({
               </div>
             ) : (
               <>
-                <div className="w-10 h-10 rounded-full bg-bg-sunken border border-border text-accent-primary flex items-center justify-center transition-transform group-hover:scale-105">
-                  <UploadCloud className="w-5 h-5" />
+                <div className="w-10 h-10 rounded-full bg-bg-sunken border border-border text-accent-primary flex items-center justify-center transition-all duration-200 ease-out group-hover:scale-110 group-hover:-translate-y-1 group-hover:border-accent-primary/40 group-hover:shadow-xs">
+                  <UploadCloud className="w-5 h-5 transition-transform duration-200 group-hover:scale-105" />
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold text-ink-primary font-display">

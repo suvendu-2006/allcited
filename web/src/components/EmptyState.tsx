@@ -51,11 +51,11 @@ export function EmptyState({ onSelectSampleQuestion, isGuest }: EmptyStateProps)
             key={question}
             type="button"
             onClick={() => onSelectSampleQuestion(question)}
-            className="group inline-flex items-center gap-2 px-3.5 py-2 rounded-interactive border border-border bg-bg-surface hover:bg-bg-sunken text-xs font-medium text-ink-primary shadow-xs transition-all duration-120 hover:border-accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary"
+            className="group inline-flex items-center gap-2 px-3.5 py-2 rounded-interactive border border-border bg-bg-surface hover:bg-bg-sunken text-xs font-medium text-ink-primary shadow-xs transition-all duration-150 ease-out hover:border-accent-primary hover:-translate-y-0.5 hover:shadow-xs active:translate-y-0 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary cursor-pointer motion-reduce:transform-none"
           >
-            <FileQuestion className="w-3.5 h-3.5 text-accent-primary opacity-70 group-hover:opacity-100" />
+            <FileQuestion className="w-3.5 h-3.5 text-accent-primary opacity-70 group-hover:opacity-100 transition-all duration-150 group-hover:scale-110" />
             <span>{question}</span>
-            <ArrowRight className="w-3 h-3 text-ink-ghost transition-transform duration-120 group-hover:translate-x-1 group-hover:text-accent-primary" />
+            <ArrowRight className="w-3 h-3 text-ink-ghost transition-transform duration-150 ease-out group-hover:translate-x-1 group-hover:text-accent-primary" />
           </button>
         ))}
       </div>

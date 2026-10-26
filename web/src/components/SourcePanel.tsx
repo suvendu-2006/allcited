@@ -105,7 +105,7 @@ export function SourcePanel({
             type="button"
             onClick={onClose}
             aria-label="Close receipts drawer (Esc)"
-            className="p-1.5 rounded-[4px] text-ink-ghost hover:text-ink-primary hover:bg-bg-sunken transition-colors focus:outline-none focus:ring-1 focus:ring-accent-primary flex-shrink-0 cursor-pointer"
+            className="p-1.5 rounded-[4px] text-ink-ghost hover:text-ink-primary hover:bg-bg-sunken transition-all duration-150 ease-out focus:outline-none focus:ring-1 focus:ring-accent-primary flex-shrink-0 cursor-pointer hover:rotate-90 active:scale-90"
           >
             <X className="w-4 h-4" />
           </button>
@@ -146,14 +146,14 @@ export function SourcePanel({
                     else cardRefs.current.delete(c.label);
                   }}
                   onClick={() => onSelectCitation?.(c.label)}
-                  className={`p-3.5 rounded-interactive text-xs transition-all duration-120 cursor-pointer bg-bg-sunken border-t-0 border-r-0 border-b-0 ${
+                  className={`p-3.5 rounded-interactive text-xs transition-all duration-150 ease-out cursor-pointer bg-bg-sunken border-t-0 border-r-0 border-b-0 group motion-reduce:transform-none ${
                     isTwoHop
                       ? isSelected
-                        ? "border-l-[3px] border-l-status-twohop -translate-y-[1px] shadow-sm ring-1 ring-status-twohop/30"
-                        : "border-l-[3px] border-l-status-twohop/70 hover:border-l-status-twohop"
+                        ? "border-l-[3px] border-l-status-twohop -translate-y-0.5 shadow-sm ring-1 ring-status-twohop/40"
+                        : "border-l-[3px] border-l-status-twohop/70 hover:border-l-status-twohop hover:-translate-y-0.5 hover:shadow-xs"
                       : isSelected
-                      ? "border-l-[3px] border-l-accent-primary -translate-y-[1px] shadow-sm ring-1 ring-accent-primary/30"
-                      : "border-l-[3px] border-l-accent-primary/70 hover:border-l-accent-primary"
+                      ? "border-l-[3px] border-l-accent-primary -translate-y-0.5 shadow-sm ring-1 ring-accent-primary/40"
+                      : "border-l-[3px] border-l-accent-primary/70 hover:border-l-accent-primary hover:-translate-y-0.5 hover:shadow-xs"
                   }`}
                 >
                   {/* Header: [S#] + section · page + copy */}
@@ -183,19 +183,19 @@ export function SourcePanel({
                         e.stopPropagation();
                         copyToClipboard(c.text_preview, c.label);
                       }}
-                      className="p-1 rounded-[4px] hover:bg-bg-surface text-ink-ghost hover:text-ink-primary transition-colors flex-shrink-0 cursor-pointer"
+                      className="p-1 rounded-[4px] hover:bg-bg-surface text-ink-ghost hover:text-ink-primary transition-all duration-120 flex-shrink-0 cursor-pointer active:scale-90 hover:scale-110"
                     >
                       {copiedLabel === c.label ? (
-                        <Check className="w-3.5 h-3.5 text-accent-primary" />
+                        <Check className="w-3.5 h-3.5 text-accent-primary animate-in zoom-in-75 duration-150" />
                       ) : (
-                        <Copy className="w-3.5 h-3.5" />
+                        <Copy className="w-3.5 h-3.5 transition-transform duration-120" />
                       )}
                     </button>
                   </div>
 
                   {isTwoHop && (
                     <div className="mb-2 text-[11px] font-mono text-status-twohop flex items-center gap-1">
-                      <Sparkles className="w-3 h-3 flex-shrink-0" />
+                      <Sparkles className="w-3 h-3 flex-shrink-0 transition-transform duration-200 group-hover:rotate-12" />
                       <span>{c.added_reason || "Cross-referenced passage"}</span>
                     </div>
                   )}
@@ -208,7 +208,7 @@ export function SourcePanel({
 
                   {isExpanded ? (
                     <div>
-                      <div className="text-ink-primary font-sans text-[13px] leading-relaxed whitespace-pre-wrap select-text">
+                      <div className="text-ink-primary font-sans text-[13px] leading-relaxed whitespace-pre-wrap select-text animate-fade-in">
                         {c.text_preview}
                       </div>
                       <button
@@ -217,9 +217,10 @@ export function SourcePanel({
                           e.stopPropagation();
                           toggleExpand(c.label);
                         }}
-                        className="text-xs font-mono text-accent-primary hover:underline cursor-pointer pt-2 block"
+                        className="text-xs font-mono text-accent-primary hover:underline cursor-pointer pt-2 flex items-center gap-1 group/btn"
                       >
-                        Show less ↑
+                        <span>Show less</span>
+                        <span className="transition-transform duration-150 group-hover/btn:-translate-y-0.5">↑</span>
                       </button>
                     </div>
                   ) : (
@@ -241,9 +242,10 @@ export function SourcePanel({
                           e.stopPropagation();
                           toggleExpand(c.label);
                         }}
-                        className="text-xs font-mono text-accent-primary hover:underline cursor-pointer pt-1.5 block"
+                        className="text-xs font-mono text-accent-primary hover:underline cursor-pointer pt-1.5 flex items-center gap-1 group/btn"
                       >
-                        Read the full passage →
+                        <span>Read the full passage</span>
+                        <span className="transition-transform duration-150 group-hover/btn:translate-x-0.5">→</span>
                       </button>
                     </div>
                   )}

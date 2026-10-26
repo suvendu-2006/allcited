@@ -47,7 +47,7 @@ export function StageChip({
     <span
       className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 font-mono text-[11.5px] rounded-[4px] border transition-all duration-200 ${getStageStyle()} ${
         isCompleted ? "opacity-40" : ""
-      }`}
+      } ${isActive ? "scale-[1.02] shadow-2xs" : "scale-100"}`}
     >
       {isActive && (
         <span className="flex items-center gap-0.5">
