@@ -21,10 +21,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // 1. Check saved localStorage or system preference
-    const saved = localStorage.getItem("allcited_theme") as Theme | null;
-    const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const initial = saved || (systemDark ? "dark" : "light");
+    // 1. Determine natural theme from current real local time:
+    // 6:00 PM to 6:00 AM is Dark Mode; 6:00 AM to 6:00 PM is Light Mode
+    const currentHour = new Date().getHours();
+    const isNight = currentHour >= 18 || currentHour < 6;
+    const timeBasedTheme: Theme = isNight ? "dark" : "light";
+
+    // 2. Check for manual session override, otherwise align with real local time
+    const manual = sessionStorage.getItem("allcited_theme_manual");
+    const saved = manual ? (localStorage.getItem("allcited_theme") as Theme | null) : null;
+    const initial = saved || timeBasedTheme;
 
     setThemeState(initial);
     if (initial === "dark") {
@@ -37,6 +43,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const applyThemeClasses = (nextTheme: Theme) => {
     setThemeState(nextTheme);
+    sessionStorage.setItem("allcited_theme_manual", "true");
     localStorage.setItem("allcited_theme", nextTheme);
     if (nextTheme === "dark") {
       document.documentElement.classList.add("dark");

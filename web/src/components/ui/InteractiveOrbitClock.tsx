@@ -106,6 +106,9 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
       setMinutes(m);
       isPmRef.current = h >= 12;
       setIsTimeTraveller(false);
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("allcited_theme_manual");
+      }
 
       const shouldBeDark = h >= 18 || h < 6;
       const targetTheme = shouldBeDark ? "dark" : "light";
