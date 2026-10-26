@@ -145,17 +145,17 @@ export function EmberAurora() {
             </pattern>
 
             {/* Studio Radial Illumination Overlay matching Screenpipe */}
-            <radialGradient id="screenpipe-studio-light" cx="50%" cy="35%" r="60%">
-              <stop offset="0%" stopColor="#FAFBFB" stopOpacity="0.35" />
-              <stop offset="60%" stopColor="#FAFBFB" stopOpacity="0.1" />
-              <stop offset="100%" stopColor="#E8E8E3" stopOpacity="0.2" />
+            <radialGradient id="screenpipe-studio-light" cx="50%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#FAFBFB" stopOpacity="0.6" />
+              <stop offset="40%" stopColor="#FAFBFB" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#E8E8E3" stopOpacity="0.1" />
             </radialGradient>
           </defs>
 
           {/* Base Neutral Canvas */}
-          <rect width="100%" height="100%" fill="#F0F0EB" />
-          {/* Tiled Screenpipe Isometric Cubes */}
-          <rect width="100%" height="100%" fill="url(#screenpipe-cubes-pattern)" />
+          <rect width="100%" height="100%" fill="#F4F4F0" />
+          {/* Low Visibility Tiled Screenpipe Isometric Cubes */}
+          <rect width="100%" height="100%" fill="url(#screenpipe-cubes-pattern)" opacity="0.45" />
           {/* Studio Radial Vignette */}
           <rect width="100%" height="100%" fill="url(#screenpipe-studio-light)" />
         </svg>
