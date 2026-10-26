@@ -466,8 +466,8 @@ async def run_telegram_polling() -> None:
     """Long-polling background worker for immediate local testing without webhooks or ngrok."""
     settings = get_settings()
     token = settings.TELEGRAM_BOT_TOKEN
-    if not token:
-        logger.info("No TELEGRAM_BOT_TOKEN configured; telegram poller is idle.")
+    if not token or settings.TELEGRAM_WEBHOOK_SECRET or settings.ENVIRONMENT == "production":
+        logger.info("No TELEGRAM_BOT_TOKEN configured or webhook mode active; telegram poller is idle.")
         return
 
     logger.info("Starting Allcited Telegram long-polling worker...")

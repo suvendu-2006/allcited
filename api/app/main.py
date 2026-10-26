@@ -72,7 +72,7 @@ async def lifespan(app: FastAPI):
     setup_pii_logging()
 
     polling_task = None
-    if settings.TELEGRAM_BOT_TOKEN:
+    if settings.TELEGRAM_BOT_TOKEN and not settings.TELEGRAM_WEBHOOK_SECRET and settings.ENVIRONMENT != "production":
         logger.info("Initializing background Telegram long-polling worker...")
         polling_task = asyncio.create_task(run_telegram_polling())
 
