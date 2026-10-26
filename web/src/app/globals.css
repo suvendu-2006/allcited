@@ -280,32 +280,115 @@
   border-top: 1px solid var(--border) !important;
 }
 
+/* Clerk Dark Mode Theme Overrides */
 .dark .cl-rootBox,
 .dark .cl-card,
+.dark .cl-cardBox,
+.dark .cl-modalBackdrop,
+.dark .cl-modalContent,
+.dark .cl-signIn-root,
+.dark .cl-signUp-root,
+.dark .cl-main {
+  background: var(--bg-surface) !important;
+  background-color: var(--bg-surface) !important;
+  background-image: none !important;
+  color: var(--ink-primary) !important;
+  border-color: var(--border) !important;
+}
+
+/* Hardened Dark Mode for Clerk Footer & Bottom Section */
 .dark .cl-footer,
 .dark .cl-footerAction,
-.dark .cl-signIn-root,
-.dark .cl-main {
+.dark .cl-footerPages,
+.dark .cl-footerItem,
+.dark footer.cl-footer,
+.dark .cl-card footer,
+.dark .cl-card > footer,
+.dark .cl-card > div:last-child,
+.dark .cl-card > :last-child,
+.dark [class*="footer"],
+.dark [class*="Footer"],
+.dark [class*="developmentBadge"],
+.dark [class*="DevelopmentBadge"],
+.dark [class*="developmentMode"],
+.dark [class*="devMode"],
+.dark [class*="watermark"] {
+  background: var(--bg-surface) !important;
   background-color: var(--bg-surface) !important;
+  background-image: none !important;
   color: var(--ink-primary) !important;
   border-color: var(--border) !important;
 }
 
 .dark .cl-footerActionText,
-.dark .cl-footerActionLink {
+.dark .cl-footerActionLink,
+.dark [class*="footerActionText"],
+.dark [class*="footerActionLink"] {
+  background: transparent !important;
   background-color: transparent !important;
+  background-image: none !important;
 }
 
-.dark .cl-footerActionText {
+.dark .cl-footerActionText,
+.dark [class*="footerActionText"] {
   color: var(--gray-warm) !important;
 }
 
-.dark .cl-footerActionLink {
+.dark .cl-footerActionLink,
+.dark [class*="footerActionLink"] {
   color: var(--accent-primary) !important;
 }
 
+/* "Last used" pill strategy badge - dark suited background with amber text */
+.dark .cl-badge,
+.dark [class*="badge"],
+.dark [class*="Badge"],
+.dark .cl-lastAuthenticationStrategyBadge,
+.dark [class*="lastAuthenticationStrategy"] {
+  background: var(--bg-sunken) !important;
+  background-color: var(--bg-sunken) !important;
+  background-image: none !important;
+  color: var(--accent-amber) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+}
+
+/* Development mode text inside badge */
+.dark [class*="developmentBadge"] span,
+.dark [class*="developmentMode"] span,
+.dark [data-localization-key*="developmentMode"] {
+  color: var(--accent-amber) !important;
+}
+
+.dark [class*="footerPages"] a,
+.dark [class*="footerPagesLink"] {
+  color: var(--gray-warm) !important;
+}
+
+/* Primary Form Action Button ("Continue") */
+.dark .cl-formButtonPrimary,
+.dark button.cl-formButtonPrimary,
+.dark [class*="formButtonPrimary"] {
+  background: var(--accent-primary) !important;
+  background-color: var(--accent-primary) !important;
+  background-image: none !important;
+  color: #FFFFFF !important;
+  border: 1px solid var(--accent-primary) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+  transition: opacity 150ms ease, transform 150ms ease !important;
+}
+
+.dark .cl-formButtonPrimary:hover,
+.dark button.cl-formButtonPrimary:hover,
+.dark [class*="formButtonPrimary"]:hover {
+  opacity: 0.9 !important;
+  background-color: var(--accent-primary) !important;
+}
+
+/* Social Buttons */
 .dark .cl-socialButtonsBlockButton,
 .dark .cl-socialButtonsIconButton {
+  background: var(--bg-sunken) !important;
   background-color: var(--bg-sunken) !important;
   border-color: var(--border) !important;
   color: var(--ink-primary) !important;
@@ -313,6 +396,7 @@
 
 .dark .cl-socialButtonsBlockButton:hover,
 .dark .cl-socialButtonsIconButton:hover {
+  background: var(--bg-surface) !important;
   background-color: var(--bg-surface) !important;
   border-color: var(--ink-primary) !important;
 }
@@ -342,13 +426,27 @@
 .dark .cl-socialButtonsBlockButton__twitter svg,
 .dark .cl-socialButtonsBlockButton__apple img,
 .dark .cl-socialButtonsBlockButton__apple svg,
+.dark .cl-socialButtonsIconButton:not(:has(img[alt*="Google" i])):not(:has(img[src*="google" i])):not(:has(svg[data-provider="google"])) svg,
 .dark img[alt*="GitHub" i],
 .dark img[alt*="Twitter" i],
 .dark img[alt="X"],
 .dark img[src*="github" i],
 .dark img[src*="twitter" i],
 .dark img[src*="x.svg" i] {
-  filter: invert(1) brightness(1.6) contrast(1.1) !important;
+  filter: invert(1) brightness(1.8) contrast(1.1) !important;
+}
+
+.dark .cl-socialButtonsIconButton__github svg,
+.dark .cl-socialButtonsIconButton__x svg,
+.dark .cl-socialButtonsIconButton__twitter svg,
+.dark .cl-socialButtonsIconButton__apple svg,
+.dark .cl-providerIcon__github svg,
+.dark .cl-providerIcon__x svg,
+.dark .cl-providerIcon__twitter svg,
+.dark .cl-providerIcon__apple svg,
+.dark .cl-socialButtonsIconButton:not(:has(img[alt*="Google" i])):not(:has(img[src*="google" i])):not(:has(svg[data-provider="google"])) svg {
+  fill: #FFFFFF !important;
+  color: #FFFFFF !important;
 }
 
 /* Explicitly preserve original multi-colored Google logo across all themes */
@@ -367,23 +465,8 @@
 .dark img[alt*="Google" i],
 .dark img[src*="google" i] {
   filter: none !important;
-}
-
-/* Clerk Modal & Card Dark Mode Hardening - Eliminate White Development/Footer Boxes */
-.dark .cl-modalBackdrop,
-.dark .cl-modalContent,
-.dark .cl-card,
-.dark .cl-rootBox,
-.dark .cl-footer,
-.dark .cl-footerAction,
-.dark .cl-footerActionText,
-.dark [class*="footer"],
-.dark [class*="developmentBadge"],
-.dark [class*="badge"],
-.dark .cl-card > div:last-child {
-  background-color: var(--bg-surface) !important;
-  color: var(--ink-primary) !important;
-  border-color: var(--border) !important;
+  -webkit-filter: none !important;
+  fill: initial !important;
 }
 
 .dark .cl-formFieldInput {
