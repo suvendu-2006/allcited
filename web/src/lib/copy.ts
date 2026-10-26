@@ -5,7 +5,7 @@
 
 export const ERROR_MESSAGES: Record<string, string> = {
   doc_unreadable: "Couldn't read that file — corrupt or password-protected. Nothing was saved.",
-  doc_too_large: "That's past the size limit for your plan. (Free: 20 MB · Pro: 100 MB.)",
+  doc_too_large: "That's past the size limit for your plan. (Free: 10 MB · Pro: 100 MB.)",
   free_tier_busy: "Our free brain is swamped right now. Try again in a minute — or plug in your own key in Settings and skip the line.",
   ollama_unreachable: "Can't reach your local Ollama. Is it running? (ollama serve)",
   url_blocked: "That link points somewhere private — we don't fetch those. Safety thing.",
@@ -43,7 +43,7 @@ export const PRICING_COPY = {
     name: "Free",
     price: "₹0",
     badge: "for everyone",
-    description: "Unlimited questions · documents up to 20 MB · all 6 formats · every citation, every trace.",
+    description: "Unlimited questions · documents up to 10 MB · all 6 formats · every citation, every trace.",
   },
   pro: {
     name: "Pro",

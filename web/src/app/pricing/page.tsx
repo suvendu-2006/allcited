@@ -63,7 +63,7 @@ export default function PricingPage() {
               <ul className="space-y-2.5 text-xs text-ink-primary font-mono pt-2">
                 {[
                   "10 questions / hour (Free beta tier)",
-                  "Files up to 20 MB",
+                  "Files up to 10 MB",
                   "All 6 file types",
                   "Every citation and trace",
                 ].map((bullet) => (
@@ -128,10 +128,6 @@ export default function PricingPage() {
               >
                 Start Pro
               </Button>
-
-              <p className="font-mono text-[10px] text-gray-warm text-center">
-                paid tier currently in beta — payment gateway coming soon
-              </p>
             </div>
           </div>
         </section>

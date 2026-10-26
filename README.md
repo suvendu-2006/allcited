@@ -266,8 +266,8 @@ All backend routes are prefixed with `/v1`. Responses include an `X-Request-ID` 
 | `unauthorized` | 401 | Missing or invalid Bearer authentication token. |
 | `token_expired` | 401 | Clerk JWT token has expired. |
 | `invalid_token` | 401 | JWT signature verification failed or subject claim missing. |
-| `plan_limit_reached` | 402 | Free tier cap reached (upload > 20 MB, precision mode, library saves > 3). |
-| `doc_too_large` | 402 | File size exceeds plan limit (Free: 20 MB, Pro: 100 MB). |
+| `plan_limit_reached` | 402 | Free tier cap reached (upload > 10 MB, precision mode, library saves > 3). |
+| `doc_too_large` | 402 | File size exceeds plan limit (Free: 10 MB, Pro: 100 MB). |
 | `session_not_found` | 404 | In-memory session expired or invalid ID. Re-upload document. |
 | `free_tier_busy` | 429 / 503 | Rate limits or LLM concurrency ceiling reached on free tier. |
 | `ollama_unreachable` | 502 / 503 | Local Ollama daemon unreachable at configured base URL. |

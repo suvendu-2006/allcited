@@ -605,7 +605,7 @@ async def ingest_document(
                     break
                 total_bytes += len(chunk)
                 if total_bytes > max_allowed:
-                    limit_mb = 100 if plan == "pro" else 20
+                    limit_mb = 100 if plan == "pro" else 10
                     raise HTTPException(
                         status_code=402,
                         detail={

@@ -62,8 +62,8 @@ def test_plan_gates_and_live_upgrade_flip():
     token = make_test_token(user_id)
     headers = {"Authorization": f"Bearer {token}"}
 
-    # 1. Gate 1: Free user uploads file > 20 MB -> plan_limit_reached (402)
-    fake_large_bytes = b"0" * (21 * 1024 * 1024)  # 21 MB
+    # 1. Gate 1: Free user uploads file > 10 MB -> plan_limit_reached (402)
+    fake_large_bytes = b"0" * (11 * 1024 * 1024)  # 11 MB
     large_upload = client.post(
         "/v1/ingest",
         files={"file": ("large_doc.txt", io.BytesIO(fake_large_bytes), "text/plain")},

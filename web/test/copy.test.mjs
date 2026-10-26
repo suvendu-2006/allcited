@@ -12,7 +12,7 @@ describe("Frontend Copy Freeze Assertions (§4)", () => {
     );
     assert.strictEqual(
       ERROR_MESSAGES.doc_too_large,
-      "That's past the size limit for your plan. (Free: 20 MB · Pro: 100 MB.)"
+      "That's past the size limit for your plan. (Free: 10 MB · Pro: 100 MB.)"
     );
     assert.strictEqual(
       ERROR_MESSAGES.free_tier_busy,

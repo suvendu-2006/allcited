@@ -48,8 +48,8 @@ def test_ingest_docx_handbook():
 def test_session_caps_and_lru():
     store = SessionStore()
 
-    # Exceeding 20 MB cap
-    fake_large_content = b"x" * (21 * 1024 * 1024)
+    # Exceeding 10 MB cap
+    fake_large_content = b"x" * (11 * 1024 * 1024)
     import pytest
     from fastapi import HTTPException
     with pytest.raises(HTTPException) as exc_info:

@@ -126,14 +126,15 @@ export function HeroCubesCanvas() {
             const strokeAlpha = lerp(0.04, 0.065, k);
             strokeStyle = `rgba(0, 0, 0, ${strokeAlpha})`;
           } else {
-            // Screenpipe Dark Mode:
-            const topAlpha = lerp(0.045, 0.085, k);
-            fill0 = `rgba(255, 255, 255, ${topAlpha})`;
-            const rightAlpha = lerp(0.01, 0.022, k);
-            fill1 = `rgba(255, 255, 255, ${rightAlpha})`;
-            const leftAlpha = lerp(0.02, 0.045, k);
-            fill2 = `rgba(255, 255, 255, ${leftAlpha})`;
-            strokeStyle = `rgba(255, 255, 255, ${lerp(0.065, 0.095, k)})`;
+            // Restored Dark Mode: Warm Ink & Paper palette (#EF EAD9 / Warm Paper)
+            const yDist = clamp01(1 - distCenter / (0.85 * Math.max(width, height)));
+            const baseAlpha = 0.02;
+            const rVal = 239, gVal = 234, bVal = 217;
+            fill0 = `rgba(${rVal},${gVal},${bVal},${lerp(baseAlpha, baseAlpha * 3.2, k)})`;
+            fill1 = `rgba(${rVal},${gVal},${bVal},${lerp(baseAlpha * 3.2, baseAlpha, k)})`;
+            fill2 = `rgba(${rVal},${gVal},${bVal},${baseAlpha * 1.8 + baseAlpha * k})`;
+            const strokeAlpha = 0.08 + 0.04 * yDist;
+            strokeStyle = `rgba(${rVal},${gVal},${bVal},${strokeAlpha})`;
           }
 
           const faceFills = [fill0, fill1, fill2];
@@ -187,11 +188,11 @@ export function HeroCubesCanvas() {
 
   return (
     <>
-      {/* 3D Isometric Tessellation Canvas - Pure Screenpipe Monochromatic Relief */}
+      {/* 3D Isometric Tessellation Canvas */}
       <canvas
         ref={canvasRef}
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-0 opacity-100"
+        className="pointer-events-none absolute inset-0 z-0 opacity-100 dark:opacity-75"
         style={{ display: "block", width: "100%", height: "100%" }}
       />
       {/* Soft edge vignette to smoothly blend into edges */}

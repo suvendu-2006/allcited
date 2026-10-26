@@ -21,7 +21,7 @@ from app.pipeline.refmap import ReferenceMap, build_reference_map
 logger = logging.getLogger(__name__)
 
 MAX_SESSIONS = 8
-MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024  # 20 MB
+MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
 MAX_PAGES = 300
 SESSION_TTL_SECONDS = 2 * 3600  # 2 hours
 

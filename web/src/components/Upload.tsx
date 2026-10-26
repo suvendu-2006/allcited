@@ -83,7 +83,7 @@ export function Upload({
 
   const validateFile = (file: File): string | null => {
     if (file.size > MAX_FILE_SIZE_BYTES) {
-      return "That's a big one. Free takes up to 20 MB — Pro takes 100.";
+      return "That's a big one. Free takes up to 10 MB — Pro takes 100.";
     }
     const ext = "." + file.name.split(".").pop()?.toLowerCase();
     if (!ALLOWED_EXTENSIONS.includes(ext)) {
@@ -124,7 +124,7 @@ export function Upload({
         const errJson = await res.json().catch(() => null);
         const code = errJson?.detail?.error?.code;
         if (code === "plan_limit_reached" || code === "doc_too_large" || res.status === 413 || res.status === 402) {
-          throw new Error(errJson?.detail?.error?.message || "That's a big one. Free takes up to 20 MB — Pro takes 100.");
+          throw new Error(errJson?.detail?.error?.message || "That's a big one. Free takes up to 10 MB — Pro takes 100.");
         }
         if (code === "doc_unreadable") {
           throw new Error("Couldn't read this file — it may be corrupt or password-protected. Nothing was saved.");

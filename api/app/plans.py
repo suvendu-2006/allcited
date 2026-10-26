@@ -5,7 +5,7 @@ from fastapi import HTTPException, status
 
 from app.payments import get_subscription_store
 
-FREE_FILE_SIZE_LIMIT_BYTES = 20 * 1024 * 1024  # 20 MB
+FREE_FILE_SIZE_LIMIT_BYTES = 10 * 1024 * 1024  # 10 MB
 PRO_FILE_SIZE_LIMIT_BYTES = 100 * 1024 * 1024  # 100 MB
 FREE_LIBRARY_DOC_LIMIT = 3
 
@@ -17,7 +17,7 @@ def check_plan_limit(
 ) -> None:
     """
     Enforce tier gates:
-    - Free: 20 MB file size cap, max 3 saved library docs, no precision mode.
+    - Free: 10 MB file size cap, max 3 saved library docs, no precision mode.
     - Pro: 100 MB file size cap, unlimited library saves, precision mode enabled.
 
     Raises HTTPException(402) with error code 'plan_limit_reached' if limit exceeded.
@@ -29,7 +29,7 @@ def check_plan_limit(
         file_size = int(value or 0)
         max_allowed = PRO_FILE_SIZE_LIMIT_BYTES if plan == "pro" else FREE_FILE_SIZE_LIMIT_BYTES
         if file_size > max_allowed:
-            limit_mb = 100 if plan == "pro" else 20
+            limit_mb = 100 if plan == "pro" else 10
             raise HTTPException(
                 status_code=status.HTTP_402_PAYMENT_REQUIRED,
                 detail={
