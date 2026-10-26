@@ -230,37 +230,32 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
   const dotX = dialRadius * Math.cos(rad);
   const dotY = dialRadius * Math.sin(rad);
 
-  // Formatted numeric readout (e.g. 3:36 AM)
-  const displayHours = hours % 12 === 0 ? 12 : hours % 12;
-  const displayMinutes = minutes < 10 ? `0${minutes}` : `${minutes}`;
-  const ampm = hours >= 12 ? "PM" : "AM";
-  const timeString = `${displayHours}:${displayMinutes} ${ampm}`;
-
   return (
-    <div className={`flex items-center gap-1.5 sm:gap-2.5 select-none flex-shrink-0 ${className}`}>
-      {/* Live / Travel Numeric Time Display */}
-      <div className="flex items-center gap-1 font-mono text-[10.5px] sm:text-xs font-semibold tabular-nums text-ink-primary/75 dark:text-ink-primary/90 transition-all duration-150">
-        <span className="tracking-tight hover:text-ink-primary">{timeString}</span>
-        {isTimeTraveller && (
-          <button
-            type="button"
-            onClick={resetToRealTime}
-            title="Time travel active · Click to return to local time"
-            className="group/reset flex items-center justify-center w-4 h-4 text-[10px] text-accent-primary hover:text-accent-primary/80 transition-transform active:rotate-180 cursor-pointer ml-0.5"
-          >
-            <span className="group-hover/reset:rotate-180 transition-transform duration-300">↺</span>
-          </button>
-        )}
-      </div>
+    <div className={`flex items-center gap-1.5 sm:gap-2 select-none flex-shrink-0 ${className}`}>
+      {/* Time Traveller Mode Pill */}
+      {isTimeTraveller && (
+        <button
+          type="button"
+          onClick={resetToRealTime}
+          title="Time traveller active · Click to return to local time"
+          className="group flex items-center justify-end gap-1 font-mono text-[8.5px] sm:text-[9px] uppercase tracking-[0.1em] sm:tracking-[0.14em] text-accent-primary font-bold hover:underline transition-all cursor-pointer flex-shrink-0 animate-fade-in"
+        >
+          <span>TIME TRAVELLER</span>
+          <span className="text-[10px] group-hover:rotate-180 transition-transform duration-300">
+            ↺
+          </span>
+        </button>
+      )}
 
       {/* Circular Orbit Dial (Minimalist Wire Circle with Microanimations) */}
       <div
         ref={dialRef}
+        data-testid="orbit-clock-dial"
         onPointerDown={handlePointerDown}
         title={
           isTimeTraveller
-            ? `Traveling at ${timeString}. Drag around circle to rotate time & switch themes (Click ↺ to reset)`
-            : `Local time: ${timeString}. Drag dot to rotate time & switch theme, or click to toggle theme`
+            ? "Time travel active. Drag dot to rotate time & shift theme (Click ↺ to reset)"
+            : "Click dot to toggle theme or drag around circle to shift theme"
         }
         className={`relative w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-ink-primary/25 dark:border-ink-primary/35 bg-transparent flex items-center justify-center transition-all duration-200 touch-none cursor-pointer flex-shrink-0 ${
           isDragging
