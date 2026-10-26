@@ -10,11 +10,12 @@ import { Settings } from "lucide-react";
 
 interface NavbarProps {
   onOpenSettings?: () => void;
+  onOpenWorkspace?: () => void;
   apiConnected?: boolean;
   isInApp?: boolean;
 }
 
-export function Navbar({ onOpenSettings, isInApp }: NavbarProps) {
+export function Navbar({ onOpenSettings, onOpenWorkspace, isInApp }: NavbarProps) {
   const pathname = usePathname();
   const isAppView = isInApp || pathname === "/exam" || pathname === "/library" || pathname === "/dev";
 
@@ -111,11 +112,23 @@ export function Navbar({ onOpenSettings, isInApp }: NavbarProps) {
           </div>
         </SignedIn>
 
-        <Link href="/?workspace=true" className="hidden sm:inline-block">
-          <Button variant="primary" size="sm" className="text-xs h-8 px-3">
+        {onOpenWorkspace ? (
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={onOpenWorkspace}
+            className="hidden sm:inline-block text-xs h-8 px-3 cursor-pointer shadow-xs"
+          >
             Open Allcited
           </Button>
-        </Link>
+        ) : (
+          <Link
+            href="/?workspace=true"
+            className="hidden sm:inline-flex items-center justify-center rounded-interactive bg-accent-primary text-white hover:opacity-90 transition-opacity text-xs h-8 px-3 font-medium cursor-pointer shadow-xs"
+          >
+            Open Allcited
+          </Link>
+        )}
       </div>
     </header>
   );

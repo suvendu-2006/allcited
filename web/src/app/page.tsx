@@ -14,7 +14,7 @@ import { MagneticButton } from "@/components/MagneticButton";
 import { LiveMiniDemo } from "@/components/LiveMiniDemo";
 import { Button } from "@/components/ui/button";
 import { Footer } from "@/components/Footer";
-import { motion, useMotionValue, useSpring } from "framer-motion";
+import { motion } from "framer-motion";
 import { Star, Settings } from "lucide-react";
 
 const PROOF_TICKER_ITEMS = [
@@ -55,27 +55,6 @@ export default function Home() {
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  // GitHub Star rotation physics (smooth GPU-accelerated spring motion on hover & cursor movement)
-  const starRotate = useMotionValue(0);
-  const starScale = useMotionValue(1);
-  const smoothStarRotate = useSpring(starRotate, { damping: 24, stiffness: 180, mass: 0.5 });
-  const smoothStarScale = useSpring(starScale, { damping: 20, stiffness: 220 });
-
-  const handleStarMouseEnter = () => {
-    starScale.set(1.25);
-    starRotate.set(starRotate.get() + 360);
-  };
-
-  const handleStarMouseMove = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    const delta = (Math.abs(e.movementX) + Math.abs(e.movementY)) || 1;
-    starRotate.set(starRotate.get() + delta * 4);
-  };
-
-  const handleStarMouseLeave = () => {
-    starScale.set(1);
-    starRotate.set(0);
-  };
-
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
   const workspaceRef = useRef<HTMLDivElement>(null);
 
@@ -114,15 +93,21 @@ export default function Home() {
         ollamaModel: savedOllamaModel,
       });
 
-      // Check URL query parameters
-      const params = new URLSearchParams(window.location.search);
-      const urlSessionId = params.get("session_id");
-      const urlFilename = params.get("filename");
-      const urlWorkspace = params.get("workspace");
       const savedGuest = sessionStorage.getItem("allcited_is_guest") === "true";
       if (savedGuest) {
         setIsGuest(true);
       }
+    }
+  }, [apiUrl]);
+
+  // Sync workspace state from URL query parameters (supports back/forward & client navigation)
+  useEffect(() => {
+    const syncFromUrl = () => {
+      if (typeof window === "undefined") return;
+      const params = new URLSearchParams(window.location.search);
+      const urlSessionId = params.get("session_id");
+      const urlFilename = params.get("filename");
+      const urlWorkspace = params.get("workspace");
 
       if (urlSessionId) {
         setSessionId(urlSessionId);
@@ -131,8 +116,12 @@ export default function Home() {
       } else if (urlWorkspace === "true") {
         setInWorkspace(true);
       }
-    }
-  }, [apiUrl]);
+    };
+
+    syncFromUrl();
+    window.addEventListener("popstate", syncFromUrl);
+    return () => window.removeEventListener("popstate", syncFromUrl);
+  }, []);
 
   const handleSaveToShelf = useCallback(async () => {
     if (!sessionId) return;
@@ -207,6 +196,7 @@ export default function Home() {
           apiConnected={apiConnected}
           isInApp={inWorkspace}
           onOpenSettings={() => setIsSettingsOpen(true)}
+          onOpenWorkspace={() => setInWorkspace(true)}
         />
 
         {/* Dynamic View: Workspace Mode vs Full Award Landing Page */}
@@ -321,7 +311,7 @@ export default function Home() {
               <DeepSeaAurora />
 
               <div className="relative z-10 max-w-4xl mx-auto space-y-6 my-auto">
-                <h1 className="font-editorial text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-ink-primary drop-shadow-xs">
+                <h1 className="font-display text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-ink-primary drop-shadow-xs">
                   {headlineWords.map((word, idx) => (
                     <motion.span
                       key={word}
@@ -371,16 +361,13 @@ export default function Home() {
                     </Button>
                   </Link>
 
-                  {/* GitHub Star Button with Interactive Rotating Star Animation (exactly same as multi-agent) */}
+                  {/* GitHub Star Button with Constant Stable Rotating Star Animation */}
                   <MagneticButton>
                     <a
                       href="https://github.com/suvendu-2006/allcited"
                       target="_blank"
                       rel="noopener noreferrer"
                       data-tracking-id="home_hero_github_star"
-                      onMouseEnter={handleStarMouseEnter}
-                      onMouseMove={handleStarMouseMove}
-                      onMouseLeave={handleStarMouseLeave}
                       className="group relative flex h-11 w-full sm:w-auto items-center justify-center gap-2.5 overflow-hidden whitespace-nowrap rounded-interactive border border-border bg-bg-surface px-5 font-mono text-xs font-semibold text-ink-primary shadow-xs transition-all duration-200 hover:border-ink-primary hover:shadow-sm hover:-translate-y-0.5 active:translate-y-0"
                     >
                       <svg
@@ -398,12 +385,9 @@ export default function Home() {
                         <path d="M9 18c-4.51 2-5-2-7-2" />
                       </svg>
                       <span>Star us on GitHub</span>
-                      <motion.div
-                        style={{ rotate: smoothStarRotate, scale: smoothStarScale }}
-                        className="inline-flex shrink-0 items-center justify-center text-amber-500 transform-gpu will-change-transform"
-                      >
-                        <Star className="h-4 w-4 fill-amber-500 drop-shadow-sm" />
-                      </motion.div>
+                      <div className="inline-flex shrink-0 items-center justify-center text-amber-500 transition-transform duration-300 group-hover:scale-110">
+                        <Star className="h-4 w-4 fill-amber-500 drop-shadow-sm group-hover:animate-[spin_3s_linear_infinite]" />
+                      </div>
                     </a>
                   </MagneticButton>
                 </motion.div>
