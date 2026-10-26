@@ -1,5 +1,6 @@
 import json
 import logging
+from collections import OrderedDict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -41,16 +42,20 @@ class TraceRecord(BaseModel):
     latencies_ms: Dict[str, float] = Field(default_factory=dict)
 
 
+MAX_MEMORY_TRACES = 1000
+
+
 class TraceManager:
     """
     Manages persistent JSONL and in-memory caching of per-question traces.
     Guarantees failure resilience: disk write errors are logged only and never disrupt answers.
     """
 
-    def __init__(self, trace_dir: Optional[Path] = None):
+    def __init__(self, trace_dir: Optional[Path] = None, max_memory_traces: int = MAX_MEMORY_TRACES):
         settings = get_settings()
         self.trace_dir = trace_dir or Path(getattr(settings, "TRACES_DIR", "data/traces"))
-        self._memory_store: Dict[str, TraceRecord] = {}
+        self.max_memory_traces = max_memory_traces
+        self._memory_store: OrderedDict[str, TraceRecord] = OrderedDict()
 
     def _ensure_dir(self):
         try:
@@ -61,6 +66,9 @@ class TraceManager:
     def record_trace(self, trace: TraceRecord) -> None:
         """Cache trace in memory and append to persistent JSONL log file."""
         self._memory_store[trace.question_id] = trace
+        self._memory_store.move_to_end(trace.question_id)
+        if len(self._memory_store) > self.max_memory_traces:
+            self._memory_store.popitem(last=False)
 
         try:
             self._ensure_dir()
@@ -79,6 +87,7 @@ class TraceManager:
     def get_trace(self, question_id: str) -> Optional[Dict[str, Any]]:
         """Retrieve trace by question ID from memory cache or JSONL file."""
         if question_id in self._memory_store:
+            self._memory_store.move_to_end(question_id)
             return self._memory_store[question_id].model_dump()
 
         # Fallback to scanning JSONL file backwards

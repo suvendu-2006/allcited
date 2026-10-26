@@ -1,10 +1,11 @@
 import asyncio
 import logging
+import secrets
 import time
 from typing import Any, Dict, List, Optional
 
 import httpx
-from fastapi import APIRouter, Header, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Header, HTTPException, Request
 
 from app.config import get_settings
 from app.pipeline.answer import CitationItem, stream_answer_pipeline
@@ -511,6 +512,7 @@ async def run_telegram_polling() -> None:
 )
 async def telegram_webhook(
     request: Request,
+    background_tasks: BackgroundTasks,
     x_telegram_bot_api_secret_token: Optional[str] = Header(None),
 ) -> Dict[str, Any]:
     """
@@ -520,12 +522,14 @@ async def telegram_webhook(
     """
     settings = get_settings()
     if settings.TELEGRAM_WEBHOOK_SECRET:
-        if x_telegram_bot_api_secret_token != settings.TELEGRAM_WEBHOOK_SECRET:
+        if not x_telegram_bot_api_secret_token or not secrets.compare_digest(
+            x_telegram_bot_api_secret_token, settings.TELEGRAM_WEBHOOK_SECRET
+        ):
             raise HTTPException(
                 status_code=401,
                 detail={"error": {"code": "invalid_secret_token", "message": "Invalid secret token"}},
             )
 
     body = await request.json()
-    await process_telegram_update(body)
+    background_tasks.add_task(process_telegram_update, body)
     return {"ok": True}

@@ -166,3 +166,16 @@ def test_trace_write_failure_resilience(tmp_path: Path):
     assert ask_res.status_code == 200
     events = parse_sse_events(ask_res.text)
     assert any(e["event"] == "done" for e in events)
+
+
+def test_trace_manager_bounded_memory_lru(tmp_path: Path):
+    from app.trace import TraceManager, TraceRecord
+    mgr = TraceManager(trace_dir=tmp_path, max_memory_traces=3)
+    for i in range(5):
+        mgr.record_trace(TraceRecord(question_id=f"q_{i}", query=f"query {i}", route="direct"))
+    assert len(mgr._memory_store) == 3
+    assert "q_0" not in mgr._memory_store
+    assert "q_1" not in mgr._memory_store
+    assert "q_2" in mgr._memory_store
+    assert "q_3" in mgr._memory_store
+    assert "q_4" in mgr._memory_store

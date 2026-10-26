@@ -57,6 +57,45 @@ class LibraryStoredChunk(BaseModel):
     embedding: List[float]
 
 
+def _sync_supabase_save(doc_payload: dict, chunks_to_persist: list):
+    settings = get_settings()
+    if not (settings.SUPABASE_URL and settings.SUPABASE_SERVICE_ROLE_KEY):
+        return
+    try:
+        base_url = settings.SUPABASE_URL.rstrip("/")
+        headers = {
+            "apikey": settings.SUPABASE_SERVICE_ROLE_KEY,
+            "Authorization": f"Bearer {settings.SUPABASE_SERVICE_ROLE_KEY}",
+            "Content-Type": "application/json",
+            "Prefer": "return=minimal",
+        }
+        with httpx.Client(timeout=5.0) as client:
+            resp = client.post(f"{base_url}/rest/v1/saved_documents", headers=headers, json=doc_payload)
+            if resp.status_code in (200, 201) and chunks_to_persist:
+                client.post(f"{base_url}/rest/v1/saved_chunks", headers=headers, json=chunks_to_persist)
+    except Exception as e:
+        logger.warning("Supabase save_document sync failed: %s", e)
+
+
+def _sync_supabase_delete(user_id: str, doc_id: str):
+    settings = get_settings()
+    if not (settings.SUPABASE_URL and settings.SUPABASE_SERVICE_ROLE_KEY):
+        return
+    try:
+        base_url = settings.SUPABASE_URL.rstrip("/")
+        headers = {
+            "apikey": settings.SUPABASE_SERVICE_ROLE_KEY,
+            "Authorization": f"Bearer {settings.SUPABASE_SERVICE_ROLE_KEY}",
+        }
+        with httpx.Client(timeout=5.0) as client:
+            client.delete(
+                f"{base_url}/rest/v1/saved_documents?id=eq.{doc_id}&user_id=eq.{user_id}",
+                headers=headers,
+            )
+    except Exception as e:
+        logger.warning("Supabase delete_document sync failed: %s", e)
+
+
 class InMemoryLibraryStore:
     """Thread-safe in-memory library store with per-user isolation and dense vector search."""
 
@@ -147,59 +186,50 @@ class InMemoryLibraryStore:
                     "embedding": emb,
                 })
 
-            # Remote Supabase persistence (if configured)
-            settings = get_settings()
-            if settings.SUPABASE_URL and settings.SUPABASE_SERVICE_ROLE_KEY:
-                try:
-                    base_url = settings.SUPABASE_URL.rstrip("/")
-                    headers = {
-                        "apikey": settings.SUPABASE_SERVICE_ROLE_KEY,
-                        "Authorization": f"Bearer {settings.SUPABASE_SERVICE_ROLE_KEY}",
-                        "Content-Type": "application/json",
-                        "Prefer": "return=minimal",
-                    }
-                    doc_payload = {
-                        "id": doc_id,
-                        "user_id": user_id,
-                        "filename": doc_item.filename,
-                        "format": doc_item.format,
-                        "file_size_bytes": doc_item.file_size_bytes,
-                        "page_count": doc_item.page_count,
-                        "chunk_count": doc_item.chunk_count,
-                        "doc_hash": getattr(session, "doc_hash", None) or f"hash_{doc_id}",
-                        "created_at": doc_item.created_at,
-                        "updated_at": doc_item.created_at,
-                    }
-                    with httpx.Client(timeout=5.0) as client:
-                        resp = client.post(f"{base_url}/rest/v1/saved_documents", headers=headers, json=doc_payload)
-                        if resp.status_code in (200, 201) and chunks_to_persist:
-                            client.post(f"{base_url}/rest/v1/saved_chunks", headers=headers, json=chunks_to_persist)
-                except Exception as e:
-                    logger.warning("Supabase save_document sync failed: %s", e)
+            doc_payload = {
+                "id": doc_id,
+                "user_id": user_id,
+                "filename": doc_item.filename,
+                "format": doc_item.format,
+                "file_size_bytes": doc_item.file_size_bytes,
+                "page_count": doc_item.page_count,
+                "chunk_count": doc_item.chunk_count,
+                "doc_hash": getattr(session, "doc_hash", None) or f"hash_{doc_id}",
+                "created_at": doc_item.created_at,
+                "updated_at": doc_item.created_at,
+            }
 
-            return doc_item
+        # Remote Supabase persistence asynchronously outside lock
+        threading.Thread(
+            target=_sync_supabase_save,
+            args=(doc_payload, chunks_to_persist),
+            daemon=True,
+        ).start()
+
+        return doc_item
 
     def list_documents(self, user_id: str) -> List[LibraryDocumentItem]:
         with self._lock:
             if user_id in self._docs and self._docs[user_id]:
                 return list(self._docs[user_id].values())
 
-            # Attempt fetching from Supabase if not loaded in memory
-            settings = get_settings()
-            if settings.SUPABASE_URL and settings.SUPABASE_SERVICE_ROLE_KEY:
-                try:
-                    base_url = settings.SUPABASE_URL.rstrip("/")
-                    headers = {
-                        "apikey": settings.SUPABASE_SERVICE_ROLE_KEY,
-                        "Authorization": f"Bearer {settings.SUPABASE_SERVICE_ROLE_KEY}",
-                    }
-                    with httpx.Client(timeout=5.0) as client:
-                        resp = client.get(
-                            f"{base_url}/rest/v1/saved_documents?user_id=eq.{user_id}&order=created_at.desc",
-                            headers=headers,
-                        )
-                        if resp.status_code == 200:
-                            rows = resp.json()
+        # Attempt fetching from Supabase if not loaded in memory (outside lock)
+        settings = get_settings()
+        if settings.SUPABASE_URL and settings.SUPABASE_SERVICE_ROLE_KEY:
+            try:
+                base_url = settings.SUPABASE_URL.rstrip("/")
+                headers = {
+                    "apikey": settings.SUPABASE_SERVICE_ROLE_KEY,
+                    "Authorization": f"Bearer {settings.SUPABASE_SERVICE_ROLE_KEY}",
+                }
+                with httpx.Client(timeout=5.0) as client:
+                    resp = client.get(
+                        f"{base_url}/rest/v1/saved_documents?user_id=eq.{user_id}&order=created_at.desc",
+                        headers=headers,
+                    )
+                    if resp.status_code == 200:
+                        rows = resp.json()
+                        with self._lock:
                             if user_id not in self._docs:
                                 self._docs[user_id] = {}
                             for r in rows:
@@ -215,9 +245,10 @@ class InMemoryLibraryStore:
                                 )
                                 self._docs[user_id][doc_item.id] = doc_item
                             return list(self._docs[user_id].values())
-                except Exception as e:
-                    logger.warning("Supabase list_documents sync failed: %s", e)
+            except Exception as e:
+                logger.warning("Supabase list_documents sync failed: %s", e)
 
+        with self._lock:
             return list(self._docs.get(user_id, {}).values())
 
     def get_document(self, user_id: str, doc_id: str) -> Optional[LibraryDocumentItem]:
@@ -234,26 +265,14 @@ class InMemoryLibraryStore:
             if user_id in self._chunks:
                 self._chunks[user_id] = [c for c in self._chunks[user_id] if c.document_id != doc_id]
 
-            # Remote Supabase delete
-            settings = get_settings()
-            if settings.SUPABASE_URL and settings.SUPABASE_SERVICE_ROLE_KEY:
-                try:
-                    base_url = settings.SUPABASE_URL.rstrip("/")
-                    headers = {
-                        "apikey": settings.SUPABASE_SERVICE_ROLE_KEY,
-                        "Authorization": f"Bearer {settings.SUPABASE_SERVICE_ROLE_KEY}",
-                    }
-                    with httpx.Client(timeout=5.0) as client:
-                        resp = client.delete(
-                            f"{base_url}/rest/v1/saved_documents?id=eq.{doc_id}&user_id=eq.{user_id}",
-                            headers=headers,
-                        )
-                        if resp.status_code in (200, 204):
-                            deleted = True
-                except Exception as e:
-                    logger.warning("Supabase delete_document sync failed: %s", e)
+        # Remote Supabase delete asynchronously outside lock
+        threading.Thread(
+            target=_sync_supabase_delete,
+            args=(user_id, doc_id),
+            daemon=True,
+        ).start()
 
-            return deleted
+        return deleted
 
     def search_chunks(
         self,
