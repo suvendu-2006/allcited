@@ -4,6 +4,7 @@ import json
 import httpx
 from fastapi.testclient import TestClient
 
+from app.config import get_settings
 from app.llm.client import BrainClient, LLMClientError
 from app.llm.provider import resolve_provider
 from app.main import app
@@ -261,6 +262,9 @@ def test_groq_key_pool_streaming_failover_on_429(monkeypatch):
 
 def test_nvidia_fallback_when_all_groq_fail(monkeypatch):
     """Verify that when all Groq attempts fail, request fails over to NVIDIA NIM."""
+    settings = get_settings()
+    monkeypatch.setattr(settings, "NVIDIA_API_KEY", "nvapi-test-mock-key")
+
     async def run_test():
         brain = BrainClient()
         brain.groq_pool._keys = ["key_1_aaa", "key_2_bbb", "key_3_ccc"]
@@ -305,6 +309,9 @@ def test_nvidia_fallback_when_all_groq_fail(monkeypatch):
 
 def test_nvidia_streaming_fallback_when_all_groq_fail(monkeypatch):
     """Verify that when all Groq attempts fail during streaming, request streams from NVIDIA NIM."""
+    settings = get_settings()
+    monkeypatch.setattr(settings, "NVIDIA_API_KEY", "nvapi-test-mock-key")
+
     async def run_test():
         brain = BrainClient()
         brain.groq_pool._keys = ["key_1_aaa", "key_2_bbb", "key_3_ccc"]
@@ -357,6 +364,10 @@ def test_pipeline_e2e_groq_failover_to_nvidia(monkeypatch):
     End-to-end verification: when all Groq requests fail with 429,
     the pipeline streams from NVIDIA NIM and delivers done event with provider='nvidia'.
     """
+    settings = get_settings()
+    monkeypatch.setattr(settings, "NVIDIA_API_KEY", "nvapi-test-mock-key")
+    monkeypatch.setattr(settings, "GROQ_API_KEY", "gsk-mock-key-for-test")
+
     async def run_test():
         from app.pipeline.answer import stream_answer_pipeline
         from app.pipeline.chunker import Chunk

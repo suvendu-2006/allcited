@@ -160,15 +160,33 @@ def test_readyz_endpoint():
     assert data["pipeline"]["reranker"] == "ready"
 
 
-def test_local_model_path_resolution():
-    """Verify local models in api/models are resolved without downloading from Hub."""
+def test_local_model_path_resolution(tmp_path: Path, monkeypatch):
+    """Verify local models in candidate directories are resolved without downloading from Hub."""
     from app.pipeline.embed import resolve_local_model_path
 
+    # 1. Fallback when model directory is absent
+    fallback = resolve_local_model_path("nonexistent-model-xyz", "embedding")
+    assert fallback == "nonexistent-model-xyz"
+
+    # 2. Test relative candidate directory lookup (cwd / "models")
+    mock_models_dir = tmp_path / "models"
+    embed_dir = mock_models_dir / "all-MiniLM-L6-v2"
+    embed_dir.mkdir(parents=True)
+    (embed_dir / "config.json").write_text("{}")
+
+    rerank_dir = mock_models_dir / "ms-marco-MiniLM-L-6-v2"
+    rerank_dir.mkdir(parents=True)
+    (rerank_dir / "config.json").write_text("{}")
+
+    monkeypatch.chdir(tmp_path)
+
+    # Embedding model lookup
     embed_path = resolve_local_model_path("all-MiniLM-L6-v2", "embedding")
-    assert "models/all-MiniLM-L6-v2" in embed_path or "api/models/all-MiniLM-L6-v2" in embed_path
+    assert "models/all-MiniLM-L6-v2" in embed_path
     assert Path(embed_path).exists()
 
+    # Cross-encoder reranker model lookup (resolves via stripped simple_name candidate)
     rerank_path = resolve_local_model_path("cross-encoder/ms-marco-MiniLM-L-6-v2", "reranker")
-    assert "models/ms-marco-MiniLM-L-6-v2" in rerank_path or "api/models/ms-marco-MiniLM-L-6-v2" in rerank_path
+    assert "models/ms-marco-MiniLM-L-6-v2" in rerank_path
     assert Path(rerank_path).exists()
 

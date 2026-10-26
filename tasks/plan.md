@@ -1,13 +1,10 @@
-# Revised Implementation Plan: UI Polish, Rate Limiting, & Clerk Light Mode
+# Master Implementation Plan: Audit Remediation, Hardening & Supabase Persistence
 
-## Overview
-Address all 6 user requirements incorporating critical architectural fixes identified in the plan review:
-1. Sound: Zero audio assets or Web Audio APIs remain.
-2. Stable Hero Buttons: Unwrap buttons and remove unused `MagneticButton` import.
-3. Continuous Ticker: Remove hover pause and section `group` class.
-4. Smooth Footer Link Underline: Retain exact tested origin-swap strings while smoothing hardware-accelerated transitions.
-5. Rate Limiting (10 q/hr): Exclude BYOK users, isolate countdown timer component to prevent re-render stutter, use `Date.now()` timestamp diffs, sync across tabs with `storage` events, and update Pricing page beta notices.
-6. Clerk Light Mode: Use design tokens (`var(--ink-primary)`, `var(--bg-surface)`, etc.) without hardcoded hexes to override Clerk styles on `:root:not(.dark)`.
+See full task list in [todo.md](file:///Users/suvendu/Downloads/allcited/tasks/todo.md).
 
-## Task List
-See [todo.md](file:///Users/suvendu/Downloads/allcited/tasks/todo.md).
+## Phasing & Execution Order
+1. Phase 1: Critical Security & Authentication Hardening (`SEC-01`, `SEC-02`, `SEC-03`, `SEC-05`)
+2. Phase 2: Ingestion & Pipeline Defense (`SEC-04`, `QUAL-01`, `LOGIC-01`)
+3. Phase 3: File Ingestion, Size Caps & Server Stability (`FUNC-01`, `FUNC-02`, `Item 10`)
+4. Phase 4: Concurrency, Async Architecture & Supabase Persistence (`PERF-01`, `PERF-02`, `INT-01`, `Item 18`, `DATA-01`)
+5. Phase 5: Client Contracts & Frontend Hardening (`FUNC-03`, `FUNC-04`, `DEP-01`, `Item 1`)
