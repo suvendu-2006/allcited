@@ -87,26 +87,39 @@ export function ModelSettings({
   const testOllamaConnection = async () => {
     setIsTestingOllama(true);
     setOllamaStatus({ tested: false, online: false, message: "Testing connectivity…" });
+    const targetUrl = ollamaBaseUrl.trim() || "http://localhost:11434";
     try {
-      const res = await fetch(`${apiUrl}/v1/models`);
-      if (res.ok) {
-        const data = await res.json();
-        const ollamaMode = (data.modes || []).find(
-          (m: { provider: string }) => m.provider === "ollama"
-        );
-        if (ollamaMode && ollamaMode.detected) {
-          setOllamaStatus({
-            tested: true,
-            online: true,
-            message: `Ollama service online at ${ollamaBaseUrl || "http://localhost:11434"}`,
-          });
-        } else {
-          setOllamaStatus({
-            tested: true,
-            online: false,
-            message: "Can't reach your local Ollama. Is it running? (ollama serve)",
-          });
+      // 1. Try direct browser check to the configured Ollama URL
+      let isOnline = false;
+      try {
+        const directRes = await fetch(`${targetUrl.replace(/\/$/, "")}/api/tags`, {
+          signal: AbortSignal.timeout(1200),
+        });
+        if (directRes.ok) isOnline = true;
+      } catch {
+        // Direct probe failed (e.g. CORS or network boundary), fallback to backend probe
+      }
+
+      // 2. Fallback to checking via backend endpoint
+      if (!isOnline) {
+        const res = await fetch(`${apiUrl}/v1/models`);
+        if (res.ok) {
+          const data = await res.json();
+          const ollamaMode = (data.modes || []).find(
+            (m: { provider: string }) => m.provider === "ollama"
+          );
+          if (ollamaMode && ollamaMode.detected) {
+            isOnline = true;
+          }
         }
+      }
+
+      if (isOnline) {
+        setOllamaStatus({
+          tested: true,
+          online: true,
+          message: `Ollama service online at ${targetUrl}`,
+        });
       } else {
         setOllamaStatus({
           tested: true,

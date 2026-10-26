@@ -110,16 +110,17 @@ async def safe_fetch_url(
             if response.status_code != 200:
                 raise SSRFBlockedError(f"HTTP fetch returned non-200 status code: {response.status_code}")
 
-            # Enforce 2 MB size limit via Content-Length if present
+            # Enforce size limit via Content-Length if present
+            limit_mb = max(1, max_size_bytes // (1024 * 1024))
             cl_header = response.headers.get("content-length")
             if cl_header and cl_header.isdigit():
                 if int(cl_header) > max_size_bytes:
-                    raise SSRFBlockedError(f"Resource size ({cl_header} bytes) exceeds 2 MB cap.")
+                    raise SSRFBlockedError(f"Resource size ({cl_header} bytes) exceeds {limit_mb} MB cap.")
 
             # Read content stream enforcing byte limit
             content_bytes = response.content
             if len(content_bytes) > max_size_bytes:
-                raise SSRFBlockedError(f"Downloaded content ({len(content_bytes)} bytes) exceeds 2 MB cap.")
+                raise SSRFBlockedError(f"Downloaded content ({len(content_bytes)} bytes) exceeds {limit_mb} MB cap.")
 
             return content_bytes
 

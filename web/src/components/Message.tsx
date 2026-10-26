@@ -69,17 +69,22 @@ export function Message({ message, onCitationClick }: MessageProps) {
     }
   });
 
-  // Parse [S#] citations into interactive CitationChips
+  // Parse [S#] and [related: S#] citations into interactive CitationChips
   const renderFormattedText = (text: string) => {
     if (!text) return null;
 
     const normalizedText = text.replace(/【/g, "[").replace(/】/g, "]");
-    const parts = normalizedText.split(/(\[S\d+(?:\s*\(OCR\))?\])/g);
+    const parts = normalizedText.split(/(\[(?:related:\s*)?S\d+(?:\s*\(OCR\))?\])/gi);
     return parts.map((part, idx) => {
-      const match = part.match(/\[S(\d+)(?:\s*\(OCR\))?\]/);
+      const match = part.match(/\[(?:related:\s*)?S(\d+)(?:\s*\(OCR\))?\]/i);
       if (match) {
         const baseLabel = `S${match[1]}`;
-        const citation = citationsMap.get(part.slice(1, -1)) || citationsMap.get(baseLabel);
+        const relatedLabel = `related: S${match[1]}`;
+        const rawKey = part.slice(1, -1).trim();
+        const citation =
+          citationsMap.get(rawKey) ||
+          citationsMap.get(relatedLabel) ||
+          citationsMap.get(baseLabel);
         if (citation) {
           return (
             <CitationChip

@@ -20,10 +20,11 @@ export function CitationChip({ citation, isPinned = false, onClick }: CitationCh
   const cleanLabel = citation.label.replace(/\s*\(OCR\)/gi, "").trim();
 
   // Section or page snippet
+  const pageNum = citation.page_number != null ? citation.page_number : citation.page != null ? citation.page : null;
   const sectionText = citation.section_path?.length
     ? citation.section_path.slice(-1)[0]
-    : citation.page_number
-    ? `p.${citation.page_number}`
+    : pageNum != null
+    ? `p.${pageNum}`
     : "";
 
   return (

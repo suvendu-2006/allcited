@@ -55,3 +55,4 @@ def test_tokenize_for_bm25_unicode_multilingual():
     assert "नीतियां" in tokens
     assert "corporate" in tokens
     assert "compliance" in tokens
+    assert "2026" in tokens

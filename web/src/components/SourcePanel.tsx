@@ -135,7 +135,8 @@ export function SourcePanel({
 
               // Section & page label
               const sectionName = c.section_path?.length ? c.section_path.slice(-1)[0] : "";
-              const pageStr = c.page_number || c.page ? `p.${c.page_number || c.page}` : "";
+              const pageNum = c.page_number != null ? c.page_number : c.page != null ? c.page : null;
+              const pageStr = pageNum != null ? `p.${pageNum}` : "";
               const chunkLabel = [sectionName, pageStr].filter(Boolean).join(" · ");
 
               return (

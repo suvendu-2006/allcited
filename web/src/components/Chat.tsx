@@ -237,7 +237,16 @@ export function Chat({
           setIsGenerating(false);
         },
       });
-    } catch {
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setStreamError({
+        code: "generic",
+        message: msg || "Failed to start question stream",
+        requestId: `req_${Math.random().toString(36).slice(2, 10)}`,
+      });
+      setMessages((prev) =>
+        prev.filter((m) => m.id !== assistantMessageId || m.content.trim().length > 0)
+      );
       setIsGenerating(false);
     }
   };

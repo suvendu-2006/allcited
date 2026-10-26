@@ -17,7 +17,7 @@ interface UploadProps {
 }
 
 const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB max allowed (server enforces Free/Pro tier limits)
-const ALLOWED_EXTENSIONS = [".pdf", ".md", ".txt", ".docx", ".pptx", ".xlsx", ".html"];
+const ALLOWED_EXTENSIONS = [".pdf", ".md", ".txt", ".docx", ".pptx", ".xlsx", ".xlsm", ".html", ".htm"];
 
 const PROGRESS_STEPS = [
   "Cutting into chunks…",

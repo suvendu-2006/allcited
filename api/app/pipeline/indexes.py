@@ -11,7 +11,7 @@ from app.pipeline.embed import EMBEDDING_DIM, get_embedding_manager
 def tokenize_for_bm25(text: str) -> List[str]:
     """Unicode-aware lowercase tokenizer for BM25 ranking."""
     words = [t.strip(".,;:!'\"()[]{}!?<>~`@#$%^&*+=/\\|") for t in text.lower().split()]
-    return [t for t in words if len(t) >= 2 and not t.isdigit()]
+    return [t for t in words if len(t) >= 2]
 
 
 class VectorIndex:
