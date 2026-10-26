@@ -139,3 +139,11 @@ def test_anonymous_endpoint_accessible_without_auth():
     response = client.get("/v1/health")
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
+
+
+def test_unconfigured_key_fails_closed():
+    """SEC-01: Verify that when signing key is None, verify_clerk_token fails closed with 401."""
+    set_test_verification_key(None)
+    response = client.get("/v1/auth/me", headers={"Authorization": "Bearer any.token.here"})
+    assert response.status_code == 401
+    assert response.json()["detail"]["error"]["code"] in ("auth_not_configured", "invalid_token")

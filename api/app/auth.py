@@ -1,4 +1,3 @@
-import os
 import uuid
 from typing import Any, Dict, Optional
 
@@ -89,21 +88,18 @@ def verify_clerk_token(token: str) -> Dict[str, Any]:
     elif settings.CLERK_SECRET_KEY:
         signing_key = settings.CLERK_SECRET_KEY
 
-    # If no key is configured in test/dev environment, fallback to reading unverified in local mock only if mode=mock
+    # If no key is configured or resolved, fail closed immediately
     if signing_key is None:
-        # Check if environment is test or development and no key configured
-        if os.getenv("ENVIRONMENT") == "test":
-            # In test mode without key, reject
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail={
-                    "error": {
-                        "code": "auth_not_configured",
-                        "message": "Clerk authentication key not configured",
-                        "request_id": str(uuid.uuid4()),
-                    }
-                },
-            )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "error": {
+                    "code": "auth_not_configured",
+                    "message": "Clerk authentication signing key could not be resolved",
+                    "request_id": str(uuid.uuid4()),
+                }
+            },
+        )
 
     try:
         # Decode and verify signature, exp, nbf
@@ -111,7 +107,7 @@ def verify_clerk_token(token: str) -> Dict[str, Any]:
             token,
             signing_key,
             algorithms=algorithms,
-            options={"verify_signature": signing_key is not None, "verify_exp": True},
+            options={"verify_signature": True, "verify_exp": True},
         )
         if not decoded.get("sub"):
             raise HTTPException(

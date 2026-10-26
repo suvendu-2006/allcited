@@ -1,9 +1,11 @@
 import datetime
 import logging
+import os
 import threading
 import uuid
 from typing import Any, Dict, Optional, Set
 
+import httpx
 import stripe
 from fastapi import HTTPException, status
 from pydantic import BaseModel, Field
@@ -34,6 +36,43 @@ class SubscriptionInfo(BaseModel):
     updated_at: str
 
 
+def _sync_subscription_to_supabase(
+    user_id: str,
+    plan: str,
+    customer_id: Optional[str],
+    subscription_id: Optional[str],
+    status: str,
+):
+    settings = get_settings()
+    if not (settings.SUPABASE_URL and settings.SUPABASE_SERVICE_ROLE_KEY):
+        return
+    try:
+        base_url = settings.SUPABASE_URL.rstrip("/")
+        headers = {
+            "apikey": settings.SUPABASE_SERVICE_ROLE_KEY,
+            "Authorization": f"Bearer {settings.SUPABASE_SERVICE_ROLE_KEY}",
+            "Content-Type": "application/json",
+            "Prefer": "resolution=merge-duplicates,return=minimal",
+        }
+        now_str = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        payload = {
+            "user_id": user_id,
+            "plan": plan,
+            "stripe_customer_id": customer_id,
+            "stripe_subscription_id": subscription_id,
+            "status": status,
+            "updated_at": now_str,
+        }
+        with httpx.Client(timeout=5.0) as client:
+            client.post(
+                f"{base_url}/rest/v1/subscriptions?on_conflict=user_id",
+                headers=headers,
+                json=payload,
+            )
+    except Exception as e:
+        logger.warning("Supabase subscription sync failed: %s", e)
+
+
 class SubscriptionStore:
     """Thread-safe store for subscriptions with idempotent webhook event replay protection."""
 
@@ -47,7 +86,42 @@ class SubscriptionStore:
     def get_plan(self, user_id: str) -> str:
         with self._lock:
             info = self._subscriptions.get(user_id)
-            return info.plan if info else "free"
+            if info:
+                return info.plan
+
+        # On in-memory miss, query Supabase outside lock
+        settings = get_settings()
+        if settings.SUPABASE_URL and settings.SUPABASE_SERVICE_ROLE_KEY:
+            try:
+                base_url = settings.SUPABASE_URL.rstrip("/")
+                headers = {
+                    "apikey": settings.SUPABASE_SERVICE_ROLE_KEY,
+                    "Authorization": f"Bearer {settings.SUPABASE_SERVICE_ROLE_KEY}",
+                }
+                with httpx.Client(timeout=3.0) as client:
+                    resp = client.get(
+                        f"{base_url}/rest/v1/subscriptions?user_id=eq.{user_id}",
+                        headers=headers,
+                    )
+                    if resp.status_code == 200:
+                        rows = resp.json()
+                        if rows:
+                            row = rows[0]
+                            sub = SubscriptionInfo(
+                                user_id=user_id,
+                                plan=row.get("plan", "free"),
+                                customer_id=row.get("stripe_customer_id"),
+                                subscription_id=row.get("stripe_subscription_id"),
+                                status=row.get("status", "active"),
+                                updated_at=row.get("updated_at", ""),
+                            )
+                            with self._lock:
+                                self._subscriptions[user_id] = sub
+                            return sub.plan
+            except Exception as e:
+                logger.warning("Supabase get_plan lookup failed: %s", e)
+
+        return "free"
 
     def get_subscription(self, user_id: str) -> SubscriptionInfo:
         with self._lock:
@@ -79,7 +153,15 @@ class SubscriptionStore:
                 updated_at=now_str,
             )
             self._subscriptions[user_id] = sub
-            return sub
+
+        # Persist to Supabase asynchronously outside lock
+        threading.Thread(
+            target=_sync_subscription_to_supabase,
+            args=(user_id, plan, customer_id, subscription_id, status),
+            daemon=True,
+        ).start()
+
+        return sub
 
     def is_event_processed(self, event_id: str) -> bool:
         with self._lock:
@@ -162,7 +244,15 @@ async def handle_stripe_webhook(payload: bytes, sig_header: Optional[str]) -> Di
     """
     settings = get_settings()
     store = get_subscription_store()
-    webhook_secret = settings.STRIPE_WEBHOOK_SECRET or "whsec_test_secret_allcited"
+    webhook_secret = settings.STRIPE_WEBHOOK_SECRET
+    if not webhook_secret:
+        if os.getenv("ENVIRONMENT") == "test":
+            webhook_secret = "whsec_test_secret_allcited"
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail={"error": {"code": "stripe_unconfigured", "message": "STRIPE_WEBHOOK_SECRET is not configured."}},
+            )
 
     if not sig_header:
         raise HTTPException(

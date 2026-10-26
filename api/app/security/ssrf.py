@@ -35,6 +35,7 @@ def validate_url_target(url: str) -> None:
     except socket.gaierror as e:
         raise SSRFBlockedError(f"Could not resolve hostname '{hostname}': {str(e)}") from e
 
+    validated_ips = []
     for item in addr_info:
         sockaddr = item[4]
         ip_str = sockaddr[0]
@@ -59,6 +60,10 @@ def validate_url_target(url: str) -> None:
         if ip_str == "169.254.169.254":
             raise SSRFBlockedError("Access to cloud metadata service is strictly blocked.")
 
+        validated_ips.append(ip_str)
+
+    return validated_ips[0] if validated_ips else ""
+
 
 async def safe_fetch_url(
     url: str,
@@ -82,8 +87,13 @@ async def safe_fetch_url(
         for _ in range(max_redirects + 1):
             validate_url_target(current_url)
 
+            req_headers = dict(headers)
+            parsed = urlparse(current_url)
+            if parsed.hostname and not parsed.hostname.replace(".", "").isdigit():
+                req_headers["Host"] = parsed.netloc
+
             try:
-                response = await client.get(current_url, headers=headers)
+                response = await client.get(current_url, headers=req_headers)
             except Exception as e:
                 raise SSRFBlockedError(f"Failed to fetch URL: {str(e)}") from e
 
