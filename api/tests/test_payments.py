@@ -51,10 +51,13 @@ def generate_stripe_signature(payload: bytes, secret: str, timestamp: int) -> st
     return f"t={timestamp},v1={sig}"
 
 
-def test_stripe_checkout_and_idempotent_webhook():
+def test_stripe_checkout_and_idempotent_webhook(monkeypatch):
     """
     STEP 43 Done when: test checkout completes; webhook updates plan; replayed webhook event does not double-apply.
     """
+    settings = get_settings()
+    monkeypatch.setattr(settings, "STRIPE_WEBHOOK_SECRET", "whsec_test_secret_allcited")
+
     set_test_verification_key(_public_pem)
     store = get_subscription_store()
     store.reset_for_tests()
