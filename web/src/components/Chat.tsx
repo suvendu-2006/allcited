@@ -7,6 +7,8 @@ import { Composer } from "./Composer";
 import { Upload } from "./Upload";
 import { EmptyState } from "./EmptyState";
 import { ErrorState } from "./ErrorState";
+import { checkRateLimit, recordFreeQuery, RateLimitState } from "@/lib/rateLimit";
+import { RateLimitBanner } from "./RateLimitBanner";
 
 interface ChatProps {
   sessionId?: string | null;
@@ -57,6 +59,27 @@ export function Chat({
   const scrollEndRef = useRef<HTMLDivElement>(null);
   const searchVariantIdx = useRef(0);
 
+  // Rate Limiter: Free tier is limited to 10 queries / hour (BYOK users are exempt)
+  const isByokActive = Boolean(byokKey || preferredProvider === "ollama");
+  const [rateLimitState, setRateLimitState] = useState<RateLimitState>(() =>
+    checkRateLimit(isByokActive)
+  );
+
+  useEffect(() => {
+    setRateLimitState(checkRateLimit(isByokActive));
+  }, [isByokActive]);
+
+  // Synchronize rate limit status across multiple browser tabs
+  useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "allcited_free_queries") {
+        setRateLimitState(checkRateLimit(isByokActive));
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, [isByokActive]);
+
   // Auto-scroll to bottom on incoming message updates
   const scrollToBottom = () => {
     scrollEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -86,8 +109,23 @@ export function Chat({
       return;
     }
 
+    // Check rate limit for free tier
+    if (!isByokActive) {
+      const current = checkRateLimit(false);
+      if (current.isRateLimited) {
+        setRateLimitState(current);
+        return;
+      }
+    }
+
     setStreamError(null);
     searchVariantIdx.current = (searchVariantIdx.current + 1) % SEARCHING_VARIANTS.length;
+
+    // Record question in free tier history
+    if (!isByokActive) {
+      const updated = recordFreeQuery(false);
+      setRateLimitState(updated);
+    }
 
     const userMessageId = `user_${Date.now()}`;
     const assistantMessageId = `asst_${Date.now()}`;
@@ -270,11 +308,23 @@ export function Chat({
       {/* Composer Dock */}
       <div className="p-4 bg-bg-surface/90 backdrop-blur-md border-t border-border">
         <div className="max-w-[640px] w-full mx-auto">
+          {rateLimitState.isRateLimited && rateLimitState.resetAt && (
+            <RateLimitBanner
+              resetAt={rateLimitState.resetAt}
+              onReset={() => setRateLimitState(checkRateLimit(isByokActive))}
+              onOpenSettings={onOpenSettings}
+            />
+          )}
           <Composer
             onSend={handleSend}
             onAbort={handleAbort}
             isGenerating={isGenerating}
-            disabled={!sessionId}
+            disabled={!sessionId || rateLimitState.isRateLimited}
+            placeholder={
+              rateLimitState.isRateLimited
+                ? "Free tier limit reached (10 questions / hour). Resets soon or use BYOK."
+                : undefined
+            }
           />
         </div>
       </div>

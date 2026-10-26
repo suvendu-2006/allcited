@@ -6,17 +6,13 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { Check } from "lucide-react";
+import { Check, Sparkles, X } from "lucide-react";
 
 export default function PricingPage() {
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [betaModalOpen, setBetaModalOpen] = useState(false);
 
   const handleCheckout = () => {
-    setCheckoutLoading(true);
-    setTimeout(() => {
-      alert("Test mode checkout: Pro tier activated for testing (no real charges).");
-      setCheckoutLoading(false);
-    }, 600);
+    setBetaModalOpen(true);
   };
 
   return (
@@ -40,7 +36,7 @@ export default function PricingPage() {
             transition={{ duration: 0.4, delay: 0.1 }}
             className="text-sm sm:text-base text-gray-warm leading-relaxed"
           >
-            Questions are free, forever. Pro is for big files and heavy use.
+            Free tier includes 10 questions per hour during beta. Pro is for big files and heavy use.
           </motion.p>
         </div>
 
@@ -66,7 +62,7 @@ export default function PricingPage() {
 
               <ul className="space-y-2.5 text-xs text-ink-primary font-mono pt-2">
                 {[
-                  "Unlimited questions, forever",
+                  "10 questions / hour (Free beta tier)",
                   "Files up to 20 MB",
                   "All 6 file types",
                   "Every citation and trace",
@@ -128,14 +124,13 @@ export default function PricingPage() {
                 variant="primary"
                 size="lg"
                 onClick={handleCheckout}
-                disabled={checkoutLoading}
-                className="w-full text-xs"
+                className="w-full text-xs cursor-pointer shadow-sm"
               >
-                {checkoutLoading ? "Opening checkout..." : "Start Pro"}
+                Start Pro
               </Button>
 
               <p className="font-mono text-[10px] text-gray-warm text-center">
-                test-mode checkout during beta — no real charges
+                paid tier currently in beta — payment gateway coming soon
               </p>
             </div>
           </div>
@@ -144,6 +139,53 @@ export default function PricingPage() {
         <section className="text-center font-mono text-xs text-gray-warm pt-4 border-t border-border/60">
           <p>Nothing is stored unless you save it · Cancel anytime in one click</p>
         </section>
+
+        {/* Pro Plan Beta Modal */}
+        {betaModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
+            <div className="relative w-full max-w-md bg-bg-surface border border-border rounded-interactive p-6 shadow-2xl space-y-4">
+              <button
+                type="button"
+                onClick={() => setBetaModalOpen(false)}
+                className="absolute top-4 right-4 text-gray-warm hover:text-ink-primary p-1 rounded-interactive transition-colors cursor-pointer"
+                aria-label="Close modal"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="flex items-center gap-2.5 text-accent-primary">
+                <Sparkles className="w-5 h-5" />
+                <h3 className="font-display text-lg font-bold text-ink-primary">
+                  Pro Plan is in Beta
+                </h3>
+              </div>
+
+              <p className="text-xs text-gray-warm leading-relaxed">
+                We are actively testing our precision retrieval pipelines and haven&apos;t added the live payment gateway yet.
+              </p>
+
+              <p className="text-xs text-ink-primary font-medium leading-relaxed bg-bg-sunken p-3 rounded border border-border">
+                Paid plans will be available once the beta phase finishes. In the meantime, you can plug in your own free Groq/Ollama API key in Settings to enjoy unlimited questions with zero wait!
+              </p>
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <Link href="/?workspace=true">
+                  <Button variant="outline" size="sm" className="text-xs">
+                    Open Workspace
+                  </Button>
+                </Link>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => setBetaModalOpen(false)}
+                  className="text-xs cursor-pointer shadow-xs"
+                >
+                  Got it, thank you
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
 
       <Footer />

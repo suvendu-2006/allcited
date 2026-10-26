@@ -254,23 +254,160 @@
 .animate-proof-ticker {
   display: flex;
   width: max-content;
+  will-change: transform;
   animation: proofTicker 40s linear infinite;
 }
 
-.animate-proof-ticker:hover,
-.group:hover .animate-proof-ticker {
-  animation-play-state: paused;
-}
-
 /* ==========================================================================
-   Clerk Theme Overrides & Dark Mode Contrast Hardening
-   Eliminates unstyled white footer boxes and provides crisp high-contrast UI
+   Clerk Theme Overrides & High-Contrast Light / Dark Mode Hardening
+   Uses design tokens (var(--bg-surface), var(--ink-primary), var(--border))
    ========================================================================== */
 .cl-rootBox,
 .cl-card,
 .cl-footer,
 .cl-footerAction {
   transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
+}
+
+/* Clerk Light Mode Hardening (Fixes washed-out yellow text and dark box mismatches) */
+:root:not(.dark) {
+  --cl-color-background: var(--bg-surface);
+  --cl-color-text: var(--ink-primary);
+  --cl-color-text-secondary: var(--gray-warm);
+  --cl-color-input-background: var(--bg-surface);
+  --cl-color-input-text: var(--ink-primary);
+  --cl-color-border: var(--border);
+}
+
+:root:not(.dark) .cl-rootBox,
+:root:not(.dark) .cl-card,
+:root:not(.dark) .cl-cardBox,
+:root:not(.dark) .cl-modalBackdrop,
+:root:not(.dark) .cl-modalContent,
+:root:not(.dark) .cl-signIn-root,
+:root:not(.dark) .cl-signUp-root,
+:root:not(.dark) .cl-main {
+  background: var(--bg-surface) !important;
+  background-color: var(--bg-surface) !important;
+  background-image: none !important;
+  color: var(--ink-primary) !important;
+  border-color: var(--border) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04) !important;
+}
+
+:root:not(.dark) .cl-headerTitle,
+:root:not(.dark) [class*="headerTitle"] {
+  color: var(--ink-primary) !important;
+  font-weight: 700 !important;
+}
+
+:root:not(.dark) .cl-headerSubtitle,
+:root:not(.dark) [class*="headerSubtitle"] {
+  color: var(--gray-warm) !important;
+}
+
+:root:not(.dark) .cl-socialButtonsIconButton,
+:root:not(.dark) .cl-socialButtonsBlockButton,
+:root:not(.dark) [class*="socialButtonsBlockButton"],
+:root:not(.dark) [class*="socialButtonsIconButton"] {
+  background: var(--bg-sunken) !important;
+  background-color: var(--bg-sunken) !important;
+  background-image: none !important;
+  border: 1px solid var(--border) !important;
+  color: var(--ink-primary) !important;
+}
+
+:root:not(.dark) .cl-socialButtonsBlockButton:hover,
+:root:not(.dark) .cl-socialButtonsIconButton:hover {
+  background-color: var(--bg-surface) !important;
+  border-color: var(--ink-primary) !important;
+}
+
+:root:not(.dark) .cl-socialButtonsIconButton svg,
+:root:not(.dark) .cl-socialButtonsBlockButton svg {
+  filter: none !important;
+  color: var(--ink-primary) !important;
+}
+
+:root:not(.dark) .cl-dividerLine,
+:root:not(.dark) [class*="dividerLine"] {
+  background-color: var(--border) !important;
+}
+
+:root:not(.dark) .cl-dividerText,
+:root:not(.dark) [class*="dividerText"] {
+  color: var(--gray-warm) !important;
+}
+
+:root:not(.dark) .cl-formFieldLabel,
+:root:not(.dark) [class*="formFieldLabel"] {
+  color: var(--ink-primary) !important;
+  font-weight: 500 !important;
+}
+
+:root:not(.dark) .cl-formFieldInput,
+:root:not(.dark) [class*="formFieldInput"] {
+  background: var(--bg-surface) !important;
+  background-color: var(--bg-surface) !important;
+  background-image: none !important;
+  border: 1px solid var(--border) !important;
+  color: var(--ink-primary) !important;
+}
+
+:root:not(.dark) .cl-formFieldInput:focus,
+:root:not(.dark) [class*="formFieldInput"]:focus {
+  border-color: var(--accent-primary) !important;
+}
+
+:root:not(.dark) .cl-formButtonPrimary,
+:root:not(.dark) [class*="formButtonPrimary"] {
+  background-color: var(--accent-primary) !important;
+  color: #ffffff !important;
+}
+
+:root:not(.dark) .cl-footer,
+:root:not(.dark) .cl-footerAction,
+:root:not(.dark) .cl-footerPages,
+:root:not(.dark) .cl-footerItem,
+:root:not(.dark) footer.cl-footer,
+:root:not(.dark) .cl-card footer,
+:root:not(.dark) .cl-card > footer,
+:root:not(.dark) .cl-card > div:last-child,
+:root:not(.dark) .cl-card > :last-child,
+:root:not(.dark) [class*="footer"],
+:root:not(.dark) [class*="Footer"],
+:root:not(.dark) [class*="developmentBadge"],
+:root:not(.dark) [class*="developmentMode"],
+:root:not(.dark) [class*="devMode"],
+:root:not(.dark) [class*="watermark"] {
+  background: var(--bg-sunken) !important;
+  background-color: var(--bg-sunken) !important;
+  background-image: none !important;
+  color: var(--gray-warm) !important;
+  border-color: var(--border) !important;
+}
+
+:root:not(.dark) .cl-footerActionText,
+:root:not(.dark) [class*="footerActionText"] {
+  color: var(--gray-warm) !important;
+  background: transparent !important;
+}
+
+:root:not(.dark) .cl-footerActionLink,
+:root:not(.dark) [class*="footerActionLink"] {
+  color: var(--accent-primary) !important;
+  font-weight: 600 !important;
+  background: transparent !important;
+}
+
+:root:not(.dark) .cl-badge,
+:root:not(.dark) [class*="badge"],
+:root:not(.dark) [class*="Badge"],
+:root:not(.dark) .cl-lastAuthenticationStrategyBadge,
+:root:not(.dark) [class*="lastAuthenticationStrategy"] {
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--gray-warm) !important;
 }
 
 /* Base footer styling - prevent white box in all themes */
@@ -515,6 +652,8 @@
   color: var(--gray-warm);
   text-decoration: none;
   transform: translateY(0);
+  will-change: transform, color;
+  backface-visibility: hidden;
   transition:
     color 120ms cubic-bezier(0.22, 1, 0.36, 1),
     transform 120ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -530,6 +669,8 @@
   background-color: var(--accent-primary);
   transform: scaleX(0);
   transform-origin: right center;
+  will-change: transform;
+  backface-visibility: hidden;
   transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
   pointer-events: none;
 }
