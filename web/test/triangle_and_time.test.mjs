@@ -124,4 +124,24 @@ describe('Interactive Orbit Clock 12-Hour Angle & Position Mapping', () => {
     assert.strictEqual(src.includes('title='), false, 'Should have zero title attributes to prevent browser tooltips');
     assert.ok(src.includes('aria-label="Orbit clock theme switcher"'));
   });
+
+  it('Account Section (UserProfile & UserButton) is strictly optimized for Dark Mode', async () => {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const layout = fs.readFileSync(path.resolve('src/app/layout.tsx'), 'utf-8');
+    const navbar = fs.readFileSync(path.resolve('src/components/Navbar.tsx'), 'utf-8');
+    const globals = fs.readFileSync(path.resolve('src/app/globals.css'), 'utf-8');
+
+    // ClerkProvider and UserButton must specify dark baseTheme
+    assert.ok(layout.includes('baseTheme: dark'));
+    assert.ok(navbar.includes('baseTheme: dark'));
+
+    // globals.css must define dark styles for Account Section (.cl-userProfile-root)
+    assert.ok(globals.includes('.cl-userProfile-root'));
+    assert.ok(globals.includes('.cl-navbar'));
+    assert.ok(globals.includes('.cl-profileSectionTitleText'));
+    assert.ok(globals.includes('#171514')); // Warm Ink dark background
+    assert.ok(globals.includes('#EFEAD9')); // Warm Ink text
+    assert.ok(globals.includes('#E8765A')); // Accent primary ember
+  });
 });

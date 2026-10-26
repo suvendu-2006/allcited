@@ -279,14 +279,10 @@
   --cl-color-border: var(--border);
 }
 
-:root:not(.dark) .cl-rootBox,
-:root:not(.dark) .cl-card,
-:root:not(.dark) .cl-cardBox,
-:root:not(.dark) .cl-modalBackdrop,
-:root:not(.dark) .cl-modalContent,
 :root:not(.dark) .cl-signIn-root,
 :root:not(.dark) .cl-signUp-root,
-:root:not(.dark) .cl-main {
+:root:not(.dark) .cl-signIn-root .cl-card,
+:root:not(.dark) .cl-signUp-root .cl-card {
   background: var(--bg-surface) !important;
   background-color: var(--bg-surface) !important;
   background-image: none !important;
@@ -633,6 +629,361 @@
 
 .dark .cl-dividerText {
   color: var(--ink-ghost) !important;
+}
+
+/* ==========================================================================
+   Clerk Account Section & User Profile: Always Hardened for Dark Mode Only
+   Consistent Warm Ink & Ember Theme:
+   - Primary Surface: #171514
+   - Sidebar & Sub-surfaces: #121110 / #0D0C0B
+   - Text Primary: #EFEAD9
+   - Text Secondary / Muted: #A8A69A
+   - Accent / Action Links: #E8765A
+   - Borders: rgba(239, 234, 217, 0.12)
+   - Inputs: #0D0C0B with border rgba(239, 234, 217, 0.18)
+   ========================================================================== */
+
+/* 1. Modal backdrop & outer dialog */
+.cl-modalBackdrop,
+div[class*="modalBackdrop"],
+body:has(.cl-userProfile-root) .cl-modalBackdrop {
+  background: rgba(0, 0, 0, 0.82) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+.cl-modalContent,
+.cl-modalContent:has(.cl-userProfile-root),
+.cl-userProfile-root,
+.cl-userProfile-root .cl-card,
+.cl-userProfile-root .cl-cardBox {
+  background: #171514 !important;
+  background-color: #171514 !important;
+  background-image: none !important;
+  color: #EFEAD9 !important;
+  border: 1px solid rgba(239, 234, 217, 0.14) !important;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(239, 234, 217, 0.10) !important;
+  border-radius: 16px !important;
+}
+
+/* 2. Left navigation sidebar */
+.cl-userProfile-root .cl-navbar,
+.cl-userProfile-root [class*="navbar"] {
+  background: #121110 !important;
+  background-color: #121110 !important;
+  background-image: none !important;
+  border-right: 1px solid rgba(239, 234, 217, 0.10) !important;
+}
+
+.cl-userProfile-root .cl-navbarButton,
+.cl-userProfile-root [class*="navbarButton"] {
+  color: #A8A69A !important;
+  border-radius: 8px !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  padding: 8px 12px !important;
+  transition: all 150ms ease !important;
+}
+
+.cl-userProfile-root .cl-navbarButton:hover,
+.cl-userProfile-root [class*="navbarButton"]:hover {
+  color: #EFEAD9 !important;
+  background-color: #201D1B !important;
+}
+
+.cl-userProfile-root .cl-navbarButtonActive,
+.cl-userProfile-root .cl-navbarButton[data-active="true"],
+.cl-userProfile-root [class*="navbarButtonActive"],
+.cl-userProfile-root button[aria-current="page"] {
+  color: #E8765A !important;
+  background-color: rgba(232, 118, 90, 0.15) !important;
+  font-weight: 600 !important;
+}
+
+.cl-userProfile-root .cl-navbarButtonIcon,
+.cl-userProfile-root .cl-navbarButtonActive .cl-navbarButtonIcon {
+  color: inherit !important;
+}
+
+/* 3. Header title & subtitle */
+.cl-userProfile-root .cl-headerTitle,
+.cl-userProfile-root [class*="headerTitle"] {
+  color: #EFEAD9 !important;
+  font-weight: 700 !important;
+  font-size: 1.25rem !important;
+  letter-spacing: -0.01em !important;
+}
+
+.cl-userProfile-root .cl-headerSubtitle,
+.cl-userProfile-root [class*="headerSubtitle"] {
+  color: #A8A69A !important;
+  font-size: 0.8125rem !important;
+}
+
+/* 4. Right panel: Section titles & content */
+.cl-userProfile-root .cl-pageScrollBox,
+.cl-userProfile-root .cl-page,
+.cl-userProfile-root [class*="pageScrollBox"],
+.cl-userProfile-root [class*="pageContent"] {
+  background: #171514 !important;
+  background-color: #171514 !important;
+  color: #EFEAD9 !important;
+}
+
+.cl-userProfile-root .cl-profileSectionTitle,
+.cl-userProfile-root .cl-profileSectionTitleText,
+.cl-userProfile-root .cl-sectionTitleText,
+.cl-userProfile-root [class*="profileSectionTitle"],
+.cl-userProfile-root [class*="sectionTitle"],
+.cl-userProfile-root h1,
+.cl-userProfile-root h2,
+.cl-userProfile-root h3 {
+  color: #EFEAD9 !important;
+  font-weight: 600 !important;
+  font-size: 1rem !important;
+  letter-spacing: -0.01em !important;
+}
+
+.cl-userProfile-root .cl-profileSection {
+  border-bottom: 1px solid rgba(239, 234, 217, 0.08) !important;
+  padding: 16px 0 !important;
+}
+
+.cl-userProfile-root .cl-profileSection:last-child {
+  border-bottom: none !important;
+}
+
+.cl-userProfile-root .cl-profileSectionTitle + .cl-profileSectionContent {
+  color: #EFEAD9 !important;
+}
+
+.cl-userProfile-root .cl-profileSectionContent,
+.cl-userProfile-root [class*="profileSectionContent"] {
+  color: #EFEAD9 !important;
+}
+
+/* Labels: Profile, Username, Email addresses, Connected accounts, Password, Active devices */
+.cl-userProfile-root .cl-profileSectionItem,
+.cl-userProfile-root .cl-formFieldLabel,
+.cl-userProfile-root .cl-formHeaderSubtitle,
+.cl-userProfile-root [class*="profileSectionItemLabel"],
+.cl-userProfile-root [class*="formFieldLabel"] {
+  color: #A8A69A !important;
+  font-size: 0.8125rem !important;
+}
+
+/* Values: text like "subh", email, "Macintosh" */
+.cl-userProfile-root span,
+.cl-userProfile-root p,
+.cl-userProfile-root div {
+  color: inherit;
+}
+
+/* Links & Action buttons: Update profile, Update username, Add email address, Set password */
+.cl-userProfile-root .cl-profileSectionPrimaryButton,
+.cl-userProfile-root button.cl-profileSectionPrimaryButton,
+.cl-userProfile-root .cl-buttonLink,
+.cl-userProfile-root [class*="profileSectionPrimaryButton"],
+.cl-userProfile-root a:not([class*="badge"]),
+.cl-userProfile-root button[class*="action"] {
+  color: #E8765A !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  transition: opacity 150ms ease !important;
+}
+
+.cl-userProfile-root .cl-profileSectionPrimaryButton:hover,
+.cl-userProfile-root button.cl-profileSectionPrimaryButton:hover,
+.cl-userProfile-root .cl-buttonLink:hover,
+.cl-userProfile-root a:hover {
+  opacity: 0.85 !important;
+  text-decoration: underline !important;
+}
+
+/* Danger link: Delete account */
+.cl-userProfile-root button[data-localization-key*="deleteAccount"],
+.cl-userProfile-root .cl-profileSectionPrimaryButton__danger,
+.cl-userProfile-root [class*="danger"] {
+  color: #F0788C !important;
+}
+
+/* Badges: "Primary", "This device" */
+.cl-userProfile-root .cl-badge,
+.cl-userProfile-root [class*="badge"],
+.cl-userProfile-root [class*="Badge"] {
+  background: #201D1B !important;
+  background-color: #201D1B !important;
+  color: #EFEAD9 !important;
+  border: 1px solid rgba(239, 234, 217, 0.16) !important;
+  font-size: 0.6875rem !important;
+  font-weight: 500 !important;
+  border-radius: 9999px !important;
+  padding: 2px 8px !important;
+}
+
+/* 5. Sub-modals & Nested Dialogs (e.g., "Add email address" card from image 3) */
+.cl-userProfile-root .cl-modalContent,
+.cl-userProfile-root .cl-dialog,
+.cl-userProfile-root .cl-card,
+.cl-userProfile-root [class*="dialogContent"],
+.cl-userProfile-root [class*="popoverCard"],
+.cl-userProfile-root [class*="accordionContent"],
+.cl-userProfile-root .cl-accordionContent {
+  background: #1C1A18 !important;
+  background-color: #1C1A18 !important;
+  background-image: none !important;
+  border: 1px solid rgba(239, 234, 217, 0.14) !important;
+  color: #EFEAD9 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Form inputs inside account section */
+.cl-userProfile-root .cl-formFieldInput,
+.cl-userProfile-root [class*="formFieldInput"],
+.cl-userProfile-root input[type="text"],
+.cl-userProfile-root input[type="email"],
+.cl-userProfile-root input[type="password"] {
+  background: #0D0C0B !important;
+  background-color: #0D0C0B !important;
+  color: #EFEAD9 !important;
+  border: 1px solid rgba(239, 234, 217, 0.18) !important;
+  border-radius: 8px !important;
+  font-size: 0.8125rem !important;
+  padding: 8px 12px !important;
+}
+
+.cl-userProfile-root .cl-formFieldInput:focus,
+.cl-userProfile-root input:focus {
+  border-color: #E8765A !important;
+  box-shadow: 0 0 0 1px #E8765A !important;
+  outline: none !important;
+}
+
+/* Action buttons inside forms */
+.cl-userProfile-root .cl-formButtonPrimary,
+.cl-userProfile-root button.cl-formButtonPrimary,
+.cl-userProfile-root [class*="formButtonPrimary"] {
+  background: #E8765A !important;
+  background-color: #E8765A !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  font-size: 0.8125rem !important;
+  padding: 8px 16px !important;
+  transition: opacity 150ms ease !important;
+}
+
+.cl-userProfile-root .cl-formButtonPrimary:hover,
+.cl-userProfile-root button.cl-formButtonPrimary:hover {
+  opacity: 0.9 !important;
+}
+
+.cl-userProfile-root .cl-formButtonReset,
+.cl-userProfile-root button.cl-formButtonReset,
+.cl-userProfile-root [class*="formButtonReset"] {
+  background: #201D1B !important;
+  background-color: #201D1B !important;
+  color: #EFEAD9 !important;
+  border: 1px solid rgba(239, 234, 217, 0.14) !important;
+  border-radius: 8px !important;
+  font-size: 0.8125rem !important;
+  padding: 8px 16px !important;
+}
+
+.cl-userProfile-root .cl-formButtonReset:hover,
+.cl-userProfile-root button.cl-formButtonReset:hover {
+  background-color: #2A2724 !important;
+}
+
+/* 6. Close button (X) in top-right */
+.cl-modalCloseButton,
+.cl-userProfile-root .cl-modalCloseButton,
+[class*="modalCloseButton"] {
+  color: #A8A69A !important;
+  background: transparent !important;
+  border-radius: 8px !important;
+  transition: all 150ms ease !important;
+}
+
+.cl-modalCloseButton:hover,
+.cl-userProfile-root .cl-modalCloseButton:hover,
+[class*="modalCloseButton"]:hover {
+  color: #EFEAD9 !important;
+  background: #201D1B !important;
+}
+
+/* 7. Dropdown menu (three dots button) */
+.cl-userProfile-root .cl-menuButton,
+.cl-userProfile-root button[aria-label*="Options"] {
+  color: #A8A69A !important;
+}
+
+.cl-userProfile-root .cl-menuButton:hover {
+  color: #EFEAD9 !important;
+}
+
+.cl-userProfile-root .cl-menuList,
+.cl-menuList {
+  background: #1C1A18 !important;
+  background-color: #1C1A18 !important;
+  border: 1px solid rgba(239, 234, 217, 0.14) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6) !important;
+}
+
+.cl-userProfile-root .cl-menuItem,
+.cl-menuItem {
+  color: #EFEAD9 !important;
+  font-size: 0.8125rem !important;
+}
+
+.cl-userProfile-root .cl-menuItem:hover,
+.cl-menuItem:hover {
+  background-color: #201D1B !important;
+  color: #E8765A !important;
+}
+
+/* 8. User Button Popover (Avatar dropdown) */
+.cl-userButtonPopoverCard {
+  background: #171514 !important;
+  background-color: #171514 !important;
+  border: 1px solid rgba(239, 234, 217, 0.14) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8) !important;
+  color: #EFEAD9 !important;
+}
+
+.cl-userButtonPopoverActions button {
+  color: #EFEAD9 !important;
+  font-size: 0.8125rem !important;
+}
+
+.cl-userButtonPopoverActions button:hover {
+  background-color: #201D1B !important;
+}
+
+.cl-userButtonPopoverFooter {
+  background: #121110 !important;
+  background-color: #121110 !important;
+  border-top: 1px solid rgba(239, 234, 217, 0.10) !important;
+  color: #A8A69A !important;
+}
+
+/* 9. Secured by Clerk & Development Mode Badges */
+.cl-userProfile-root .cl-footerAction,
+.cl-userProfile-root .cl-internal-b3fm6y,
+.cl-userProfile-root [class*="developmentMode"],
+.cl-userProfile-root [class*="devMode"],
+.cl-userProfile-root [class*="watermark"] {
+  background: transparent !important;
+}
+
+.cl-userProfile-root [class*="developmentMode"],
+.cl-userProfile-root [class*="devMode"] {
+  color: #E8765A !important;
+  font-weight: 500 !important;
 }
 
 /* ==========================================================================

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import { dark } from "@clerk/themes";
 import { InteractiveOrbitClock } from "./ui/InteractiveOrbitClock";
 import { Button } from "./ui/button";
 import { Settings, Menu, X } from "lucide-react";
@@ -122,7 +123,61 @@ export function Navbar({ onOpenSettings, onOpenWorkspace, onGoHome, isInApp }: N
           </SignedOut>
           <SignedIn>
             <div className="flex items-center flex-shrink-0">
-              <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-6 h-6 sm:w-7 sm:h-7" } }} />
+              <UserButton
+                afterSignOutUrl="/"
+                appearance={{
+                  baseTheme: dark,
+                  variables: {
+                    colorPrimary: "#E8765A",
+                    colorBackground: "#171514",
+                    colorInputBackground: "#0D0C0B",
+                    colorInputText: "#EFEAD9",
+                    colorText: "#EFEAD9",
+                    colorTextSecondary: "#A8A69A",
+                    colorNeutral: "#EFEAD9",
+                    colorDanger: "#F0788C",
+                    borderRadius: "10px",
+                  },
+                  elements: {
+                    avatarBox: "w-6 h-6 sm:w-7 sm:h-7",
+                    userButtonPopoverCard: "bg-[#171514] border border-[rgba(239,234,217,0.14)] shadow-2xl text-[#EFEAD9]",
+                    userButtonPopoverActionButton: "hover:bg-[#201D1B] text-[#EFEAD9] text-xs",
+                    userButtonPopoverFooter: "bg-[#121110] border-t border-[rgba(239,234,217,0.10)] text-[#A8A69A]",
+                  },
+                }}
+                userProfileProps={{
+                  appearance: {
+                    baseTheme: dark,
+                    variables: {
+                      colorPrimary: "#E8765A",
+                      colorBackground: "#171514",
+                      colorInputBackground: "#0D0C0B",
+                      colorInputText: "#EFEAD9",
+                      colorText: "#EFEAD9",
+                      colorTextSecondary: "#A8A69A",
+                      colorNeutral: "#EFEAD9",
+                      colorDanger: "#F0788C",
+                      borderRadius: "10px",
+                    },
+                    elements: {
+                      rootBox: "text-[#EFEAD9]",
+                      card: "bg-[#171514] border border-[rgba(239,234,217,0.14)] shadow-2xl text-[#EFEAD9]",
+                      modalBackdrop: "bg-black/80 backdrop-blur-sm",
+                      modalContent: "bg-[#171514] border border-[rgba(239,234,217,0.14)] rounded-2xl shadow-2xl",
+                      modalCloseButton: "text-[#A8A69A] hover:text-[#EFEAD9] hover:bg-[#201D1B]",
+                      navbar: "bg-[#121110] border-r border-[rgba(239,234,217,0.10)]",
+                      navbarButton: "text-[#A8A69A] hover:text-[#EFEAD9] hover:bg-[#201D1B]",
+                      navbarButtonActive: "bg-[rgba(232,118,90,0.15)] text-[#E8765A]",
+                      profileSectionTitle: "text-[#EFEAD9] font-semibold",
+                      profileSectionTitleText: "text-[#EFEAD9] font-semibold",
+                      profileSectionPrimaryButton: "text-[#E8765A]",
+                      formButtonPrimary: "bg-[#E8765A] text-white hover:bg-[#E8765A]/90",
+                      formButtonReset: "bg-[#201D1B] text-[#EFEAD9] hover:bg-[#2A2724]",
+                      formFieldInput: "bg-[#0D0C0B] border-[rgba(239,234,217,0.16)] text-[#EFEAD9]",
+                    },
+                  },
+                }}
+              />
             </div>
           </SignedIn>
 
