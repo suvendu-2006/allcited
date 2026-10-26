@@ -28,6 +28,7 @@ export interface StreamQueryOptions {
   apiUrl?: string;
   sessionId: string;
   query: string;
+  authToken?: string | null;
   byokKey?: string | null;
   byokBaseUrl?: string | null;
   byokModel?: string | null;
@@ -55,6 +56,7 @@ export async function streamQuery(options: StreamQueryOptions): Promise<void> {
     apiUrl = DEFAULT_API_URL,
     sessionId,
     query,
+    authToken,
     byokKey,
     byokBaseUrl,
     byokModel,
@@ -70,6 +72,10 @@ export async function streamQuery(options: StreamQueryOptions): Promise<void> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
+
+  if (authToken) {
+    headers["Authorization"] = `Bearer ${authToken}`;
+  }
 
   // BYOK headers are passed directly to API per hard constraints
   if (byokKey) {
@@ -200,8 +206,14 @@ export async function streamQuery(options: StreamQueryOptions): Promise<void> {
           }
           case "done": {
             onStageChange?.("done", "Answer complete");
+            const finalAnswer =
+              typeof parsedData.answer === "string" && parsedData.answer
+                ? parsedData.answer
+                : typeof parsedData.summary === "string"
+                ? parsedData.summary
+                : "";
             onDone?.({
-              answer: typeof parsedData.answer === "string" ? parsedData.answer : "",
+              answer: finalAnswer,
               question_id: typeof parsedData.question_id === "string" ? parsedData.question_id : "",
               provider: typeof parsedData.provider === "string" ? parsedData.provider : undefined,
               model: typeof parsedData.model === "string" ? parsedData.model : undefined,

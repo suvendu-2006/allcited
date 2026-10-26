@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import { useAuth } from "@clerk/nextjs";
 import { UploadCloud, CheckCircle2, AlertCircle, Link2, ArrowRight, X } from "lucide-react";
 import { Button } from "./ui/button";
 
@@ -15,7 +16,7 @@ interface UploadProps {
   className?: string;
 }
 
-const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024; // 20 MB cap per plan
+const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB max allowed (server enforces Free/Pro tier limits)
 const ALLOWED_EXTENSIONS = [".pdf", ".md", ".txt", ".docx", ".pptx", ".xlsx", ".html"];
 
 const PROGRESS_STEPS = [
@@ -29,6 +30,7 @@ export function Upload({
   onUploadSuccess,
   className = "",
 }: UploadProps) {
+  const { getToken } = useAuth();
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [progressStepIdx, setProgressStepIdx] = useState(0);
@@ -103,19 +105,26 @@ export function Upload({
     setIsUploading(true);
 
     try {
+      const token = await getToken().catch(() => null);
       const formData = new FormData();
       formData.append("file", file);
 
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const res = await fetch(`${apiUrl.replace(/\/$/, "")}/v1/ingest`, {
         method: "POST",
+        headers,
         body: formData,
       });
 
       if (!res.ok) {
         const errJson = await res.json().catch(() => null);
         const code = errJson?.detail?.error?.code;
-        if (code === "doc_too_large" || res.status === 413) {
-          throw new Error("That's a big one. Free takes up to 20 MB — Pro takes 100.");
+        if (code === "plan_limit_reached" || code === "doc_too_large" || res.status === 413 || res.status === 402) {
+          throw new Error(errJson?.detail?.error?.message || "That's a big one. Free takes up to 20 MB — Pro takes 100.");
         }
         if (code === "doc_unreadable") {
           throw new Error("Couldn't read this file — it may be corrupt or password-protected. Nothing was saved.");
@@ -164,9 +173,15 @@ export function Upload({
     setIsSubmittingUrl(true);
 
     try {
+      const token = await getToken().catch(() => null);
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const res = await fetch(`${apiUrl.replace(/\/$/, "")}/v1/ingest/url`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ url: urlInput.trim() }),
       });
 

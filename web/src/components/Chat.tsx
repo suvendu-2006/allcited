@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import { useAuth } from "@clerk/nextjs";
 import { Citation, PipelineStage, streamQuery } from "@/lib/sse";
 import { ChatMessage, Message } from "./Message";
 import { Composer } from "./Composer";
@@ -47,6 +48,7 @@ export function Chat({
   onOpenSettings,
   isGuest,
 }: ChatProps) {
+  const { getToken } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [streamError, setStreamError] = useState<{
@@ -154,9 +156,11 @@ export function Chat({
     abortControllerRef.current = controller;
 
     try {
+      const authToken = await getToken().catch(() => null);
       await streamQuery({
         sessionId,
         query: queryText,
+        authToken,
         byokKey,
         byokBaseUrl,
         byokModel,
