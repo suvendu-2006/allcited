@@ -396,7 +396,7 @@ export default function Home() {
                       </svg>
                       <span>Star us on GitHub</span>
                       <div className="inline-flex shrink-0 items-center justify-center text-amber-500 transition-transform duration-300 group-hover:scale-110">
-                        <Star className="h-4 w-4 fill-amber-500 drop-shadow-sm group-hover:animate-[spin_3s_linear_infinite]" />
+                        <Star className="h-4 w-4 fill-amber-500 drop-shadow-sm group-hover:animate-[spin_1.2s_linear_infinite] motion-reduce:group-hover:animate-none" />
                       </div>
                     </a>
                   </MagneticButton>
