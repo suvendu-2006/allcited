@@ -158,7 +158,7 @@ flowchart TD
         Rerank --> Expand["Two-Hop & Graph Expansion (≤4)"]
         Expand --> Agentic{"Sufficiency Judge\n(≤3 iters)"}
         Agentic -- Needs More --> Router
-        Agentic -- Sufficient --> LLM["Grounded LLM Streamer\n(Groq / BYOK / Ollama)"]
+        Agentic -- Sufficient --> LLM["Grounded LLM Streamer\n(Groq / NVIDIA Failover / BYOK / Ollama)"]
         LLM --> PostPass["Citation Post-Pass & Verification"]
         PostPass --> SSE["Server-Sent Events (SSE) Stream\n+ Trace Ledger"]
     end
@@ -171,6 +171,7 @@ flowchart TD
 3. **Cross-Encoder Scoring Floor:** Evaluates full passage cross-attention, dropping low-confidence candidates with an empirical score floor (`0.0001`).
 4. **Graph-Lite & Two-Hop Traversal:** Recursively extracts referenced rules and attaches entity relations up to 4 neighbors.
 5. **Prompt Injection & SSRF Protection:** Sanitizes document text delimiters and strictly blocks private, link-local, loopback, or cloud-metadata IP queries.
+6. **Multi-Brain Redundancy & Automated Failover (Decision D-32):** Streams via Groq by default, automatically failing over to NVIDIA NIM (`meta/llama-3.2-11b-vision-instruct`) upon rate-limits or outages, while supporting air-gapped local Ollama and custom BYOK endpoints.
 
 ---
 
@@ -214,7 +215,7 @@ docker compose up
 | Channel | URL / Handle | Description |
 | :--- | :--- | :--- |
 | **Web Interface** | [allcited.vercel.app](https://allcited.vercel.app) | Next.js 14 App Router workspace with Receipts Drawer, Wave theme toggle, and Clerk auth |
-| **API Backend** | [subh-007-allcited-api.hf.space/v1/health](https://subh-007-allcited-api.hf.space/v1/health) | FastAPI cloud runner on Hugging Face Spaces with automatic provider failover |
+| **API Backend** | [subh-007-allcited-api.hf.space/v1/health](https://subh-007-allcited-api.hf.space/v1/health) | FastAPI cloud runner on Hugging Face Spaces with automatic provider failover (Groq → NVIDIA NIM) |
 | **Interactive Docs** | [subh-007-allcited-api.hf.space/docs](https://subh-007-allcited-api.hf.space/docs) | Swagger UI & OpenAPI 3.1 schema specification |
 | **Telegram Bot** | [@AllcitedBot](https://t.me/allcited_test_bot) | Real-time message streaming, document upload, and cited answers in chat (`@allcited_test_bot`) |
 | **Container Registry** | `ghcr.io/suvendu-2006/allcited-api:latest` | Pre-built air-gapped container image with OCR and local vector pipelines |

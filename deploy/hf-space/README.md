@@ -24,6 +24,7 @@ FastAPI production backend serving grounded document Q&A with receipts:
 - Health: `/v1/health` · Readiness & Keep-Alive: `/v1/readyz`
 - Environment variables configured via Space Settings → Variables and secrets (never committed):
   - `GROQ_API_KEY`: Groq Cloud LLM API key
+  - `NVIDIA_API_KEY`: Optional NVIDIA NIM API key for cloud brain failover (meta/llama-3.2-11b-vision-instruct, Decision D-32)
   - `CLERK_SECRET_KEY` / `CLERK_PUBLISHABLE_KEY` / `CLERK_JWKS_URL`: Clerk authentication
   - `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY`: Supabase library database keys
   - `STRIPE_SECRET_KEY` / `STRIPE_PRICE_ID_PRO` / `STRIPE_WEBHOOK_SECRET`: Stripe payment keys
