@@ -38,7 +38,6 @@ jobs:
 
       - name: Run unit test suite
         env:
-          ENVIRONMENT: test
           NVIDIA_API_KEY: nvapi-ci-mock-key
           CLERK_SECRET_KEY: test_clerk_secret_key
         run: |
@@ -54,7 +53,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "npm"
           cache-dependency-path: web/package-lock.json
 
