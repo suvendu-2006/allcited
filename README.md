@@ -15,7 +15,7 @@
 
 <br/>
 
-[**Live Web App**](https://allcited.vercel.app) • [**API Explorer**](https://subh-007-allcited-api.hf.space/docs) • [**Health Endpoint**](https://subh-007-allcited-api.hf.space/v1/health) • [**Telegram Bot**](https://t.me/allcited_test_bot) • [**Docker Container**](#private-offline-edition-zero-cloud-egress)
+[**Live Web App**](https://allcited.vercel.app) • [**API Explorer**](https://subh-007-allcited-api.hf.space/docs) • [**Health Endpoint**](https://subh-007-allcited-api.hf.space/v1/health) • [**Telegram Bot**](https://t.me/allcited_test_bot) • [**Docs Hub**](readme/README.md) • [**Docker Container**](#private-offline-edition-zero-cloud-egress)
 
 <br/>
 
@@ -31,6 +31,7 @@
 
 ### Quick Navigation
 
+- [Documentation Hub (Subsystem READMEs)](readme/README.md)
 - [Why Allcited? (The P1–P4 RAG Trap Story)](#why-allcited-the-p1p4-rag-trap-story)
 - [Empirical Evaluation Matrix](#empirical-evaluation-matrix-11-row-benchmark)
 - [Chunking Strategy A/B Comparison](#chunking-strategy-ab-comparison)
