@@ -326,24 +326,64 @@
 .dark .cl-socialButtonsProviderIcon__x,
 .dark .cl-socialButtonsProviderIcon__twitter,
 .dark .cl-socialButtonsProviderIcon__apple,
-.dark [data-provider="github"] img,
-.dark [data-provider="github"] svg,
-.dark [data-provider="x"] img,
-.dark [data-provider="x"] svg,
-.dark [data-provider="twitter"] img,
-.dark [data-provider="twitter"] svg,
-.dark [data-provider="apple"] img,
-.dark [data-provider="apple"] svg,
-.dark .cl-socialButtonsIconButton:not([data-provider="google"]) img,
-.dark .cl-socialButtonsIconButton:not([data-provider="google"]) svg,
-.dark .cl-socialButtonsBlockButton:not([data-provider="google"]) img,
-.dark .cl-socialButtonsBlockButton:not([data-provider="google"]) svg {
-  filter: invert(1) brightness(1.8) contrast(1.2) !important;
+.dark .cl-socialButtonsIconButton__github img,
+.dark .cl-socialButtonsIconButton__github svg,
+.dark .cl-socialButtonsIconButton__x img,
+.dark .cl-socialButtonsIconButton__x svg,
+.dark .cl-socialButtonsIconButton__twitter img,
+.dark .cl-socialButtonsIconButton__twitter svg,
+.dark .cl-socialButtonsIconButton__apple img,
+.dark .cl-socialButtonsIconButton__apple svg,
+.dark .cl-socialButtonsBlockButton__github img,
+.dark .cl-socialButtonsBlockButton__github svg,
+.dark .cl-socialButtonsBlockButton__x img,
+.dark .cl-socialButtonsBlockButton__x svg,
+.dark .cl-socialButtonsBlockButton__twitter img,
+.dark .cl-socialButtonsBlockButton__twitter svg,
+.dark .cl-socialButtonsBlockButton__apple img,
+.dark .cl-socialButtonsBlockButton__apple svg,
+.dark img[alt*="GitHub" i],
+.dark img[alt*="Twitter" i],
+.dark img[alt="X"],
+.dark img[src*="github" i],
+.dark img[src*="twitter" i],
+.dark img[src*="x.svg" i] {
+  filter: invert(1) brightness(1.6) contrast(1.1) !important;
 }
 
-.dark .cl-socialButtonsIconButton:not([data-provider="google"]) svg path,
-.dark .cl-socialButtonsBlockButton:not([data-provider="google"]) svg path {
-  fill: #EFEAD9 !important;
+/* Explicitly preserve original multi-colored Google logo across all themes */
+.cl-providerIcon__google,
+.cl-socialButtonsProviderIcon__google,
+.cl-socialButtonsIconButton__google img,
+.cl-socialButtonsIconButton__google svg,
+.cl-socialButtonsBlockButton__google img,
+.cl-socialButtonsBlockButton__google svg,
+.dark .cl-providerIcon__google,
+.dark .cl-socialButtonsProviderIcon__google,
+.dark .cl-socialButtonsIconButton__google img,
+.dark .cl-socialButtonsIconButton__google svg,
+.dark .cl-socialButtonsBlockButton__google img,
+.dark .cl-socialButtonsBlockButton__google svg,
+.dark img[alt*="Google" i],
+.dark img[src*="google" i] {
+  filter: none !important;
+}
+
+/* Clerk Modal & Card Dark Mode Hardening - Eliminate White Development/Footer Boxes */
+.dark .cl-modalBackdrop,
+.dark .cl-modalContent,
+.dark .cl-card,
+.dark .cl-rootBox,
+.dark .cl-footer,
+.dark .cl-footerAction,
+.dark .cl-footerActionText,
+.dark [class*="footer"],
+.dark [class*="developmentBadge"],
+.dark [class*="badge"],
+.dark .cl-card > div:last-child {
+  background-color: var(--bg-surface) !important;
+  color: var(--ink-primary) !important;
+  border-color: var(--border) !important;
 }
 
 .dark .cl-formFieldInput {
