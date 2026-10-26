@@ -34,129 +34,128 @@ export function EmberAurora() {
               {/* Cube 1 (centered at 20.5, 35.5) */}
               <polygon
                 points="20.5,11.835 41,23.665 20.5,35.5 0,23.665"
-                fill="#F3F3F0"
-                stroke="#ECECE7"
-                strokeWidth="0.5"
+                fill="#F6F6F3"
+                stroke="#DFDFD9"
+                strokeWidth="0.55"
                 strokeLinejoin="round"
               />
               <polygon
                 points="0,23.665 20.5,35.5 20.5,59.165 0,47.335"
-                fill="#EFEFEA"
-                stroke="#ECECE7"
-                strokeWidth="0.5"
+                fill="#EDEDE9"
+                stroke="#DFDFD9"
+                strokeWidth="0.55"
                 strokeLinejoin="round"
               />
               <polygon
                 points="20.5,35.5 41,23.665 41,47.335 20.5,59.165"
-                fill="#F1F1EC"
-                stroke="#ECECE7"
-                strokeWidth="0.5"
+                fill="#F2F2EF"
+                stroke="#DFDFD9"
+                strokeWidth="0.55"
                 strokeLinejoin="round"
               />
 
               {/* Cube 2 corners (tiled at 0,0 / 41,0 / 0,71 / 41,71) */}
               <polygon
                 points="0,-23.665 20.5,-11.835 0,0 -20.5,-11.835"
-                fill="#F3F3F0"
-                stroke="#ECECE7"
-                strokeWidth="0.5"
+                fill="#F6F6F3"
+                stroke="#DFDFD9"
+                strokeWidth="0.55"
                 strokeLinejoin="round"
               />
               <polygon
                 points="-20.5,-11.835 0,0 0,23.665 -20.5,11.835"
-                fill="#EFEFEA"
-                stroke="#ECECE7"
-                strokeWidth="0.5"
+                fill="#EDEDE9"
+                stroke="#DFDFD9"
+                strokeWidth="0.55"
                 strokeLinejoin="round"
               />
               <polygon
                 points="0,0 20.5,-11.835 20.5,11.835 0,23.665"
-                fill="#F1F1EC"
-                stroke="#ECECE7"
-                strokeWidth="0.5"
+                fill="#F2F2EF"
+                stroke="#DFDFD9"
+                strokeWidth="0.55"
                 strokeLinejoin="round"
               />
 
               <polygon
                 points="41,-23.665 61.5,-11.835 41,0 20.5,-11.835"
-                fill="#F3F3F0"
-                stroke="#ECECE7"
-                strokeWidth="0.5"
+                fill="#F6F6F3"
+                stroke="#DFDFD9"
+                strokeWidth="0.55"
                 strokeLinejoin="round"
               />
               <polygon
                 points="20.5,-11.835 41,0 41,23.665 20.5,11.835"
-                fill="#EFEFEA"
-                stroke="#ECECE7"
-                strokeWidth="0.5"
+                fill="#EDEDE9"
+                stroke="#DFDFD9"
+                strokeWidth="0.55"
                 strokeLinejoin="round"
               />
               <polygon
                 points="41,0 61.5,-11.835 61.5,11.835 41,23.665"
-                fill="#F1F1EC"
-                stroke="#ECECE7"
-                strokeWidth="0.5"
+                fill="#F2F2EF"
+                stroke="#DFDFD9"
+                strokeWidth="0.55"
                 strokeLinejoin="round"
               />
 
               <polygon
                 points="0,47.335 20.5,59.165 0,71 -20.5,59.165"
-                fill="#F3F3F0"
-                stroke="#ECECE7"
-                strokeWidth="0.5"
+                fill="#F6F6F3"
+                stroke="#DFDFD9"
+                strokeWidth="0.55"
                 strokeLinejoin="round"
               />
               <polygon
                 points="-20.5,59.165 0,71 0,94.665 -20.5,82.835"
-                fill="#EFEFEA"
-                stroke="#ECECE7"
-                strokeWidth="0.5"
+                fill="#EDEDE9"
+                stroke="#DFDFD9"
+                strokeWidth="0.55"
                 strokeLinejoin="round"
               />
               <polygon
                 points="0,71 20.5,59.165 20.5,82.835 0,94.665"
-                fill="#F1F1EC"
-                stroke="#ECECE7"
-                strokeWidth="0.5"
+                fill="#F2F2EF"
+                stroke="#DFDFD9"
+                strokeWidth="0.55"
                 strokeLinejoin="round"
               />
 
               <polygon
                 points="41,47.335 61.5,59.165 41,71 20.5,59.165"
-                fill="#F3F3F0"
-                stroke="#ECECE7"
-                strokeWidth="0.5"
+                fill="#F6F6F3"
+                stroke="#DFDFD9"
+                strokeWidth="0.55"
                 strokeLinejoin="round"
               />
               <polygon
                 points="20.5,59.165 41,71 41,94.665 20.5,82.835"
-                fill="#EFEFEA"
-                stroke="#ECECE7"
-                strokeWidth="0.5"
+                fill="#EDEDE9"
+                stroke="#DFDFD9"
+                strokeWidth="0.55"
                 strokeLinejoin="round"
               />
               <polygon
                 points="41,71 61.5,59.165 61.5,82.835 41,94.665"
-                fill="#F1F1EC"
-                stroke="#ECECE7"
-                strokeWidth="0.5"
+                fill="#F2F2EF"
+                stroke="#DFDFD9"
+                strokeWidth="0.55"
                 strokeLinejoin="round"
               />
             </pattern>
 
-            {/* Studio Radial Illumination Overlay matching Screenpipe */}
+            {/* Subtle Studio Radial Illumination Overlay matching Screenpipe */}
             <radialGradient id="screenpipe-studio-light" cx="50%" cy="35%" r="65%">
-              <stop offset="0%" stopColor="#FAFBFB" stopOpacity="0.6" />
-              <stop offset="40%" stopColor="#FAFBFB" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#E8E8E3" stopOpacity="0.1" />
+              <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.10" />
+              <stop offset="45%" stopColor="#FFFFFF" stopOpacity="0.0" />
             </radialGradient>
           </defs>
 
           {/* Base Neutral Canvas */}
-          <rect width="100%" height="100%" fill="#F4F4F0" />
-          {/* Low Visibility Tiled Screenpipe Isometric Cubes */}
-          <rect width="100%" height="100%" fill="url(#screenpipe-cubes-pattern)" opacity="0.45" />
-          {/* Studio Radial Vignette */}
+          <rect width="100%" height="100%" fill="#F3F3EF" />
+          {/* Tiled Screenpipe Isometric Cubes with calibrated visible contrast */}
+          <rect width="100%" height="100%" fill="url(#screenpipe-cubes-pattern)" />
+          {/* Subtle Studio Radial Vignette */}
           <rect width="100%" height="100%" fill="url(#screenpipe-studio-light)" />
         </svg>
       </div>
