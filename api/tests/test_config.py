@@ -33,3 +33,8 @@ def test_settings_cors_comma_separated():
     settings = Settings(CORS_ORIGINS="http://localhost:3000, https://allcited.vercel.app")
     assert "http://localhost:3000" in settings.CORS_ORIGINS
     assert "https://allcited.vercel.app" in settings.CORS_ORIGINS
+
+
+def test_settings_cors_json_array_format():
+    settings = Settings(CORS_ORIGINS='["http://localhost:3000", "https://app.allcited.com"]')
+    assert settings.CORS_ORIGINS == ["http://localhost:3000", "https://app.allcited.com"]

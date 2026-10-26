@@ -111,13 +111,15 @@ class SessionStore:
         overlap_ratio: float = 0.15,
         section_aware: bool = False,
         enable_headers: bool = True,
+        max_file_size_bytes: int = MAX_FILE_SIZE_BYTES,
     ) -> DocumentSession:
-        # 1. Enforce 20 MB cap
+        # 1. Enforce file size cap
         file_size = len(content)
-        if file_size > MAX_FILE_SIZE_BYTES:
+        if file_size > max_file_size_bytes:
+            limit_mb = max_file_size_bytes // (1024 * 1024)
             raise HTTPException(
                 status_code=400,
-                detail={"error": {"code": "plan_limit_reached", "message": f"File size ({file_size} bytes) exceeds 20 MB cap"}},
+                detail={"error": {"code": "plan_limit_reached", "message": f"File size ({file_size} bytes) exceeds {limit_mb} MB cap"}},
             )
 
         self._cleanup_expired()
@@ -142,10 +144,12 @@ class SessionStore:
                         detail={"error": {"code": "plan_limit_reached", "message": f"Document has {page_count} pages, exceeding the 300-page cap"}},
                     )
                 blocks = parse_pdf(content, source_name=filename)
-            except PDFParserError as e:
+            except HTTPException:
+                raise
+            except (PDFParserError, Exception) as e:
                 raise HTTPException(
                     status_code=400,
-                    detail={"error": {"code": "doc_unreadable", "message": str(e)}},
+                    detail={"error": {"code": "doc_unreadable", "message": f"Couldn't read this file: {str(e)}"}},
                 ) from e
         elif lower_name.endswith((".md", ".txt")):
             blocks = parse_md_txt(content, source_name=filename)

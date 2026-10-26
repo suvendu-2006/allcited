@@ -114,3 +114,14 @@ def test_five_eyeball_questions_retrieve_sensible_chunks():
         # Verify at least one of the core expected keywords was captured in the top-4
         matched = [term.lower() for term in expected_terms if term.lower() in top_combined_text]
         assert len(matched) >= 1, f"Question '{q}' failed to retrieve relevant chunks; matched terms: {matched}"
+
+
+def test_corrupt_pdf_upload_graceful_error():
+    import io
+    corrupt_bytes = b"%PDF-1.4 corrupt header gibberish garbage not a real pdf \x00\xff"
+    res = client.post(
+        "/v1/ingest",
+        files={"file": ("corrupt.pdf", io.BytesIO(corrupt_bytes), "application/pdf")},
+    )
+    assert res.status_code == 400
+    assert res.json()["detail"]["error"]["code"] == "doc_unreadable"

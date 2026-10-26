@@ -2,14 +2,17 @@ import io
 import time
 
 import jwt
+import pytest
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
 from app.auth import set_test_verification_key
 from app.main import app
 from app.payments import get_subscription_store
+from app.plans import check_plan_limit
 from app.stats import get_platform_stats
 
 client = TestClient(app)
@@ -120,6 +123,13 @@ def test_plan_gates_and_live_upgrade_flip():
         headers=headers,
     )
     assert precision_pro.status_code == 200  # SSE stream accepted
+
+    # C) Verify Pro plan limit rules: Pro user allows up to 100 MB, blocked > 100 MB
+    check_plan_limit(user_id=user_id, feature="file_upload", value=50 * 1024 * 1024)
+    with pytest.raises(HTTPException) as exc_info:
+        check_plan_limit(user_id=user_id, feature="file_upload", value=105 * 1024 * 1024)
+    assert exc_info.value.status_code == 402
+    assert exc_info.value.detail["error"]["code"] == "plan_limit_reached"
 
     # 5. Verify /v1/stats counters
     stats_res = client.get("/v1/stats")

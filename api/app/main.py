@@ -30,7 +30,11 @@ from app.payments import (
     handle_stripe_webhook,
 )
 from app.pipeline.answer import stream_answer_pipeline
-from app.plans import check_plan_limit
+from app.plans import (
+    FREE_FILE_SIZE_LIMIT_BYTES,
+    PRO_FILE_SIZE_LIMIT_BYTES,
+    check_plan_limit,
+)
 from app.schemas import (
     AuditLogsResponse,
     AuthProfileResponse,
@@ -570,10 +574,14 @@ async def ingest_document(
     target_filename = ""
     content_bytes = b""
 
+    sub_store = get_subscription_store()
+    plan = sub_store.get_plan(user_id) if user_id else "free"
+    max_allowed = PRO_FILE_SIZE_LIMIT_BYTES if plan == "pro" else FREE_FILE_SIZE_LIMIT_BYTES
+
     if url and url.strip():
         target_filename = url.strip()
         try:
-            content_bytes = await safe_fetch_url(target_filename)
+            content_bytes = await safe_fetch_url(target_filename, max_size_bytes=max_allowed)
         except SSRFBlockedError as e:
             raise HTTPException(
                 status_code=400,
@@ -587,8 +595,34 @@ async def ingest_document(
 
     elif file and file.filename:
         target_filename = file.filename
+        chunks = []
+        total_bytes = 0
+        chunk_size = 1024 * 1024  # 1 MB chunk
         try:
-            content_bytes = await file.read()
+            while True:
+                chunk = await file.read(chunk_size)
+                if not chunk:
+                    break
+                total_bytes += len(chunk)
+                if total_bytes > max_allowed:
+                    limit_mb = 100 if plan == "pro" else 20
+                    raise HTTPException(
+                        status_code=402,
+                        detail={
+                            "error": {
+                                "code": "plan_limit_reached",
+                                "message": (
+                                    f"File size ({total_bytes / (1024 * 1024):.1f} MB) exceeds {limit_mb} MB limit "
+                                    f"for {plan.capitalize()} tier. Upgrade to Pro for 100 MB uploads."
+                                ),
+                                "request_id": str(uuid.uuid4()),
+                            }
+                        },
+                    )
+                chunks.append(chunk)
+            content_bytes = b"".join(chunks)
+        except HTTPException:
+            raise
         except Exception as e:
             raise HTTPException(
                 status_code=400,
@@ -600,13 +634,14 @@ async def ingest_document(
             detail={"error": {"code": "doc_unreadable", "message": "Must provide either a file upload or a url parameter"}},
         )
 
-    # Enforce plan file size limit (20 MB for Free, 100 MB for Pro)
+    # Double check plan file size limit
     check_plan_limit(user_id=user_id, feature="file_upload", value=len(content_bytes))
 
     session_store = get_session_store()
     session = session_store.create_session_from_bytes(
         filename=target_filename,
         content=content_bytes,
+        max_file_size_bytes=max_allowed,
     )
 
     get_platform_stats().record_chunks(len(session.chunks))

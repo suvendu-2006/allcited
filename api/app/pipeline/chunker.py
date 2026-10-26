@@ -130,7 +130,28 @@ def chunk_blocks(
 
         sentences = split_into_sentences(block.text)
 
-        for sentence in sentences:
+        # Enforce max_tokens hard-split on oversized sentences (e.g. unpunctuated legal text or wide tables)
+        refined_sentences: List[str] = []
+        for s in sentences:
+            if estimate_tokens(s) > max_tokens:
+                words = s.split(" ")
+                current_sub: List[str] = []
+                current_sub_toks = 0
+                for w in words:
+                    wtoks = estimate_tokens(w + " ")
+                    if current_sub_toks + wtoks > max_tokens and current_sub:
+                        refined_sentences.append(" ".join(current_sub))
+                        current_sub = [w]
+                        current_sub_toks = wtoks
+                    else:
+                        current_sub.append(w)
+                        current_sub_toks += wtoks
+                if current_sub:
+                    refined_sentences.append(" ".join(current_sub))
+            else:
+                refined_sentences.append(s)
+
+        for sentence in refined_sentences:
             sent_tokens = estimate_tokens(sentence)
             item = _SentenceItem(
                 text=sentence,

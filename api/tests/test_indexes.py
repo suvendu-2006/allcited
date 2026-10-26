@@ -43,3 +43,15 @@ def test_indexes_fixture_top1_both_engines(session_handbook):
     assert "handbook sets out the official terms" in top1_bm25_chunk.text
     assert "handbook sets out the official terms" in top1_vec_chunk.text
     assert top1_bm25_chunk.id == top1_vec_chunk.id
+
+
+def test_tokenize_for_bm25_unicode_multilingual():
+    """QUAL-01: Verify that BM25 tokenizer preserves Hindi and accented multilingual tokens."""
+    from app.pipeline.indexes import tokenize_for_bm25
+    hindi_text = "कंपनी के नियम और नीतियां (Corporate compliance 2026)"
+    tokens = tokenize_for_bm25(hindi_text)
+    assert "कंपनी" in tokens
+    assert "नियम" in tokens
+    assert "नीतियां" in tokens
+    assert "corporate" in tokens
+    assert "compliance" in tokens

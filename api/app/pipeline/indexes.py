@@ -1,4 +1,3 @@
-import re
 from typing import List, Tuple
 
 import faiss
@@ -10,8 +9,9 @@ from app.pipeline.embed import EMBEDDING_DIM, get_embedding_manager
 
 
 def tokenize_for_bm25(text: str) -> List[str]:
-    """Simple alphanumeric lowercase tokenizer for BM25 ranking."""
-    return re.findall(r"\b[a-z0-9_\-\.]{2,}\b", text.lower())
+    """Unicode-aware lowercase tokenizer for BM25 ranking."""
+    words = [t.strip(".,;:!'\"()[]{}!?<>~`@#$%^&*+=/\\|") for t in text.lower().split()]
+    return [t for t in words if len(t) >= 2 and not t.isdigit()]
 
 
 class VectorIndex:

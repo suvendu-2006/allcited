@@ -253,6 +253,8 @@ async def stream_mapreduce_summary(
         "done",
         {
             "summary": raw_reduced.strip(),
+            "answer": raw_reduced.strip(),
+            "question_id": f"sum_{session.session_id}",
             "word_count": word_count,
             "token_count": token_count,
             "chunk_ranges": chunk_ranges,

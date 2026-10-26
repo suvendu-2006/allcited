@@ -1,3 +1,4 @@
+import json
 from functools import lru_cache
 from typing import Any, List, Optional, Union
 
@@ -68,7 +69,15 @@ class Settings(BaseSettings):
     @classmethod
     def assemble_cors_origins(cls, v: Any) -> List[str]:
         if isinstance(v, str):
-            return [i.strip() for i in v.split(",") if i.strip()]
+            s = v.strip()
+            if s.startswith("[") and s.endswith("]"):
+                try:
+                    parsed = json.loads(s)
+                    if isinstance(parsed, list):
+                        return [str(i).strip().strip("'\"") for i in parsed if str(i).strip().strip("'\"")]
+                except Exception:
+                    pass
+            return [i.strip().strip("'\"") for i in s.split(",") if i.strip().strip("'\"")]
         return list(v)
 
     @field_validator("GROQ_API_KEYS", mode="after")
