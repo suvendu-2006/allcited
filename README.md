@@ -107,6 +107,8 @@ All metrics are reproducible from single-source results ([eval/results/eval_v2_r
 | **+graph** | `95.1%` | 100.0% | 100.0% | 100.0% | 100.0% | 75.0% | 75.0% | 80.0% | 58.7% | `102.7` | `116.7` |
 | **full_system** | **`95.1%`** | **100.0%** | **100.0%** | **100.0%** | **100.0%** | **75.0%** | **75.0%** | **80.0%** | **58.7%** | `102.2` | `132.9` |
 
+> **What "Answer Corr" means:** strict exact-match scoring — an answer passes only if it contains the precise figure/clause text from the source. The LLM-judged pass rate (semantic correctness) is the **93.5% (43/46)** shown on [/exam](https://allcited.vercel.app/exam). Both are reported; strict is the harder bar.
+
 ### Architectural Insights & Ablation Progression
 
 - **BM25 Alone (82.9%):** Blazing fast (1.0ms), but collapses on colloquial paraphrasing (**50.0%**) where words like *"unspent holiday"* share 0 lexical tokens with *"annual leave carry-forward"*.
@@ -326,7 +328,7 @@ npm run dev
 ### 3. Run Test Suite & Evaluation
 
 ```bash
-# Run all 141 backend tests
+# Run all 165 backend tests
 cd api && .venv/bin/pytest tests/ -q
 
 # Run evaluation matrix benchmark
@@ -341,7 +343,7 @@ Allcited enforces strict behavioral acceptance criteria verified across all func
 
 | Section | Passed | Failed | Skipped | Evidence / Notes |
 | :--- | :---: | :---: | :---: | :--- |
-| **A — Repo Integrity** | 9 | 0 | 0 | 53 step-commits present; gitleaks 0 leaks in source and history; 141 passed tests; clean build; CI green badge. |
+| **A — Repo Integrity** | 9 | 0 | 0 | 53 step-commits present; gitleaks 0 leaks in source and history; 165 collected tests; clean build; CI green badge. |
 | **B — Live System** | 12 | 0 | 0 | Health 200; models list; all 6 formats ingest; [S1] cited stream; two-hop labeled; off-topic refused; cache <100ms. |
 | **C — Accounts & Payments** | 7 | 0 | 0 | Guest mode one-click chat; Clerk OTP auth; library cross-user isolation; Stripe checkout + idempotent webhook; Pro plan flip. |
 | **D — Security Spot Checks** | 6 | 0 | 0 | Injection neutralized & flagged; SSRF blocked (400 url_blocked); PII email masked; zero exec/eval paths. |
