@@ -308,8 +308,22 @@ async def stream_answer_pipeline(
 
     # 2b. Conversational Greeting check
     clean_q = effective_query.strip().lower()
-    GREETINGS = {"hello", "hi", "hey", "hello!", "hi!", "hey!", "good morning", "good evening", "howdy", "greetings"}
-    if clean_q in GREETINGS:
+    clean_no_punct = re.sub(r"[^\w\s]", "", clean_q).strip()
+    GREETINGS = {
+        "hello", "hi", "hey", "heya", "howdy", "hola", "greetings",
+        "good morning", "good afternoon", "good evening", "good day",
+        "hi there", "hello there", "hey there", "who are you", "what can you do", "help"
+    }
+    is_greeting = (
+        clean_q in GREETINGS
+        or clean_no_punct in GREETINGS
+        or (
+            len(clean_no_punct.split()) <= 4
+            and clean_no_punct.startswith(("hello ", "hi ", "hey "))
+            and not any(w in clean_no_punct for w in ["clause", "rule", "section", "page", "policy", "what", "why", "how", "summarize", "find"])
+        )
+    )
+    if is_greeting:
         doc_label = getattr(session, "filename", None) or "your document"
         greeting_text = f"Hello! I am ready to answer questions grounded in **{doc_label}**. What would you like to know?"
         yield format_sse("token", {"delta": greeting_text})

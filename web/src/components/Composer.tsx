@@ -117,14 +117,6 @@ export function Composer({
               {isPrecisionMode && <span className="text-[9px] font-bold">ON</span>}
             </motion.button>
           )}
-
-          <span
-            className={`font-mono text-[11px] text-gray-warm transition-opacity duration-120 ${
-              isFocused ? "opacity-100" : "opacity-0 sm:opacity-80"
-            }`}
-          >
-            ↵ to send · ⇧↵ for a new line
-          </span>
         </div>
 
         {isGenerating ? (
