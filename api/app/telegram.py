@@ -155,6 +155,16 @@ def chunk_telegram_text(text: str, max_chars: int = 4000) -> List[str]:
     current_len = 0
 
     for line in text.splitlines(keepends=True):
+        if len(line) > max_chars:
+            if current_chunk:
+                chunks.append("".join(current_chunk))
+                current_chunk = []
+                current_len = 0
+            while len(line) > max_chars:
+                chunks.append(line[:max_chars])
+                line = line[max_chars:]
+            if not line:
+                continue
         if current_len + len(line) > max_chars and current_chunk:
             chunks.append("".join(current_chunk))
             current_chunk = []
@@ -178,8 +188,9 @@ def format_telegram_answer(answer: str, citations: List[CitationItem]) -> str:
     receipts = ["\n\n📚 *Sources:*"]
     for cit in citations:
         sec = f"§ {' > '.join(cit.section_path)}" if cit.section_path else ""
-        pg = f"Page {cit.page}" if cit.page else ""
-        meta_parts = [p for p in [pg, sec] if p]
+        pg = f"Page {cit.page}" if cit.page is not None else ""
+        doc = f"Doc: {cit.doc_name}" if cit.doc_name else ""
+        meta_parts = [p for p in [doc, pg, sec] if p]
         meta_str = f" ({', '.join(meta_parts)})" if meta_parts else ""
         ocr_tag = " [OCR]" if cit.is_ocr else ""
         two_hop_tag = " [Cross-Ref]" if cit.is_two_hop else ""

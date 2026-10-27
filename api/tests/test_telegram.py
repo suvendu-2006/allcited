@@ -219,6 +219,14 @@ def test_telegram_chunking_and_formatting():
         assert len(chk) <= 4000
     assert "".join(chunks) == long_text
 
+    # Test single very long line without newlines
+    continuous_text = "A" * 9500
+    cont_chunks = chunk_telegram_text(continuous_text, max_chars=4000)
+    assert len(cont_chunks) == 3
+    for chk in cont_chunks:
+        assert len(chk) <= 4000
+    assert "".join(cont_chunks) == continuous_text
+
     # Test receipt formatting
     from app.pipeline.answer import CitationItem
 

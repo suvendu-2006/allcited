@@ -122,9 +122,10 @@ export function Upload({
 
       if (!res.ok) {
         const errJson = await res.json().catch(() => null);
-        const code = errJson?.detail?.error?.code;
+        const code = errJson?.detail?.error?.code || errJson?.error?.code;
+        const msg = errJson?.detail?.error?.message || errJson?.error?.message;
         if (code === "plan_limit_reached" || code === "doc_too_large" || res.status === 413 || res.status === 402) {
-          throw new Error(errJson?.detail?.error?.message || "That's a big one. Free takes up to 10 MB — Pro takes 100.");
+          throw new Error(msg || "That's a big one. Free takes up to 10 MB — Pro takes 100.");
         }
         if (code === "doc_unreadable") {
           throw new Error("Couldn't read this file — it may be corrupt or password-protected. Nothing was saved.");
@@ -132,7 +133,7 @@ export function Upload({
         if (res.status === 404 || res.status >= 500) {
           throw new Error(`Backend service is not running or unreachable (${res.status}). The API server at ${apiUrl} has not been deployed yet.`);
         }
-        throw new Error(errJson?.detail?.error?.message || "Couldn't read this file — it may be corrupt or password-protected. Nothing was saved.");
+        throw new Error(msg || "Couldn't read this file — it may be corrupt or password-protected. Nothing was saved.");
       }
 
       const data = await res.json();
@@ -187,14 +188,15 @@ export function Upload({
 
       if (!res.ok) {
         const errJson = await res.json().catch(() => null);
-        const code = errJson?.detail?.error?.code;
+        const code = errJson?.detail?.error?.code || errJson?.error?.code;
+        const msg = errJson?.detail?.error?.message || errJson?.error?.message;
         if (code === "url_blocked") {
           throw new Error("That link points somewhere private — we don't fetch those. Safety thing.");
         }
         if (res.status === 404 || res.status >= 500) {
           throw new Error(`Backend service is not running or unreachable (${res.status}). The API server at ${apiUrl} has not been deployed yet.`);
         }
-        throw new Error(errJson?.detail?.error?.message || "Couldn't read from that URL. Check the link and try again.");
+        throw new Error(msg || "Couldn't read from that URL. Check the link and try again.");
       }
 
       const data = await res.json();

@@ -746,7 +746,7 @@ def main():
     parser.add_argument(
         "--chunking-ab",
         action="store_true",
-        help="Run chunking strategy A/B evaluation (300 vs 500, no-overlap vs 15%, semantic)",
+        help="Run chunking strategy A/B evaluation (300 vs 500, no-overlap vs 15%%, semantic)",
     )
     parser.add_argument(
         "--config",
