@@ -324,64 +324,83 @@ class InMemoryLibraryStore:
             if user_id in self._loaded_users:
                 return list(self._docs.get(user_id, {}).values())
 
-        # Attempt fetching from Supabase asynchronously if not loaded in memory (outside lock)
-        settings = get_settings()
-        if settings.SUPABASE_URL and settings.SUPABASE_SERVICE_ROLE_KEY:
-            try:
-                base_url = settings.SUPABASE_URL.rstrip("/")
-                headers = {
-                    "apikey": settings.SUPABASE_SERVICE_ROLE_KEY,
-                    "Authorization": f"Bearer {settings.SUPABASE_SERVICE_ROLE_KEY}",
-                }
-                async with httpx.AsyncClient(timeout=5.0) as client:
-                    resp = await client.get(
-                        f"{base_url}/rest/v1/saved_documents?user_id=eq.{user_id}&order=created_at.desc",
-                        headers=headers,
-                    )
-                    chunks_resp = await client.get(
-                        f"{base_url}/rest/v1/saved_chunks?user_id=eq.{user_id}",
-                        headers=headers,
-                    )
-                    if resp.status_code == 200:
-                        rows = resp.json()
-                        chunk_rows = chunks_resp.json() if chunks_resp.status_code == 200 else []
-                        with self._lock:
-                            if user_id not in self._docs:
-                                self._docs[user_id] = {}
-                            if user_id not in self._chunks:
-                                self._chunks[user_id] = []
-                            for r in rows:
-                                doc_item = LibraryDocumentItem(
-                                    id=str(r["id"]),
-                                    user_id=r["user_id"],
-                                    filename=r["filename"],
-                                    format=r.get("format", "pdf"),
-                                    file_size_bytes=int(r.get("file_size_bytes", 0)),
-                                    page_count=int(r.get("page_count", 1)),
-                                    chunk_count=int(r.get("chunk_count", 0)),
-                                    created_at=r.get("created_at", datetime.datetime.now(datetime.timezone.utc).isoformat()),
-                                )
-                                if doc_item.id not in self._docs[user_id]:
-                                    self._docs[user_id][doc_item.id] = doc_item
-
-                            doc_filenames = {doc_id: d.filename for doc_id, d in self._docs[user_id].items()}
-                            existing_chunk_ids = {c.id for c in self._chunks[user_id]}
-                            rehydrated_chunks = []
-                            for cr in chunk_rows:
-                                doc_id = str(cr.get("document_id"))
-                                doc_name = doc_filenames.get(doc_id, "document")
-                                sc = _parse_stored_chunk(cr, doc_name=doc_name)
-                                if sc and sc.id not in existing_chunk_ids:
-                                    rehydrated_chunks.append(sc)
-                            self._chunks[user_id].extend(rehydrated_chunks)
-                            self._loaded_users.add(user_id)
-                            return list(self._docs[user_id].values())
-            except Exception as e:
-                logger.warning("Supabase list_documents sync failed: %s", e)
-
+        await self.rehydrate_user_async(user_id)
         with self._lock:
-            self._loaded_users.add(user_id)
             return list(self._docs.get(user_id, {}).values())
+
+    async def rehydrate_user_async(self, user_id: str):
+        """Asynchronously rehydrate user documents and chunks from Supabase without blocking the event loop."""
+        with self._lock:
+            if user_id in self._loaded_users:
+                return
+
+        settings = get_settings()
+        if not (settings.SUPABASE_URL and settings.SUPABASE_SERVICE_ROLE_KEY):
+            with self._lock:
+                self._docs.setdefault(user_id, {})
+                self._chunks.setdefault(user_id, [])
+                self._loaded_users.add(user_id)
+            return
+
+        try:
+            base_url = settings.SUPABASE_URL.rstrip("/")
+            headers = {
+                "apikey": settings.SUPABASE_SERVICE_ROLE_KEY,
+                "Authorization": f"Bearer {settings.SUPABASE_SERVICE_ROLE_KEY}",
+            }
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                resp = await client.get(
+                    f"{base_url}/rest/v1/saved_documents?user_id=eq.{user_id}&order=created_at.desc",
+                    headers=headers,
+                )
+                chunks_resp = await client.get(
+                    f"{base_url}/rest/v1/saved_chunks?user_id=eq.{user_id}",
+                    headers=headers,
+                )
+                if resp.status_code == 200:
+                    rows = resp.json()
+                    chunk_rows = chunks_resp.json() if chunks_resp.status_code == 200 else []
+                    with self._lock:
+                        if user_id not in self._docs:
+                            self._docs[user_id] = {}
+                        if user_id not in self._chunks:
+                            self._chunks[user_id] = []
+                        for r in rows:
+                            doc_item = LibraryDocumentItem(
+                                id=str(r["id"]),
+                                user_id=r["user_id"],
+                                filename=r["filename"],
+                                format=r.get("format", "pdf"),
+                                file_size_bytes=int(r.get("file_size_bytes", 0)),
+                                page_count=int(r.get("page_count", 1)),
+                                chunk_count=int(r.get("chunk_count", 0)),
+                                created_at=r.get("created_at", datetime.datetime.now(datetime.timezone.utc).isoformat()),
+                            )
+                            if doc_item.id not in self._docs[user_id]:
+                                self._docs[user_id][doc_item.id] = doc_item
+
+                        doc_filenames = {doc_id: d.filename for doc_id, d in self._docs[user_id].items()}
+                        existing_chunk_ids = {c.id for c in self._chunks[user_id]}
+                        rehydrated_chunks = []
+                        for cr in chunk_rows:
+                            doc_id = str(cr.get("document_id"))
+                            doc_name = doc_filenames.get(doc_id, "document")
+                            sc = _parse_stored_chunk(cr, doc_name=doc_name)
+                            if sc and sc.id not in existing_chunk_ids:
+                                rehydrated_chunks.append(sc)
+                        self._chunks[user_id].extend(rehydrated_chunks)
+                        self._loaded_users.add(user_id)
+                else:
+                    with self._lock:
+                        self._docs.setdefault(user_id, {})
+                        self._chunks.setdefault(user_id, [])
+                        self._loaded_users.add(user_id)
+        except Exception as e:
+            logger.warning("Supabase async rehydration failed: %s", e)
+            with self._lock:
+                self._docs.setdefault(user_id, {})
+                self._chunks.setdefault(user_id, [])
+                self._loaded_users.add(user_id)
 
     def get_document(self, user_id: str, doc_id: str) -> Optional[LibraryDocumentItem]:
         with self._lock:
@@ -404,6 +423,21 @@ class InMemoryLibraryStore:
         ).start()
 
         return deleted
+
+    async def search_chunks_async(
+        self,
+        user_id: str,
+        query_vector: np.ndarray,
+        top_k: int = 5,
+        doc_ids: Optional[List[str]] = None,
+    ) -> List[TwoHopChunk]:
+        with self._lock:
+            needs_rehydrate = user_id not in self._chunks or user_id not in self._loaded_users
+
+        if needs_rehydrate:
+            await self.rehydrate_user_async(user_id)
+
+        return self.search_chunks(user_id=user_id, query_vector=query_vector, top_k=top_k, doc_ids=doc_ids)
 
     def search_chunks(
         self,
@@ -507,7 +541,7 @@ async def ask_my_library(
     embedder = get_embedding_manager()
     q_vec = embedder.embed_query(query)[0]
 
-    sources = store.search_chunks(user_id=user_id, query_vector=q_vec, top_k=top_k, doc_ids=doc_ids)
+    sources = await store.search_chunks_async(user_id=user_id, query_vector=q_vec, top_k=top_k, doc_ids=doc_ids)
     if not sources:
         return "No relevant documents found in your library.", []
 

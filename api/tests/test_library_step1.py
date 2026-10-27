@@ -355,3 +355,78 @@ def test_api_delete_and_list_no_resurrection():
     assert list_res2.json()["count"] == 0
     assert len(list_res2.json()["documents"]) == 0
     assert user_id in get_library_store()._loaded_users
+
+
+@pytest.mark.anyio
+async def test_search_chunks_async_non_blocking_rehydration():
+    """
+    PERF-02 verification:
+    Verify that search_chunks_async rehydrates uncached users asynchronously
+    via httpx.AsyncClient without executing any synchronous httpx.Client calls.
+    """
+    store = InMemoryLibraryStore()
+    user_id = "user_async_search_test"
+
+    mock_docs_response = MagicMock()
+    mock_docs_response.status_code = 200
+    mock_docs_response.json.return_value = [
+        {
+            "id": "doc_async_1",
+            "user_id": user_id,
+            "filename": "policy.pdf",
+            "format": "pdf",
+            "file_size_bytes": 1200,
+            "page_count": 1,
+            "chunk_count": 1,
+            "created_at": "2026-10-27T01:00:00Z",
+        }
+    ]
+
+    mock_chunks_response = MagicMock()
+    mock_chunks_response.status_code = 200
+    mock_chunks_response.json.return_value = [
+        {
+            "id": "sc_async_1",
+            "document_id": "doc_async_1",
+            "user_id": user_id,
+            "chunk_id": "c_async_1",
+            "text": "Access control procedures and security authentication guidelines.",
+            "token_count": 8,
+            "embedding": [0.5] * 384,
+            "section_path": ["Security"],
+            "page": 1,
+        }
+    ]
+
+    mock_settings = MagicMock()
+    mock_settings.SUPABASE_URL = "https://mock.supabase.co"
+    mock_settings.SUPABASE_SERVICE_ROLE_KEY = "mock_key"
+
+    with patch("app.library.get_settings", return_value=mock_settings):
+        with patch("httpx.AsyncClient.get") as mock_async_get:
+            with patch("httpx.Client.get") as mock_sync_get:
+                def async_side_effect(url, headers):
+                    if "saved_documents" in url:
+                        return mock_docs_response
+                    elif "saved_chunks" in url:
+                        return mock_chunks_response
+                    raise ValueError(f"Unexpected url {url}")
+
+                mock_async_get.side_effect = async_side_effect
+
+                query_vec = np.array([0.5] * 384, dtype=np.float32)
+                results = await store.search_chunks_async(
+                    user_id=user_id,
+                    query_vector=query_vec,
+                    top_k=5,
+                )
+
+                # Must use httpx.AsyncClient
+                assert mock_async_get.call_count == 2
+                # Must NEVER invoke synchronous httpx.Client on the event loop (PERF-02)
+                assert mock_sync_get.call_count == 0
+
+                assert len(results) == 1
+                assert results[0].chunk.id == "c_async_1"
+                assert results[0].added_reason == "library: policy.pdf"
+                assert user_id in store._loaded_users
