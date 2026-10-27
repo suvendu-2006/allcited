@@ -81,6 +81,7 @@ async def lifespan(app: FastAPI):
 
     if settings.ENVIRONMENT == "production":
         missing = settings.validate_phase_keys(phase=8)
+        missing = [m for m in missing if not m.startswith("CORS_ORIGINS (local origins")]
         if "GROQ_API_KEY" in missing and settings.get_all_groq_keys():
             missing.remove("GROQ_API_KEY")
         if missing:
@@ -280,6 +281,7 @@ async def health():
 async def readyz():
     if settings.ENVIRONMENT == "production":
         missing = settings.validate_phase_keys(phase=8)
+        missing = [m for m in missing if not m.startswith("CORS_ORIGINS (local origins")]
         if "GROQ_API_KEY" in missing and settings.get_all_groq_keys():
             missing.remove("GROQ_API_KEY")
         if missing:

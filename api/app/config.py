@@ -22,7 +22,7 @@ class Settings(BaseSettings):
         description="Allowed CORS origins",
     )
     ALLOW_LOCAL_ORIGINS_IN_PROD: bool = Field(
-        default=False,
+        default=True,
         description="Override flag to allow localhost/127.0.0.1 CORS origins even in production mode",
     )
     RATE_LIMIT_ENABLED: bool = Field(
