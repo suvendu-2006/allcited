@@ -1,4 +1,5 @@
 import logging
+import os
 import time
 import uuid
 from typing import Any, Dict, List, Optional
@@ -20,7 +21,7 @@ from app.pipeline.refmap import ReferenceMap, build_reference_map
 
 logger = logging.getLogger(__name__)
 
-MAX_SESSIONS = 8
+MAX_SESSIONS = int(os.getenv("MAX_SESSIONS", "64"))
 MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
 MAX_PAGES = 300
 SESSION_TTL_SECONDS = 2 * 3600  # 2 hours
@@ -41,6 +42,7 @@ class DocumentSession:
         doc_index: DocumentIndex,
         delta_stats: Optional[Dict[str, int]] = None,
         knowledge_graph: Optional[Any] = None,
+        user_id: Optional[str] = None,
     ):
         self.session_id = session_id
         self.filename = filename
@@ -52,6 +54,7 @@ class DocumentSession:
         self.doc_index = doc_index
         self.delta_stats = delta_stats or {"total": len(chunks), "reused": 0, "new": len(chunks)}
         self.knowledge_graph = knowledge_graph
+        self.user_id = user_id
         self.created_at = time.time()
         self.last_accessed = self.created_at
 

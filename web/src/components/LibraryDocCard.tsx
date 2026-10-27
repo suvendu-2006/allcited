@@ -2,6 +2,7 @@
 
 import React from "react";
 import { FileText, Trash2, ArrowRight } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import { Button } from "./ui/button";
 
 export interface LibraryDocument {
@@ -25,6 +26,8 @@ export function LibraryDocCard({
   onRemove,
   isRemoving = false,
 }: LibraryDocCardProps) {
+  const shouldReduceMotion = useReducedMotion();
+
   // Format date: e.g. "Oct 24"
   const formattedDate = new Date(doc.created_at).toLocaleDateString("en-US", {
     month: "short",
@@ -32,7 +35,20 @@ export function LibraryDocCard({
   });
 
   return (
-    <div className="p-4 rounded-interactive border border-border bg-bg-surface hover:bg-bg-sunken/40 hover:-translate-y-1 hover:shadow-md hover:border-ink-primary/30 transition-all duration-200 ease-out flex flex-col justify-between shadow-xs group motion-reduce:transform-none">
+    <motion.div
+      layout
+      initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={
+        shouldReduceMotion
+          ? { opacity: 0 }
+          : { opacity: 0, scale: 0.96, height: 0, overflow: "hidden", marginTop: 0, marginBottom: 0, paddingTop: 0, paddingBottom: 0 }
+      }
+      whileHover={shouldReduceMotion ? undefined : { y: -4, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.08)" }}
+      whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
+      transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+      className="p-4 rounded-interactive border border-border bg-bg-surface flex flex-col justify-between shadow-xs group"
+    >
       <div>
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="flex items-center gap-2">
@@ -43,15 +59,17 @@ export function LibraryDocCard({
               {doc.filename}
             </h4>
           </div>
-          <button
+          <motion.button
             type="button"
             onClick={() => onRemove(doc)}
             disabled={isRemoving}
             title="Remove document"
-            className="text-ink-ghost hover:text-danger p-1 rounded transition-all duration-150 hover:scale-110 active:scale-90 disabled:opacity-40 cursor-pointer"
+            whileHover={shouldReduceMotion ? undefined : { scale: 1.15 }}
+            whileTap={shouldReduceMotion ? undefined : { scale: 0.9 }}
+            className="text-ink-ghost hover:text-danger p-1 rounded transition-colors disabled:opacity-40 cursor-pointer"
           >
             <Trash2 className="w-3.5 h-3.5" />
-          </button>
+          </motion.button>
         </div>
 
         <p className="font-mono text-xs text-gray-warm">
@@ -70,6 +88,6 @@ export function LibraryDocCard({
           <ArrowRight className="w-3 h-3 text-accent-primary transition-transform duration-150 group-hover:translate-x-1" />
         </Button>
       </div>
-    </div>
+    </motion.div>
   );
 }

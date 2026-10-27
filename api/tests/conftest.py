@@ -3,12 +3,23 @@ from pathlib import Path
 
 import pytest
 
+from app.llm.client import reset_brain_client
 from app.sessions import DocumentSession, get_session_store
 
 # Prevent OpenMP and Tokenizer threadpool deadlocks / segfaults during full test runs
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
+os.environ.setdefault("TESTING", "true")
+
+
+@pytest.fixture(autouse=True)
+def reset_brain_client_fixture():
+    """Reset the global _brain_client singleton before and after every test to prevent cross-test key pollution."""
+    reset_brain_client()
+    yield
+    reset_brain_client()
+
 
 
 @pytest.fixture(scope="session")

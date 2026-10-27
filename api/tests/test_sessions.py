@@ -45,7 +45,9 @@ def test_ingest_docx_handbook():
     assert data["status"] == "ready"
 
 
-def test_session_caps_and_lru():
+def test_session_caps_and_lru(monkeypatch):
+    import app.sessions as sess_mod
+    monkeypatch.setattr(sess_mod, "MAX_SESSIONS", 8)
     store = SessionStore()
 
     # Exceeding 10 MB cap

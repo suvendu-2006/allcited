@@ -13,7 +13,7 @@ import { DeepSeaAurora } from "@/components/DeepSeaAurora";
 import { LiveMiniDemo } from "@/components/LiveMiniDemo";
 import { Button } from "@/components/ui/button";
 import { Footer } from "@/components/Footer";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Star, Settings } from "lucide-react";
 
 const PROOF_TICKER_ITEMS = [
@@ -30,6 +30,7 @@ const PROOF_TICKER_ITEMS = [
 ];
 
 export default function Home() {
+  const shouldReduceMotion = useReducedMotion();
   const { isSignedIn, getToken } = useAuth();
   const clerk = useClerk();
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -42,6 +43,8 @@ export default function Home() {
   const [isGuest, setIsGuest] = useState<boolean>(false);
   const [isSaved, setIsSaved] = useState<boolean>(false);
   const [saveToast, setSaveToast] = useState<string | null>(null);
+  const [isShelfMode, setIsShelfMode] = useState<boolean>(false);
+  const [initialShelfQuery, setInitialShelfQuery] = useState<string | null>(null);
 
   // Provider configuration state (loaded from localStorage browser-only)
   const [providerConfig, setProviderConfig] = useState<ProviderConfig>({
@@ -77,7 +80,17 @@ export default function Home() {
         "groq";
       const savedKey = localStorage.getItem("allcited_byok_key") || "";
       const savedBaseUrl = localStorage.getItem("allcited_byok_base_url") || "";
-      const savedModel = localStorage.getItem("allcited_byok_model") || "gpt-4o-mini";
+      let savedModel = localStorage.getItem("allcited_byok_model") || "gpt-4o-mini";
+      if (
+        savedKey.startsWith("nvapi-") &&
+        (savedModel === "nvidia/nemotron-3.5-lightning-30b-a3b" ||
+          savedModel === "meta/llama-3.2-11b-vision-instruct" ||
+          savedModel === "gpt-4o-mini" ||
+          !savedModel)
+      ) {
+        savedModel = "nvidia/nemotron-3.5-bolt-e4b";
+        localStorage.setItem("allcited_byok_model", savedModel);
+      }
       const savedOllamaUrl =
         localStorage.getItem("allcited_ollama_base_url") || "http://localhost:11434";
       const savedOllamaModel =
@@ -107,11 +120,29 @@ export default function Home() {
       const urlSessionId = params.get("session_id");
       const urlFilename = params.get("filename");
       const urlWorkspace = params.get("workspace");
+      const urlShelfQuery = params.get("shelf_query");
 
-      if (urlSessionId) {
+      if (urlShelfQuery) {
+        setIsShelfMode(true);
+        setDocumentName("Your shelf (all documents)");
+        setInWorkspace(true);
+        setInitialShelfQuery(decodeURIComponent(urlShelfQuery));
+      } else if (urlSessionId) {
+        setIsShelfMode(false);
         setSessionId(urlSessionId);
         if (urlFilename) setDocumentName(decodeURIComponent(urlFilename));
         setInWorkspace(true);
+        if (typeof window !== "undefined") {
+          const activeDocStr = sessionStorage.getItem("allcited_active_doc");
+          if (activeDocStr) {
+            try {
+              const activeDoc = JSON.parse(activeDocStr);
+              if (activeDoc.id === urlSessionId) {
+                setIsSaved(true);
+              }
+            } catch {}
+          }
+        }
       } else if (urlWorkspace === "true") {
         setInWorkspace(true);
       }
@@ -162,12 +193,19 @@ export default function Home() {
 
   // Carry across active document when upgrading from guest to signed-in
   useEffect(() => {
-    if (isSignedIn && typeof window !== "undefined" && sessionId) {
+    if (isSignedIn && typeof window !== "undefined") {
       const pendingSession = sessionStorage.getItem("allcited_pending_save_session");
-      if (pendingSession && pendingSession === sessionId) {
-        sessionStorage.removeItem("allcited_pending_save_session");
-        sessionStorage.removeItem("allcited_pending_save_doc");
-        handleSaveToShelf();
+      const pendingDoc = sessionStorage.getItem("allcited_pending_save_doc");
+      if (pendingSession) {
+        if (!sessionId) {
+          setSessionId(pendingSession);
+          if (pendingDoc) setDocumentName(pendingDoc);
+          setInWorkspace(true);
+        } else if (pendingSession === sessionId) {
+          sessionStorage.removeItem("allcited_pending_save_session");
+          sessionStorage.removeItem("allcited_pending_save_doc");
+          handleSaveToShelf();
+        }
       }
     }
   }, [isSignedIn, sessionId, handleSaveToShelf]);
@@ -198,11 +236,14 @@ export default function Home() {
           onOpenWorkspace={() => setInWorkspace(true)}
           onGoHome={() => {
             setInWorkspace(false);
+            setIsShelfMode(false);
+            setInitialShelfQuery(null);
             if (typeof window !== "undefined") {
               const url = new URL(window.location.href);
               url.searchParams.delete("workspace");
               url.searchParams.delete("session_id");
               url.searchParams.delete("filename");
+              url.searchParams.delete("shelf_query");
               window.history.pushState({}, "", url.pathname);
             }
           }}
@@ -227,7 +268,19 @@ export default function Home() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setInWorkspace(false)}
+                    onClick={() => {
+                      setInWorkspace(false);
+                      setIsShelfMode(false);
+                      setInitialShelfQuery(null);
+                      if (typeof window !== "undefined") {
+                        const url = new URL(window.location.href);
+                        url.searchParams.delete("workspace");
+                        url.searchParams.delete("session_id");
+                        url.searchParams.delete("filename");
+                        url.searchParams.delete("shelf_query");
+                        window.history.pushState({}, "", url.pathname);
+                      }
+                    }}
                     className="text-xs h-7 gap-1"
                   >
                     ← Back
@@ -245,28 +298,45 @@ export default function Home() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {sessionId && (
-                    <button
+                  {sessionId && !isShelfMode && (
+                    <motion.button
                       type="button"
+                      whileHover={shouldReduceMotion ? undefined : { scale: 1.03 }}
+                      whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
                       onClick={handleSaveToShelf}
-                      className={`font-mono text-[11px] flex items-center gap-1 px-2.5 py-1 rounded border transition-all duration-150 ease-out cursor-pointer hover:-translate-y-[0.5px] hover:shadow-2xs active:translate-y-0 active:scale-95 ${
+                      className={`font-mono text-[11px] flex items-center gap-1 px-2.5 py-1 rounded border transition-colors cursor-pointer ${
                         isSaved
                           ? "border-accent-primary/40 bg-accent-primary/10 text-accent-primary font-semibold"
                           : "border-border/80 hover:border-accent-primary hover:bg-bg-sunken text-ink-primary"
                       }`}
                     >
                       <span>{isSaved ? "Saved to shelf ·" : "Save to shelf"}</span>
-                    </button>
+                    </motion.button>
                   )}
 
-                  <button
+                  <motion.button
                     type="button"
+                    whileHover={shouldReduceMotion ? undefined : { scale: 1.03 }}
+                    whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
                     onClick={() => setIsSettingsOpen(true)}
-                    className="group/engine font-mono text-[11px] text-gray-warm hover:text-ink-primary flex items-center gap-1.5 px-2 py-1 rounded border border-border/60 hover:border-ink-primary/30 hover:bg-bg-sunken hover:-translate-y-[0.5px] active:translate-y-0 active:scale-95 transition-all duration-150 ease-out cursor-pointer"
+                    className="group/engine font-mono text-[11px] text-gray-warm hover:text-ink-primary flex items-center gap-1.5 px-2 py-1 rounded border border-border/60 hover:border-ink-primary/30 hover:bg-bg-sunken transition-colors cursor-pointer"
                   >
-                    <span>Engine: {providerConfig.mode}</span>
+                    <span>
+                      Engine:{" "}
+                      {providerConfig.mode === "groq"
+                        ? "Allcited"
+                        : providerConfig.mode === "byok"
+                        ? providerConfig.byokKey.startsWith("nvapi-") || providerConfig.byokBaseUrl.includes("nvidia.com")
+                          ? "NVIDIA NIM"
+                          : providerConfig.byokKey.startsWith("sk-") || providerConfig.byokBaseUrl.includes("openai.com")
+                          ? "OpenAI"
+                          : providerConfig.byokKey.startsWith("gsk_") || providerConfig.byokBaseUrl.includes("groq.com")
+                          ? "Groq"
+                          : "Custom Key"
+                        : "Local"}
+                    </span>
                     <Settings className="w-3.5 h-3.5 text-accent-primary transition-transform duration-200 ease-out group-hover/engine:rotate-45" />
-                  </button>
+                  </motion.button>
                 </div>
               </div>
 
@@ -279,6 +349,9 @@ export default function Home() {
               <Chat
                 sessionId={sessionId}
                 documentName={documentName}
+                isShelfMode={isShelfMode}
+                initialShelfQuery={initialShelfQuery}
+                onClearInitialShelfQuery={() => setInitialShelfQuery(null)}
                 isGuest={!isSignedIn}
                 byokKey={providerConfig.mode === "byok" ? providerConfig.byokKey : null}
                 byokBaseUrl={
@@ -412,7 +485,7 @@ export default function Home() {
               className="border-y border-border bg-bg-surface py-2.5 overflow-hidden"
             >
               <div className="whitespace-nowrap font-mono text-xs text-gray-warm flex items-center justify-center gap-2">
-                <span>React · Next.js · TypeScript · FastAPI · RAG pipeline: BM25 + FAISS + cross-encoder re-ranking · Llama on Groq</span>
+                <span>React · Next.js · TypeScript · FastAPI · RAG pipeline: BM25 + FAISS + cross-encoder re-ranking · High-precision LLM reasoning</span>
               </div>
             </motion.div>
 

@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { SignIn } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
+import { motion, useReducedMotion } from "framer-motion";
 import { useTheme } from "@/lib/theme";
 import { Button } from "./ui/button";
 import { DeepSeaAurora } from "./DeepSeaAurora";
@@ -16,6 +17,7 @@ interface AuthScreenProps {
 export function AuthScreen({ onContinueAsGuest, onBackToHome }: AuthScreenProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const shouldReduceMotion = useReducedMotion();
 
   return (
     <div className="relative min-h-screen w-full flex flex-col justify-between bg-bg-base text-ink-primary overflow-y-auto selection:bg-accent-primary/20">
@@ -26,13 +28,15 @@ export function AuthScreen({ onContinueAsGuest, onBackToHome }: AuthScreenProps)
       <header className="relative z-10 w-full px-4 sm:px-8 py-3.5 flex items-center justify-between border-b border-border/60 bg-bg-surface/50 backdrop-blur-md flex-shrink-0">
         <div className="flex items-center gap-3">
           {onBackToHome ? (
-            <button
+            <motion.button
               type="button"
               onClick={onBackToHome}
+              whileHover={shouldReduceMotion ? undefined : { x: -2 }}
+              whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
               className="text-xs font-mono text-gray-warm hover:text-ink-primary transition-colors flex items-center gap-1 cursor-pointer"
             >
               ← Back to home
-            </button>
+            </motion.button>
           ) : (
             <Link
               href="/"
@@ -62,7 +66,12 @@ export function AuthScreen({ onContinueAsGuest, onBackToHome }: AuthScreenProps)
 
       {/* Centered Auth Card Area */}
       <main className="relative z-10 flex-1 flex flex-col items-center justify-start sm:justify-center px-4 py-6 sm:py-10 max-w-md w-full mx-auto my-auto">
-        <div className="w-full space-y-5 animate-fade-in">
+        <motion.div
+          initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.36, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full space-y-5"
+        >
           {/* Headline & Explanation */}
           <div className="text-center space-y-1.5">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-ink-primary font-display">
@@ -95,7 +104,7 @@ export function AuthScreen({ onContinueAsGuest, onBackToHome }: AuthScreenProps)
                   headerTitle: "text-ink-primary font-display font-semibold text-xl",
                   headerSubtitle: "text-gray-warm text-xs",
                   socialButtonsBlockButton: "border border-border bg-bg-sunken hover:bg-bg-surface text-ink-primary text-xs h-10 transition-colors shadow-2xs",
-                  socialButtonsBlockButtonText: "text-ink-primary font-medium",
+                  socialButtonsBlockButtonText: "text-ink-primary font-medium border-0 outline-none shadow-none",
                   socialButtonsIconButton: "border border-border bg-bg-sunken hover:bg-bg-surface text-ink-primary transition-colors shadow-2xs",
                   providerIcon__apple: isDark ? { filter: "invert(1) brightness(1.8)" } : {},
                   providerIcon__github: isDark ? { filter: "invert(1) brightness(1.8)" } : {},
@@ -113,6 +122,12 @@ export function AuthScreen({ onContinueAsGuest, onBackToHome }: AuthScreenProps)
                   lastAuthenticationStrategyBadge: "bg-bg-sunken text-accent-amber border border-border text-xs px-2 py-0.5 rounded-full shadow-none",
                   identityPreviewText: "text-ink-primary",
                   identityPreviewEditButton: "text-accent-primary",
+                  formResendCodeLink: "text-gray-warm text-xs hover:text-accent-primary",
+                  alternativeMethodsBlockButton: "text-accent-primary hover:underline text-xs font-semibold bg-transparent border-0 shadow-none",
+                  otpCodeField: "bg-transparent border-0 shadow-none",
+                  otpCodeFieldInputs: "bg-transparent border-0 shadow-none gap-2",
+                  otpCodeFieldInputContainer: "bg-transparent border-0 shadow-none",
+                  otpCodeFieldInput: "w-11 h-12 rounded-lg border border-[rgba(26,25,24,0.25)] dark:border-[rgba(239,234,217,0.22)] bg-white dark:bg-[#0D0C0B] text-ink-primary dark:text-[#EFEAD9] font-bold text-xl text-center focus:border-ink-primary dark:focus:border-accent-primary",
                   dividerLine: "bg-border",
                   dividerText: "text-ink-ghost text-xs font-mono",
                 },
@@ -131,20 +146,25 @@ export function AuthScreen({ onContinueAsGuest, onBackToHome }: AuthScreenProps)
           </div>
 
           <div className="space-y-2 pt-0.5 text-center">
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={onContinueAsGuest}
-              className="w-full h-11 text-sm font-medium border-border hover:border-ink-primary bg-bg-surface hover:bg-bg-sunken text-ink-primary shadow-xs transition-all active:scale-[0.99] cursor-pointer"
+            <motion.div
+              whileHover={shouldReduceMotion ? undefined : { scale: 1.01 }}
+              whileTap={shouldReduceMotion ? undefined : { scale: 0.99 }}
             >
-              Continue without login
-            </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={onContinueAsGuest}
+                className="w-full h-11 text-sm font-medium border-border hover:border-ink-primary bg-bg-surface hover:bg-bg-sunken text-ink-primary shadow-xs transition-all cursor-pointer"
+              >
+                Continue without login
+              </Button>
+            </motion.div>
 
             <p className="font-sans text-[11px] text-ink-ghost tracking-tight px-2 leading-relaxed">
               Guest mode: everything works, nothing is saved. Sign in later to keep your documents.
             </p>
           </div>
-        </div>
+        </motion.div>
       </main>
 
       {/* Footer Minimal Notice */}

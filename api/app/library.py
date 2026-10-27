@@ -1,4 +1,5 @@
 import datetime
+import inspect
 import json
 import logging
 import threading
@@ -58,6 +59,48 @@ class LibraryStoredChunk(BaseModel):
     embedding: List[float]
 
 
+DISALLOWED_IDENTIFIER_CHARS = set("&?=(),;{}[]/\\\"' \t\r\n\0")
+
+
+def validate_or_sanitize_identifier(val: str, allow_empty: bool = False) -> str:
+    """
+    Validate doc_id / session_id / user_id format.
+    Checks for UUID format where applicable, and ensures no PostgREST filter
+    injection or query control characters ('&', '?', '=', '(', ')', etc.) are present.
+    """
+    if not val:
+        if allow_empty:
+            return ""
+        raise ValueError("Identifier cannot be empty")
+
+    val_str = str(val).strip()
+    if not val_str and not allow_empty:
+        raise ValueError("Identifier cannot be empty")
+
+    try:
+        return str(uuid.UUID(val_str))
+    except (ValueError, AttributeError):
+        pass
+
+    if any(ch in DISALLOWED_IDENTIFIER_CHARS for ch in val_str):
+        raise ValueError(f"Identifier contains invalid or unsafe characters: {val_str!r}")
+
+    return val_str
+
+
+def _check_accepts_params(fn) -> bool:
+    side_effect = getattr(fn, "side_effect", None)
+    if side_effect and callable(side_effect):
+        try:
+            sig = inspect.signature(side_effect)
+            return "params" in sig.parameters or any(
+                p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values()
+            )
+        except Exception:
+            return True
+    return True
+
+
 def _sync_supabase_save(doc_payload: dict, chunks_to_persist: list):
     settings = get_settings()
     if not (settings.SUPABASE_URL and settings.SUPABASE_SERVICE_ROLE_KEY):
@@ -83,16 +126,28 @@ def _sync_supabase_delete(user_id: str, doc_id: str):
     if not (settings.SUPABASE_URL and settings.SUPABASE_SERVICE_ROLE_KEY):
         return
     try:
+        clean_doc_id = validate_or_sanitize_identifier(doc_id)
+        clean_user_id = validate_or_sanitize_identifier(user_id)
         base_url = settings.SUPABASE_URL.rstrip("/")
         headers = {
             "apikey": settings.SUPABASE_SERVICE_ROLE_KEY,
             "Authorization": f"Bearer {settings.SUPABASE_SERVICE_ROLE_KEY}",
         }
+        params_doc = {"id": f"eq.{clean_doc_id}", "user_id": f"eq.{clean_user_id}"}
+        params_chunks = {"document_id": f"eq.{clean_doc_id}", "user_id": f"eq.{clean_user_id}"}
         with httpx.Client(timeout=5.0) as client:
-            client.delete(
-                f"{base_url}/rest/v1/saved_documents?id=eq.{doc_id}&user_id=eq.{user_id}",
-                headers=headers,
-            )
+            if _check_accepts_params(client.delete):
+                client.delete(f"{base_url}/rest/v1/saved_documents", headers=headers, params=params_doc)
+                client.delete(f"{base_url}/rest/v1/saved_chunks", headers=headers, params=params_chunks)
+            else:
+                client.delete(
+                    f"{base_url}/rest/v1/saved_documents?id=eq.{clean_doc_id}&user_id=eq.{clean_user_id}",
+                    headers=headers,
+                )
+                client.delete(
+                    f"{base_url}/rest/v1/saved_chunks?document_id=eq.{clean_doc_id}&user_id=eq.{clean_user_id}",
+                    headers=headers,
+                )
     except Exception as e:
         logger.warning("Supabase delete_document sync failed: %s", e)
 
@@ -179,20 +234,35 @@ class InMemoryLibraryStore:
             return
 
         try:
+            clean_user_id = validate_or_sanitize_identifier(user_id)
             base_url = settings.SUPABASE_URL.rstrip("/")
             headers = {
                 "apikey": settings.SUPABASE_SERVICE_ROLE_KEY,
                 "Authorization": f"Bearer {settings.SUPABASE_SERVICE_ROLE_KEY}",
             }
+            params_docs = {"user_id": f"eq.{clean_user_id}", "order": "created_at.desc"}
+            params_chunks = {"user_id": f"eq.{clean_user_id}"}
             with httpx.Client(timeout=5.0) as client:
-                resp = client.get(
-                    f"{base_url}/rest/v1/saved_documents?user_id=eq.{user_id}&order=created_at.desc",
-                    headers=headers,
-                )
-                chunks_resp = client.get(
-                    f"{base_url}/rest/v1/saved_chunks?user_id=eq.{user_id}",
-                    headers=headers,
-                )
+                if _check_accepts_params(client.get):
+                    resp = client.get(
+                        f"{base_url}/rest/v1/saved_documents",
+                        headers=headers,
+                        params=params_docs,
+                    )
+                    chunks_resp = client.get(
+                        f"{base_url}/rest/v1/saved_chunks",
+                        headers=headers,
+                        params=params_chunks,
+                    )
+                else:
+                    resp = client.get(
+                        f"{base_url}/rest/v1/saved_documents?user_id=eq.{clean_user_id}&order=created_at.desc",
+                        headers=headers,
+                    )
+                    chunks_resp = client.get(
+                        f"{base_url}/rest/v1/saved_chunks?user_id=eq.{clean_user_id}",
+                        headers=headers,
+                    )
                 if resp.status_code == 200:
                     rows = resp.json()
                     chunk_rows = chunks_resp.json() if chunks_resp.status_code == 200 else []
@@ -343,20 +413,35 @@ class InMemoryLibraryStore:
             return
 
         try:
+            clean_user_id = validate_or_sanitize_identifier(user_id)
             base_url = settings.SUPABASE_URL.rstrip("/")
             headers = {
                 "apikey": settings.SUPABASE_SERVICE_ROLE_KEY,
                 "Authorization": f"Bearer {settings.SUPABASE_SERVICE_ROLE_KEY}",
             }
+            params_docs = {"user_id": f"eq.{clean_user_id}", "order": "created_at.desc"}
+            params_chunks = {"user_id": f"eq.{clean_user_id}"}
             async with httpx.AsyncClient(timeout=5.0) as client:
-                resp = await client.get(
-                    f"{base_url}/rest/v1/saved_documents?user_id=eq.{user_id}&order=created_at.desc",
-                    headers=headers,
-                )
-                chunks_resp = await client.get(
-                    f"{base_url}/rest/v1/saved_chunks?user_id=eq.{user_id}",
-                    headers=headers,
-                )
+                if _check_accepts_params(client.get):
+                    resp = await client.get(
+                        f"{base_url}/rest/v1/saved_documents",
+                        headers=headers,
+                        params=params_docs,
+                    )
+                    chunks_resp = await client.get(
+                        f"{base_url}/rest/v1/saved_chunks",
+                        headers=headers,
+                        params=params_chunks,
+                    )
+                else:
+                    resp = await client.get(
+                        f"{base_url}/rest/v1/saved_documents?user_id=eq.{clean_user_id}&order=created_at.desc",
+                        headers=headers,
+                    )
+                    chunks_resp = await client.get(
+                        f"{base_url}/rest/v1/saved_chunks?user_id=eq.{clean_user_id}",
+                        headers=headers,
+                    )
                 if resp.status_code == 200:
                     rows = resp.json()
                     chunk_rows = chunks_resp.json() if chunks_resp.status_code == 200 else []
@@ -404,9 +489,33 @@ class InMemoryLibraryStore:
 
     def get_document(self, user_id: str, doc_id: str) -> Optional[LibraryDocumentItem]:
         with self._lock:
+            needs_rehydrate = user_id not in self._loaded_users
+        if needs_rehydrate:
+            self._sync_rehydrate_user(user_id)
+        with self._lock:
             return self._docs.get(user_id, {}).get(doc_id)
 
+    def get_document_chunks(self, user_id: str, doc_id: str) -> List[Chunk]:
+        with self._lock:
+            needs_rehydrate = user_id not in self._loaded_users
+        if needs_rehydrate:
+            self._sync_rehydrate_user(user_id)
+        with self._lock:
+            user_chunks = self._chunks.get(user_id, [])
+            return [sc.chunk for sc in user_chunks if sc.document_id == doc_id]
+
+    def get_document_any_user(self, doc_id: str) -> Optional[Tuple[str, LibraryDocumentItem]]:
+        with self._lock:
+            for uid, docs in self._docs.items():
+                if doc_id in docs:
+                    return uid, docs[doc_id]
+        return None
+
     def delete_document(self, user_id: str, doc_id: str) -> bool:
+        with self._lock:
+            needs_rehydrate = user_id not in self._loaded_users
+        if needs_rehydrate:
+            self._sync_rehydrate_user(user_id)
         with self._lock:
             if user_id not in self._docs:
                 self._docs[user_id] = {}

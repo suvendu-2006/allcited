@@ -13,7 +13,7 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/Table";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Check } from "lucide-react";
 import evalData from "@/data/eval_results.json";
 
@@ -57,6 +57,7 @@ const PIPELINE_ROWS = evalData.pipeline_ablation as unknown as PipelineRow[];
 const CHUNKING_ROWS = evalData.chunking_comparison as unknown as ChunkingRow[];
 
 export default function ExamPage() {
+  const shouldReduceMotion = useReducedMotion();
   return (
     <div className="min-h-screen bg-bg-base text-ink-primary flex flex-col">
       <Navbar />
@@ -125,9 +126,11 @@ export default function ExamPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {WHAT_WE_TEST_CATEGORIES.map((cat) => (
-              <div
+              <motion.div
                 key={cat.name}
-                className="p-4 rounded-interactive border border-border bg-bg-surface flex flex-col justify-between shadow-xs space-y-2"
+                whileHover={shouldReduceMotion ? undefined : { y: -3, scale: 1.01 }}
+                whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
+                className="p-4 rounded-interactive border border-border bg-bg-surface flex flex-col justify-between shadow-xs space-y-2 cursor-default transition-colors hover:border-accent-primary/40"
               >
                 <div>
                   <div className="flex items-center justify-between mb-1">
@@ -142,7 +145,7 @@ export default function ExamPage() {
                     {cat.meaning}
                   </p>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </section>
@@ -314,9 +317,15 @@ export default function ExamPage() {
         {/* Footer CTA */}
         <div className="text-center py-4">
           <Link href="/?workspace=true">
-            <Button variant="primary" size="lg" className="text-sm">
-              Try it free
-            </Button>
+            <motion.div
+              whileHover={shouldReduceMotion ? undefined : { scale: 1.03 }}
+              whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
+              className="inline-block"
+            >
+              <Button variant="primary" size="lg" className="text-sm cursor-pointer shadow-sm">
+                Try it free
+              </Button>
+            </motion.div>
           </Link>
         </div>
       </main>

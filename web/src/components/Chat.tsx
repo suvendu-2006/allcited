@@ -10,6 +10,7 @@ import { EmptyState } from "./EmptyState";
 import { ErrorState } from "./ErrorState";
 import { checkRateLimit, recordFreeQuery, RateLimitState } from "@/lib/rateLimit";
 import { RateLimitBanner } from "./RateLimitBanner";
+import { motion, useReducedMotion } from "framer-motion";
 
 interface ChatProps {
   sessionId?: string | null;
@@ -28,6 +29,9 @@ interface ChatProps {
   }) => void;
   onOpenSettings?: () => void;
   isGuest?: boolean;
+  isShelfMode?: boolean;
+  initialShelfQuery?: string | null;
+  onClearInitialShelfQuery?: () => void;
 }
 
 // Rotating status indicators
@@ -49,6 +53,9 @@ export function Chat({
   onUploadSuccess,
   onOpenSettings,
   isGuest,
+  isShelfMode = false,
+  initialShelfQuery,
+  onClearInitialShelfQuery,
 }: ChatProps) {
   const { getToken, isSignedIn } = useAuth();
   const { user } = useUser();
@@ -64,7 +71,10 @@ export function Chat({
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const scrollEndRef = useRef<HTMLDivElement>(null);
+  const messagesViewportRef = useRef<HTMLDivElement>(null);
+  const isNearBottomRef = useRef(true);
   const searchVariantIdx = useRef(0);
+  const shouldReduceMotion = useReducedMotion();
 
   // Pro status detection (via prop, Clerk metadata, or Stripe subscription endpoint)
   useEffect(() => {
@@ -117,9 +127,28 @@ export function Chat({
     return () => window.removeEventListener("storage", handleStorage);
   }, [isRateLimitExempt]);
 
-  // Auto-scroll to bottom on incoming message updates
+  // Handle initial shelf query passed from /?shelf_query=...
+  useEffect(() => {
+    if (initialShelfQuery && initialShelfQuery.trim()) {
+      handleSend(initialShelfQuery.trim());
+      onClearInitialShelfQuery?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialShelfQuery]);
+
+  const handleScroll = () => {
+    const el = messagesViewportRef.current;
+    if (!el) return;
+    const threshold = 120;
+    const isBottom = el.scrollHeight - el.scrollTop - el.clientHeight <= threshold;
+    isNearBottomRef.current = isBottom;
+  };
+
+  // Auto-scroll to bottom on incoming message updates: smooth only when user is already at bottom
   const scrollToBottom = () => {
-    scrollEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (isNearBottomRef.current) {
+      scrollEndRef.current?.scrollIntoView({ behavior: shouldReduceMotion ? "auto" : "smooth" });
+    }
   };
 
   useEffect(() => {
@@ -141,7 +170,7 @@ export function Chat({
   };
 
   const handleSend = async (queryText: string) => {
-    if (!sessionId) {
+    if (!sessionId && !isShelfMode) {
       alert("Drop or select a document first.");
       return;
     }
@@ -175,7 +204,9 @@ export function Chat({
     };
 
     // 2. Add assistant placeholder with human rotating stage text
-    const initialStageText = SEARCHING_VARIANTS[searchVariantIdx.current % SEARCHING_VARIANTS.length];
+    const initialStageText = isShelfMode
+      ? "searching across your shelf…"
+      : SEARCHING_VARIANTS[searchVariantIdx.current % SEARCHING_VARIANTS.length];
     const assistantMsg: ChatMessage = {
       id: assistantMessageId,
       role: "assistant",
@@ -189,6 +220,101 @@ export function Chat({
 
     const controller = new AbortController();
     abortControllerRef.current = controller;
+
+    // 3. Handle Shelf Query mode (POST /v1/library/query across all saved docs)
+    if (isShelfMode) {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+        let authToken: string | null = null;
+        try {
+          authToken = await getToken();
+        } catch {}
+        if (!authToken && typeof window !== "undefined") {
+          authToken = localStorage.getItem("allcited_auth_token");
+        }
+
+        if (!authToken) {
+          setStreamError({
+            code: "unauthorized",
+            message: "Please sign in to search across your shelf documents.",
+          });
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === assistantMessageId
+                ? { ...msg, stage: "error", stageMessage: "Sign-in required" }
+                : msg
+            )
+          );
+          setIsGenerating(false);
+          return;
+        }
+
+        const res = await fetch(`${apiUrl.replace(/\/$/, "")}/v1/library/query`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({
+            query: queryText,
+            top_k: 5,
+            provider: preferredProvider || undefined,
+          }),
+          signal: controller.signal,
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => null);
+          const errMsg =
+            errData?.detail?.error?.message ||
+            errData?.error?.message ||
+            `Shelf query failed (${res.status})`;
+          throw new Error(errMsg);
+        }
+
+        const data = await res.json();
+        const answer = data.answer || "No relevant documents found in your library.";
+        const citations: Citation[] = data.citations || [];
+
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantMessageId
+              ? {
+                  ...msg,
+                  content: answer,
+                  citations,
+                  stage: "done",
+                  stageMessage: undefined,
+                }
+              : msg
+          )
+        );
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name === "AbortError") return;
+        const msg = err instanceof Error ? err.message : String(err);
+        setStreamError({
+          code: "shelf_query_error",
+          message: msg || "Failed to search shelf.",
+          requestId: `req_${Math.random().toString(36).slice(2, 10)}`,
+        });
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantMessageId
+              ? { ...msg, stage: "error", stageMessage: "Search failed" }
+              : msg
+          )
+        );
+      } finally {
+        setIsGenerating(false);
+      }
+      return;
+    }
+
+    if (!sessionId) {
+      alert("Drop or select a document first.");
+      setIsGenerating(false);
+      return;
+    }
 
     try {
       const authToken = await getToken().catch(() => null);
@@ -258,6 +384,13 @@ export function Chat({
             code = "free_tier_busy";
           } else if (errStr.includes("expired") || errStr.includes("404")) {
             code = "session_expired";
+          } else if (
+            errStr.includes("pro feature") ||
+            errStr.includes("precision mode") ||
+            errStr.includes("plan_limit") ||
+            errStr.includes("402")
+          ) {
+            code = "plan_limit_reached";
           }
 
           setStreamError({
@@ -275,8 +408,22 @@ export function Chat({
       });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
+      let code = "generic";
+      const errStr = msg.toLowerCase();
+      if (errStr.includes("swamped") || errStr.includes("rate limit") || errStr.includes("429")) {
+        code = "free_tier_busy";
+      } else if (errStr.includes("expired") || errStr.includes("404")) {
+        code = "session_expired";
+      } else if (
+        errStr.includes("pro feature") ||
+        errStr.includes("precision mode") ||
+        errStr.includes("plan_limit") ||
+        errStr.includes("402")
+      ) {
+        code = "plan_limit_reached";
+      }
       setStreamError({
-        code: "generic",
+        code,
         message: msg || "Failed to start question stream",
         requestId: `req_${Math.random().toString(36).slice(2, 10)}`,
       });
@@ -285,6 +432,18 @@ export function Chat({
       );
       setIsGenerating(false);
     }
+  };
+
+  const handleTogglePrecision = (enabled: boolean) => {
+    if (enabled && !isProUser && !byokKey) {
+      setStreamError({
+        code: "plan_limit_reached",
+        message: "Precision mode is a Pro feature providing deep iterative agentic retrieval and cross-encoder re-ranking. Upgrade to Pro to enable, or bring your own API key.",
+      });
+      return;
+    }
+    setStreamError(null);
+    setIsPrecisionMode(enabled);
   };
 
   const handleAbort = () => {
@@ -298,11 +457,20 @@ export function Chat({
   return (
     <div className="flex flex-col h-full bg-bg-base">
       {/* Messages Viewport */}
-      <div className="flex-1 overflow-y-auto px-4 py-6">
+      <div
+        ref={messagesViewportRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto px-4 py-6"
+      >
         <div className="max-w-[640px] w-full mx-auto">
           {messages.length === 0 ? (
-            <div className="my-auto">
-              {!sessionId && onUploadSuccess && (
+            <motion.div
+              initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: shouldReduceMotion ? 0.08 : 0.24 }}
+              className="my-auto"
+            >
+              {!sessionId && !isShelfMode && onUploadSuccess && (
                 <div className="max-w-[640px] w-full mx-auto mb-6">
                   <Upload onUploadSuccess={onUploadSuccess} />
                 </div>
@@ -311,9 +479,14 @@ export function Chat({
                 onSelectSampleQuestion={(q) => handleSend(q)}
                 isGuest={isGuest}
               />
-            </div>
+            </motion.div>
           ) : (
-            <div className="space-y-6">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: shouldReduceMotion ? 0.08 : 0.2 }}
+              className="space-y-6"
+            >
               {documentName && (
                 <div className="flex items-center justify-between pb-3 border-b border-border/60 text-xs text-gray-warm">
                   <div className="flex items-center gap-2 min-w-0">
@@ -323,7 +496,7 @@ export function Chat({
                     </span>
                   </div>
                   <span className="font-mono text-[11px] text-ink-ghost flex-shrink-0">
-                    grounded Q&A session
+                    {isShelfMode ? "multi-document synthesis" : "grounded Q&A session"}
                   </span>
                 </div>
               )}
@@ -346,9 +519,12 @@ export function Chat({
                     if (lastUser) handleSend(lastUser.content);
                   }}
                   onOpenSettings={onOpenSettings}
+                  onOpenUpgrade={() => {
+                    window.location.href = "/pricing";
+                  }}
                 />
               )}
-            </div>
+            </motion.div>
           )}
           <div ref={scrollEndRef} />
         </div>
@@ -369,12 +545,14 @@ export function Chat({
             onAbort={handleAbort}
             isGenerating={isGenerating}
             isPrecisionMode={isPrecisionMode}
-            onTogglePrecision={setIsPrecisionMode}
-            isPro={isProUser}
-            disabled={!sessionId || (!isRateLimitExempt && rateLimitState.isRateLimited)}
+            onTogglePrecision={handleTogglePrecision}
+            isPro={isProUser || Boolean(byokKey)}
+            disabled={(!sessionId && !isShelfMode) || (!isRateLimitExempt && rateLimitState.isRateLimited)}
             placeholder={
               !isRateLimitExempt && rateLimitState.isRateLimited
                 ? "Free tier limit reached (10 questions / hour). Resets soon or use BYOK."
+                : isShelfMode
+                ? "Ask across everything on your shelf…"
                 : undefined
             }
           />

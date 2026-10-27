@@ -6,9 +6,10 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { CitationChip } from "@/components/CitationChip";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 export default function HowItWorksPage() {
+  const shouldReduceMotion = useReducedMotion();
   const [activeReceipt, setActiveReceipt] = useState(false);
 
   const STAGES = [
@@ -52,7 +53,7 @@ export default function HowItWorksPage() {
       num: "6",
       title: "Stage 6 — Grounded generation.",
       techDesc:
-        "The LLM (Llama on Groq, your own key, or local Ollama) writes using only the selected passages. Temperature 0.1. If the passages don't contain the answer, it must refuse.",
+        "The LLM (Allcited Cloud, your own API key, or a local model) writes using only the selected passages. Temperature 0.1. If the passages don't contain the answer, it must refuse.",
       plainGloss: "In plain words: the AI writes from your pages only — or not at all.",
     },
     {
@@ -71,9 +72,9 @@ export default function HowItWorksPage() {
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-12 sm:py-16 space-y-16">
         <div className="text-center max-w-3xl mx-auto space-y-4">
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: shouldReduceMotion ? 0.08 : 0.3 }}
           >
             <span className="font-mono text-xs uppercase tracking-wider px-2.5 py-1 rounded bg-accent-primary/10 text-accent-primary border border-accent-primary/20 font-semibold">
               THE PIPELINE
@@ -81,17 +82,17 @@ export default function HowItWorksPage() {
           </motion.div>
 
           <motion.h1
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.05 }}
+            transition={{ duration: shouldReduceMotion ? 0.08 : 0.4, delay: shouldReduceMotion ? 0 : 0.05 }}
             className="text-3xl sm:text-5xl font-bold tracking-tight text-ink-primary font-display"
           >
             Every step, under the hood.
           </motion.h1>
           <motion.p
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
+            transition={{ duration: shouldReduceMotion ? 0.08 : 0.4, delay: shouldReduceMotion ? 0 : 0.1 }}
             className="text-base text-gray-warm"
           >
             From your file to a cited answer — the exact path, stage by stage. Nothing hidden.
@@ -190,9 +191,15 @@ export default function HowItWorksPage() {
 
           <div className="pt-4">
             <Link href="/?workspace=true">
-              <Button variant="primary" size="lg" className="text-sm">
-                Try it free
-              </Button>
+              <motion.div
+                whileHover={shouldReduceMotion ? undefined : { scale: 1.02 }}
+                whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
+                className="inline-block"
+              >
+                <Button variant="primary" size="lg" className="text-sm cursor-pointer shadow-sm">
+                  Try it free
+                </Button>
+              </motion.div>
             </Link>
           </div>
         </section>

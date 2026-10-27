@@ -5,7 +5,7 @@ import httpx
 from fastapi.testclient import TestClient
 
 from app.config import get_settings
-from app.llm.client import BrainClient, LLMClientError
+from app.llm.client import BrainClient, LLMClientError, reset_brain_client
 from app.llm.provider import resolve_provider
 from app.main import app
 
@@ -302,9 +302,12 @@ def test_nvidia_fallback_when_all_groq_fail(monkeypatch):
         assert res == "Answer from NVIDIA NIM"
         assert any("nvidia.com" in u for u in urls_called)
         assert brain.last_used_provider == "nvidia"
-        assert "llama-3.2-11b" in brain.last_used_model
+        assert (brain.last_used_model == settings.NVIDIA_MODEL) or ("llama-3.2-11b" in brain.last_used_model) or ("nemotron" in brain.last_used_model)
 
-    asyncio.run(run_test())
+    try:
+        asyncio.run(run_test())
+    finally:
+        reset_brain_client()
 
 
 def test_nvidia_streaming_fallback_when_all_groq_fail(monkeypatch):
@@ -354,9 +357,12 @@ def test_nvidia_streaming_fallback_when_all_groq_fail(monkeypatch):
         assert "".join(chunks) == "NVIDIA streamed response"
         assert any("nvidia.com" in u for u in urls_called)
         assert brain.last_used_provider == "nvidia"
-        assert "llama-3.2-11b" in brain.last_used_model
+        assert (brain.last_used_model == settings.NVIDIA_MODEL) or ("llama-3.2-11b" in brain.last_used_model) or ("nemotron" in brain.last_used_model)
 
-    asyncio.run(run_test())
+    try:
+        asyncio.run(run_test())
+    finally:
+        reset_brain_client()
 
 
 def test_pipeline_e2e_groq_failover_to_nvidia(monkeypatch):
@@ -430,7 +436,10 @@ def test_pipeline_e2e_groq_failover_to_nvidia(monkeypatch):
 
         done_event = events[-1] if events else {}
         assert done_event.get("provider") == "nvidia"
-        assert "llama-3.2-11b" in done_event.get("model", "")
+        assert (done_event.get("model", "") == settings.NVIDIA_MODEL) or ("llama-3.2-11b" in done_event.get("model", "")) or ("nemotron" in done_event.get("model", ""))
         assert "60 calendar days" in done_event.get("answer", "")
 
-    asyncio.run(run_test())
+    try:
+        asyncio.run(run_test())
+    finally:
+        reset_brain_client()

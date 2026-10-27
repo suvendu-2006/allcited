@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { UploadCloud, CheckCircle2, AlertCircle, Link2, ArrowRight, X } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import { Button } from "./ui/button";
 
 interface UploadProps {
@@ -31,6 +32,7 @@ export function Upload({
   className = "",
 }: UploadProps) {
   const { getToken } = useAuth();
+  const shouldReduceMotion = useReducedMotion();
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [progressStepIdx, setProgressStepIdx] = useState(0);
@@ -230,22 +232,29 @@ export function Upload({
   return (
     <div className={`relative ${className}`}>
       {successInfo && (
-        <div className="mb-3 px-3.5 py-2.5 rounded-interactive bg-accent-primary/10 border border-accent-primary/30 text-ink-primary text-xs font-medium flex items-center justify-between shadow-xs animate-fade-in">
+        <motion.div
+          initial={{ rotateX: shouldReduceMotion ? 0 : 8, opacity: 0 }}
+          animate={{ rotateX: 0, opacity: 1 }}
+          transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+          className="mb-3 px-3.5 py-2.5 rounded-interactive bg-accent-primary/10 border border-accent-primary/30 text-ink-primary text-xs font-medium flex items-center justify-between shadow-xs"
+        >
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-accent-primary flex-shrink-0" />
             <span>
               <strong className="font-mono">{animatedCount}</strong> chunks ready — ask away.
             </span>
           </div>
-          <button
+          <motion.button
             type="button"
             onClick={() => setSuccessInfo(null)}
-            className="text-ink-ghost hover:text-ink-primary text-xs font-mono ml-2 p-0.5 rounded cursor-pointer transition-transform duration-120 hover:scale-110 active:scale-90"
+            whileHover={shouldReduceMotion ? undefined : { scale: 1.15 }}
+            whileTap={shouldReduceMotion ? undefined : { scale: 0.9 }}
+            className="text-ink-ghost hover:text-ink-primary text-xs font-mono ml-2 p-0.5 rounded cursor-pointer"
             aria-label="Dismiss banner"
           >
             <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       )}
 
       {errorMessage && (
@@ -311,7 +320,7 @@ export function Upload({
         </form>
       ) : (
         /* Drag & Drop Target with Waving Border on Drag-over */
-        <div
+        <motion.div
           onDragOver={(e) => {
             e.preventDefault();
             setIsDragging(true);
@@ -325,10 +334,13 @@ export function Upload({
             }
           }}
           onClick={() => !isUploading && fileInputRef.current?.click()}
-          className={`group relative rounded-interactive p-6 text-center cursor-pointer transition-all duration-200 ease-out bg-bg-surface motion-reduce:transform-none ${
+          whileHover={shouldReduceMotion ? undefined : { scale: 1.008, y: -2 }}
+          whileTap={shouldReduceMotion ? undefined : { scale: 0.992 }}
+          transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          className={`group relative rounded-interactive p-6 text-center cursor-pointer bg-bg-surface ${
             isDragging
-              ? "waving-border bg-accent-primary/5 scale-[1.01] shadow-sm"
-              : "border border-dashed border-border hover:border-accent-primary/60 hover:bg-bg-sunken/40 hover:-translate-y-0.5 hover:shadow-xs active:translate-y-0"
+              ? "waving-border bg-accent-primary/5 shadow-sm"
+              : "border border-dashed border-border hover:border-accent-primary/60 hover:bg-bg-sunken/40 shadow-xs"
           } ${isUploading ? "pointer-events-none opacity-90" : ""}`}
         >
           <input
@@ -373,7 +385,7 @@ export function Upload({
               </>
             )}
           </div>
-        </div>
+        </motion.div>
       )}
     </div>
   );

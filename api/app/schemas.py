@@ -60,6 +60,7 @@ class ReadyzResponse(BaseModel):
         default_factory=lambda: {"embedding": "ready", "reranker": "ready", "ocr": "ready"},
         description="Subsystem readiness state mapping",
     )
+    error: Optional[str] = Field(None, description="Error detail if readiness probe failed", examples=[None])
 
 
 class AuthProfileResponse(BaseModel):

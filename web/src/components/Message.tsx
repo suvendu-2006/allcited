@@ -6,6 +6,7 @@ import { CitationChip } from "./CitationChip";
 import { TraceViewer } from "./TraceViewer";
 import { StageChip } from "./ui/StageChip";
 import { ShieldAlert, ThumbsUp, ThumbsDown, Sparkles } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 
 export interface ChatMessage {
   id: string;
@@ -34,6 +35,7 @@ export function Message({ message, onCitationClick }: MessageProps) {
   const [showNoteInput, setShowNoteInput] = useState(false);
   const [feedbackNote, setFeedbackNote] = useState("");
   const isUser = message.role === "user";
+  const shouldReduceMotion = useReducedMotion();
 
   const handleFeedback = async (score: 1 | -1, note?: string) => {
     if (!message.questionId) return;
@@ -69,11 +71,64 @@ export function Message({ message, onCitationClick }: MessageProps) {
     }
   });
 
+  // Consolidate citation markers to appear only once at the end of each sentence
+  const consolidateSentenceCitations = (srcText: string): string => {
+    if (!srcText) return "";
+    const citPattern = /(\[\s*(?:related:\s*)?S\d+(?:\s*\(OCR\))?\s*\]|\(\s*related:\s*\[?S\d+\]?\s*\))/gi;
+    const paragraphs = srcText.split("\n");
+    const cleanedParagraphs: string[] = [];
+
+    for (const para of paragraphs) {
+      if (!para.trim()) {
+        cleanedParagraphs.push(para);
+        continue;
+      }
+
+      const sentenceParts = para.split(/([.!?]+(?:\s+|$))/);
+      const newParaParts: string[] = [];
+
+      for (let i = 0; i < sentenceParts.length; i += 2) {
+        const sent = sentenceParts[i];
+        const delim = sentenceParts[i + 1] || "";
+
+        const cits = sent.match(citPattern);
+        if (!cits || cits.length === 0) {
+          newParaParts.push(sent + delim);
+          continue;
+        }
+
+        const uniqueCits: string[] = [];
+        const seen = new Set<string>();
+        for (const c of cits) {
+          const norm = c.replace(/\s+/g, "").toUpperCase();
+          if (!seen.has(norm)) {
+            seen.add(norm);
+            uniqueCits.push(c.trim());
+          }
+        }
+
+        const sentClean = sent.replace(citPattern, "").replace(/[ \t]+/g, " ").trim();
+        const citsStr = " " + uniqueCits.join(" ");
+
+        if (sentClean) {
+          newParaParts.push(sentClean + citsStr + delim);
+        } else {
+          newParaParts.push(citsStr.trim() + delim);
+        }
+      }
+
+      cleanedParagraphs.push(newParaParts.join(""));
+    }
+
+    return cleanedParagraphs.join("\n");
+  };
+
   // Parse [S#] and [related: S#] citations into interactive CitationChips
   const renderFormattedText = (text: string) => {
     if (!text) return null;
 
-    const normalizedText = text.replace(/【/g, "[").replace(/】/g, "]");
+    const consolidated = consolidateSentenceCitations(text);
+    const normalizedText = consolidated.replace(/【/g, "[").replace(/】/g, "]");
     const parts = normalizedText.split(/(\[(?:related:\s*)?S\d+(?:\s*\(OCR\))?\])/gi);
     return parts.map((part, idx) => {
       const match = part.match(/\[(?:related:\s*)?S(\d+)(?:\s*\(OCR\))?\]/i);
@@ -102,10 +157,16 @@ export function Message({ message, onCitationClick }: MessageProps) {
   // User Message Turn
   if (isUser) {
     return (
-      <div className="flex justify-end animate-fade-in">
-        <div className="bg-bg-surface text-ink-primary border border-border px-4 py-2.5 rounded-interactive text-sm leading-relaxed shadow-xs max-w-[85%]">
+      <div className="flex justify-end">
+        <motion.div
+          initial={{ x: shouldReduceMotion ? 0 : 24, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: shouldReduceMotion ? 0.08 : 0.28, ease: [0.16, 1, 0.3, 1] }}
+          whileHover={{ y: shouldReduceMotion ? 0 : -1 }}
+          className="bg-bg-surface text-ink-primary border border-border px-4 py-2.5 rounded-interactive text-sm leading-relaxed shadow-xs max-w-[85%]"
+        >
           <p className="whitespace-pre-wrap">{message.content}</p>
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -130,7 +191,12 @@ export function Message({ message, onCitationClick }: MessageProps) {
     message.stage !== "idle";
 
   return (
-    <div className="flex justify-start animate-fade-in w-full">
+    <motion.div
+      initial={{ y: shouldReduceMotion ? 0 : 12, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: shouldReduceMotion ? 0.08 : 0.32, ease: [0.16, 1, 0.3, 1] }}
+      className="flex justify-start w-full"
+    >
       <div className="flex gap-3 w-full">
         <div className="w-6 h-6 rounded bg-bg-sunken border border-border text-accent-primary flex items-center justify-center flex-shrink-0 text-[11px] font-mono font-bold select-none mt-1 shadow-2xs transition-transform duration-150 hover:scale-105">
           A
@@ -180,14 +246,31 @@ export function Message({ message, onCitationClick }: MessageProps) {
                 I answer only from what you&apos;ve given me, and it isn&apos;t in here. Try rephrasing — or check you&apos;ve uploaded the full version.
               </p>
             </div>
+          ) : !message.content?.trim() && !isPending ? (
+            /* Safety Fallback: Empty content received */
+            <div className="p-4 rounded-interactive border border-border bg-bg-surface border-l-[3px] border-l-accent-primary text-ink-primary shadow-xs space-y-1.5 animate-fade-in">
+              <div className="flex items-center gap-2">
+                <ShieldAlert className="w-4 h-4 text-accent-primary flex-shrink-0" />
+                <h3 className="font-semibold text-sm font-display text-ink-primary">
+                  Honestly? This document doesn&apos;t say.
+                </h3>
+              </div>
+              <p className="text-xs text-gray-warm leading-relaxed">
+                I answer only from what you&apos;ve given me, and it isn&apos;t in here. Try rephrasing — or check you&apos;ve uploaded the full version.
+              </p>
+            </div>
           ) : (
             /* Normal Grounded Answer Card */
             <div className="p-4 rounded-interactive border border-border bg-bg-surface text-ink-primary shadow-xs">
               <div className="text-[14px] leading-relaxed prose prose-neutral dark:prose-invert max-w-none break-words">
                 {renderFormattedText(message.content)}
-                {/* Blinking hot accent caret when composing */}
+                {/* 2px seal-red block pulsing caret when composing */}
                 {isPending && (
-                  <span className="inline-block w-1.5 h-4 ml-1 bg-accent-hot animate-pulse align-middle" />
+                  <motion.span
+                    animate={{ opacity: [1, 0.2, 1] }}
+                    transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}
+                    className="inline-block w-[2px] h-4 ml-1 bg-accent-primary align-middle"
+                  />
                 )}
               </div>
             </div>
@@ -197,32 +280,38 @@ export function Message({ message, onCitationClick }: MessageProps) {
             <div className="flex items-center justify-between text-[11px] text-gray-warm pt-1 px-1">
               <div className="flex items-center gap-1.5">
                 <span className="text-[11px] text-gray-warm">Right?</span>
-                <button
+                <motion.button
                   type="button"
                   onClick={() => handleFeedback(1)}
                   aria-label="Thumbs up"
                   title="Helpful 👍"
-                  className={`p-1 rounded-[4px] transition-all duration-150 ease-out cursor-pointer active:scale-90 hover:scale-110 ${
+                  whileHover={{ scale: shouldReduceMotion ? 1 : 1.15 }}
+                  whileTap={{ scale: shouldReduceMotion ? 1 : 0.85 }}
+                  transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                  className={`p-1 rounded-[4px] cursor-pointer transition-colors ${
                     feedback === "up"
-                      ? "text-accent-primary bg-accent-primary/10 ring-1 ring-accent-primary/30 scale-105"
+                      ? "text-accent-primary bg-accent-primary/10 ring-1 ring-accent-primary/30"
                       : "text-ink-ghost hover:text-ink-primary hover:bg-bg-sunken"
                   }`}
                 >
-                  <ThumbsUp className={`w-3.5 h-3.5 transition-transform duration-150 ${feedback === "up" ? "scale-110" : ""}`} />
-                </button>
-                <button
+                  <ThumbsUp className={`w-3.5 h-3.5 transition-transform duration-150 ${feedback === "up" ? "text-accent-amber fill-accent-amber scale-110" : ""}`} />
+                </motion.button>
+                <motion.button
                   type="button"
                   onClick={() => handleFeedback(-1)}
                   aria-label="Thumbs down"
                   title="Unhelpful 👎"
-                  className={`p-1 rounded-[4px] transition-all duration-150 ease-out cursor-pointer active:scale-90 hover:scale-110 ${
+                  whileHover={{ scale: shouldReduceMotion ? 1 : 1.15 }}
+                  whileTap={{ scale: shouldReduceMotion ? 1 : 0.85 }}
+                  transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                  className={`p-1 rounded-[4px] cursor-pointer transition-colors ${
                     feedback === "down"
-                      ? "text-accent-primary bg-accent-primary/10 ring-1 ring-accent-primary/30 scale-105"
+                      ? "text-accent-primary bg-accent-primary/10 ring-1 ring-accent-primary/30"
                       : "text-ink-ghost hover:text-ink-primary hover:bg-bg-sunken"
                   }`}
                 >
-                  <ThumbsDown className={`w-3.5 h-3.5 transition-transform duration-150 ${feedback === "down" ? "scale-110" : ""}`} />
-                </button>
+                  <ThumbsDown className={`w-3.5 h-3.5 transition-transform duration-150 ${feedback === "down" ? "text-accent-amber fill-accent-amber scale-110" : ""}`} />
+                </motion.button>
 
                 {/* Explicit indicator when NVIDIA NIM answered as failover brain */}
                 {(message.provider === "nvidia" ||
@@ -239,14 +328,16 @@ export function Message({ message, onCitationClick }: MessageProps) {
               </div>
 
               {/* "Why this answer?" modal trigger */}
-              <button
+              <motion.button
                 type="button"
                 onClick={() => setShowTrace(true)}
+                whileHover={{ x: shouldReduceMotion ? 0 : 2 }}
+                whileTap={{ scale: shouldReduceMotion ? 1 : 0.96 }}
                 className="group flex items-center gap-1.5 text-[11px] text-accent-primary hover:underline font-medium transition-colors cursor-pointer"
               >
                 <Sparkles className="w-3.5 h-3.5 text-accent-primary transition-transform duration-200 ease-out group-hover:rotate-45 group-hover:scale-110" />
                 <span className="transition-transform duration-150 group-hover:translate-x-0.5">Why this answer?</span>
-              </button>
+              </motion.button>
             </div>
           )}
 
@@ -280,6 +371,6 @@ export function Message({ message, onCitationClick }: MessageProps) {
           onClose={() => setShowTrace(false)}
         />
       )}
-    </div>
+    </motion.div>
   );
 }

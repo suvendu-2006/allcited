@@ -21,6 +21,18 @@ class Settings(BaseSettings):
         default=["http://localhost:3000", "http://127.0.0.1:3000", "https://allcited.vercel.app"],
         description="Allowed CORS origins",
     )
+    ALLOW_LOCAL_ORIGINS_IN_PROD: bool = Field(
+        default=False,
+        description="Override flag to allow localhost/127.0.0.1 CORS origins even in production mode",
+    )
+    RATE_LIMIT_ENABLED: bool = Field(
+        default=True,
+        description="Enable server-side sliding window rate limiting",
+    )
+    TESTING: bool = Field(
+        default=False,
+        description="Testing mode flag",
+    )
 
     # LLM / Brain settings
     GROQ_API_KEY: Optional[str] = Field(default=None, description="Groq API key for default cloud brain")
@@ -30,7 +42,7 @@ class Settings(BaseSettings):
     )
     NVIDIA_API_KEY: Optional[str] = Field(default=None, description="NVIDIA NIM API key for ultimate cloud brain failover")
     NVIDIA_BASE_URL: str = Field(default="https://integrate.api.nvidia.com/v1", description="Base URL for NVIDIA NIM")
-    NVIDIA_MODEL: str = Field(default="meta/llama-3.2-11b-vision-instruct", description="NVIDIA fallback model")
+    NVIDIA_MODEL: str = Field(default="nvidia/nemotron-3.5-bolt-e4b", description="NVIDIA fallback model")
     OLLAMA_BASE_URL: str = Field(default="http://localhost:11434", description="Base URL for local Ollama")
     DEFAULT_LLM_MODEL: str = Field(default="qwen/qwen3.8-27b", description="Default LLM model name")
 
@@ -93,9 +105,34 @@ class Settings(BaseSettings):
             keys.insert(0, self.GROQ_API_KEY)
         return [k for k in keys if k and k.strip()]
 
+    def get_cors_origins(self) -> List[str]:
+        """Return CORS origins list sanitized for environment."""
+        raw = self.CORS_ORIGINS if isinstance(self.CORS_ORIGINS, list) else [self.CORS_ORIGINS]
+        origins = list(raw)
+        if self.ENVIRONMENT == "production":
+            origins = [o for o in origins if o != "*"]
+            if not self.ALLOW_LOCAL_ORIGINS_IN_PROD:
+                origins = [
+                    o for o in origins
+                    if not ("://localhost" in o or "://127.0.0.1" in o or o.startswith("localhost") or o.startswith("127.0.0.1"))
+                ]
+        return origins
+
     def validate_phase_keys(self, phase: int = 1) -> List[str]:
         """Validate required keys for given build phase, returning missing var names."""
         missing = []
+        if self.ENVIRONMENT == "production":
+            raw_origins = self.CORS_ORIGINS if isinstance(self.CORS_ORIGINS, list) else [self.CORS_ORIGINS]
+            if "*" in raw_origins:
+                missing.append("CORS_ORIGINS (wildcard '*' disallowed in production with credentials)")
+            if not self.ALLOW_LOCAL_ORIGINS_IN_PROD:
+                local_found = [
+                    o for o in raw_origins
+                    if "://localhost" in o or "://127.0.0.1" in o or o.startswith("localhost") or o.startswith("127.0.0.1")
+                ]
+                if local_found:
+                    missing.append(f"CORS_ORIGINS (local origins {local_found} disallowed in production without ALLOW_LOCAL_ORIGINS_IN_PROD)")
+
         if phase >= 2 and self.MODE == "cloud" and not self.GROQ_API_KEY:
             missing.append("GROQ_API_KEY")
         if phase >= 4 and not self.CLERK_SECRET_KEY:

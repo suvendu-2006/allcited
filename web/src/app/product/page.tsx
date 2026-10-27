@@ -6,10 +6,11 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { CitationChip } from "@/components/CitationChip";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Check } from "lucide-react";
 
 export default function ProductPage() {
+  const shouldReduceMotion = useReducedMotion();
   const [activeChipDemo, setActiveChipDemo] = useState(false);
 
   return (
@@ -19,9 +20,9 @@ export default function ProductPage() {
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-12 sm:py-16 space-y-16">
         <div className="text-center max-w-3xl mx-auto space-y-4">
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: shouldReduceMotion ? 0.08 : 0.3 }}
           >
             <span className="font-mono text-xs uppercase tracking-wider px-2.5 py-1 rounded bg-accent-primary/10 text-accent-primary border border-accent-primary/20 font-semibold">
               WHAT YOU GET
@@ -29,9 +30,9 @@ export default function ProductPage() {
           </motion.div>
 
           <motion.h1
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.05 }}
+            transition={{ duration: shouldReduceMotion ? 0.08 : 0.4, delay: shouldReduceMotion ? 0 : 0.05 }}
             className="text-3xl sm:text-5xl font-bold tracking-tight text-ink-primary font-display"
           >
             It can only answer from your document.
@@ -176,7 +177,7 @@ export default function ProductPage() {
             <div className="mt-4 pt-3 border-t border-border/60">
               <div className="p-2.5 rounded bg-bg-sunken border border-border/40 font-mono text-[11px] flex items-center gap-2 text-gray-warm">
                 <Check className="w-3.5 h-3.5 text-accent-primary flex-shrink-0" />
-                <span>Groq Cloud · OpenAI BYOK · Local Ollama</span>
+                <span>Allcited Cloud · Bring Your Own Key · Local Model</span>
               </div>
             </div>
           </div>
@@ -272,9 +273,15 @@ export default function ProductPage() {
 
           <div className="text-center sm:text-left pt-4">
             <Link href="/?workspace=true">
-              <Button variant="primary" size="lg" className="text-sm">
-                Try Allcited free
-              </Button>
+              <motion.div
+                whileHover={shouldReduceMotion ? undefined : { scale: 1.02 }}
+                whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
+                className="inline-block"
+              >
+                <Button variant="primary" size="lg" className="text-sm cursor-pointer shadow-sm">
+                  Try Allcited free
+                </Button>
+              </motion.div>
             </Link>
           </div>
         </section>

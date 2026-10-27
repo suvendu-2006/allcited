@@ -16,7 +16,7 @@ from app.pipeline.rewrite import rewrite_query
 from app.pipeline.router import route_query
 from app.pipeline.twohop import TwoHopChunk, expand_two_hop
 from app.prompts import get_prompt
-from app.security.guards import format_source_as_data_block
+from app.security.guards import check_query_injection, format_source_as_data_block
 from app.sessions import DocumentSession
 from app.trace import TraceRecord, get_trace_manager
 
@@ -71,8 +71,13 @@ def build_grounded_prompt(
             any_injection_flagged = True
         sources_blocks.append(block)
 
+    # Sanitize user query against prompt injection and strip delimiter tokens
+    clean_query, query_flagged = check_query_injection(query)
+    if query_flagged:
+        any_injection_flagged = True
+
     formatted_sources = "\n\n".join(sources_blocks)
-    user_content = f"SOURCES:\n{formatted_sources}\n\nQUESTION:\n{query.strip()}"
+    user_content = f"SOURCES:\n{formatted_sources}\n\nQUESTION:\n{clean_query.strip()}"
 
     system_prompt, _ = get_grounded_system_prompt()
     messages = [
@@ -82,6 +87,59 @@ def build_grounded_prompt(
     if return_flagged:
         return messages, any_injection_flagged
     return messages
+
+
+def consolidate_sentence_citations(text: str) -> str:
+    """
+    Consolidate citation markers to appear only once at the end of each sentence,
+    eliminating mid-sentence interruptions and duplicate citations within the same sentence.
+    """
+    if not text:
+        return ""
+
+    cit_pattern = r"(\[\s*(?:related:\s*)?S\d+(?:\s*\(OCR\))?\s*\]|\(\s*related:\s*\[?S\d+\]?\s*\))"
+    paragraphs = text.split("\n")
+    cleaned_paragraphs = []
+
+    for para in paragraphs:
+        if not para.strip():
+            cleaned_paragraphs.append(para)
+            continue
+
+        sentence_parts = re.split(r"([.!?]+(?:\s+|$))", para)
+        new_para_parts = []
+
+        i = 0
+        while i < len(sentence_parts):
+            sent = sentence_parts[i]
+            delim = sentence_parts[i + 1] if i + 1 < len(sentence_parts) else ""
+            i += 2
+
+            cits = re.findall(cit_pattern, sent, flags=re.IGNORECASE)
+            if not cits:
+                new_para_parts.append(sent + delim)
+                continue
+
+            unique_cits = []
+            seen = set()
+            for c in cits:
+                norm = re.sub(r"\s+", "", c.upper())
+                if norm not in seen:
+                    seen.add(norm)
+                    unique_cits.append(c.strip())
+
+            sent_clean = re.sub(cit_pattern, "", sent, flags=re.IGNORECASE)
+            sent_clean = re.sub(r"[ \t]+", " ", sent_clean).strip()
+
+            cits_str = " " + " ".join(unique_cits)
+            if sent_clean:
+                new_para_parts.append(sent_clean + cits_str + delim)
+            else:
+                new_para_parts.append(cits_str.strip() + delim)
+
+        cleaned_paragraphs.append("".join(new_para_parts))
+
+    return "\n".join(cleaned_paragraphs)
 
 
 def post_pass_citations(
@@ -123,6 +181,8 @@ def post_pass_citations(
 
     # Strip any markers outside valid range [1, num_sources]
     cleaned = re.sub(pattern, replace_marker, raw_answer, flags=re.IGNORECASE)
+    # Consolidate citations to appear once at the end of each sentence
+    cleaned = consolidate_sentence_citations(cleaned)
     cleaned = re.sub(r"[ \t]+", " ", cleaned).strip()
 
     seen_labels: Set[str] = set()
@@ -209,9 +269,13 @@ async def stream_answer_pipeline(
     t_start = time.perf_counter()
     latencies: Dict[str, float] = {}
 
+    # SEC: Sanitize query against direct prompt injection and control tokens
+    sanitized_query, query_injection_flagged = check_query_injection(query)
+    effective_query = sanitized_query
+
     # 1. Route
     t0 = time.perf_counter()
-    route_res = await route_query(query)
+    route_res = await route_query(effective_query)
     latencies["route_ms"] = round((time.perf_counter() - t0) * 1000, 2)
     yield format_sse("route", {"route": route_res.route.value, "reason": route_res.reason})
 
@@ -242,6 +306,27 @@ async def stream_answer_pipeline(
         preferred_provider=effective_preferred,
     )
 
+    # 2b. Conversational Greeting check
+    clean_q = effective_query.strip().lower()
+    GREETINGS = {"hello", "hi", "hey", "hello!", "hi!", "hey!", "good morning", "good evening", "howdy", "greetings"}
+    if clean_q in GREETINGS:
+        doc_label = getattr(session, "filename", None) or "your document"
+        greeting_text = f"Hello! I am ready to answer questions grounded in **{doc_label}**. What would you like to know?"
+        yield format_sse("token", {"delta": greeting_text})
+        yield format_sse("citations", {"citations": []})
+        yield format_sse(
+            "done",
+            {
+                "answer": greeting_text,
+                "question_id": qid,
+                "provider": provider.provider_type,
+                "model": provider.model,
+                "refused": False,
+                "total_tokens": len(greeting_text.split()),
+            },
+        )
+        return
+
     # 3. Semantic Cache lookup (@0.96 threshold)
     from app.cache import get_semantic_cache
 
@@ -252,7 +337,7 @@ async def stream_answer_pipeline(
         if (getattr(provider, "is_byok", False) or provider.provider_type in ("ollama", "byok", "stub"))
         else None
     )
-    cached_hit = cache.get(session.session_id, query, model=cache_lookup_model)
+    cached_hit = cache.get(session.session_id, effective_query, model=cache_lookup_model)
     latencies["cache_ms"] = round((time.perf_counter() - t_cache) * 1000, 2)
 
     if cached_hit is not None:
@@ -261,16 +346,16 @@ async def stream_answer_pipeline(
         get_trace_manager().record_trace(
             TraceRecord(
                 question_id=qid,
-                query=query,
+                query=effective_query,
                 route=route_res.route.value,
                 route_reason=route_res.reason,
-                sub_queries=[query],
+                sub_queries=[effective_query],
                 retrieved_count=0,
                 reranked_count=0,
                 top_rerank_score=0.0,
                 two_hop_count=0,
                 total_sources=len(cached_hit.citations),
-                injection_flagged=False,
+                injection_flagged=query_injection_flagged,
                 refused=cached_hit.refused,
                 refusal_reason="not_covered" if cached_hit.refused else None,
                 cached=True,
@@ -298,7 +383,7 @@ async def stream_answer_pipeline(
                 "refused": cached_hit.refused,
                 "cached": True,
                 "total_tokens": 0,
-                "injection_flagged": False,
+                "injection_flagged": query_injection_flagged,
             },
         )
         return
@@ -307,9 +392,9 @@ async def stream_answer_pipeline(
 
     # 4. Rewrite
     t0 = time.perf_counter()
-    rewrite_res = await rewrite_query(query)
+    rewrite_res = await rewrite_query(effective_query)
     latencies["rewrite_ms"] = round((time.perf_counter() - t0) * 1000, 2)
-    sub_queries = rewrite_res.sub_queries or [query]
+    sub_queries = rewrite_res.sub_queries or [effective_query]
     yield format_sse("rewrite", {"sub_queries": sub_queries, "reason": rewrite_res.reason})
 
     # 5. Retrieve (Hybrid BM25 + Vector + HyDE probe)
@@ -344,7 +429,7 @@ async def stream_answer_pipeline(
 
         candidates, agentic_iterations, best_available_sources = await run_agentic_retrieval_loop(
             session=session,
-            query=query,
+            query=effective_query,
             initial_candidates=candidates,
             provider=provider,
             max_iterations=3,
@@ -363,7 +448,7 @@ async def stream_answer_pipeline(
     t0 = time.perf_counter()
     reranker = get_reranker()
     reranked = reranker.rerank(
-        query=query,
+        query=effective_query,
         candidates=candidates,
         top_k=4,
         enabled=settings.RERANKER_ENABLED,
@@ -385,7 +470,7 @@ async def stream_answer_pipeline(
         get_trace_manager().record_trace(
             TraceRecord(
                 question_id=qid,
-                query=query,
+                query=effective_query,
                 route=route_res.route.value,
                 route_reason=route_res.reason,
                 sub_queries=sub_queries,
@@ -395,7 +480,7 @@ async def stream_answer_pipeline(
                 two_hop_count=0,
                 graph_expansion_count=0,
                 total_sources=0,
-                injection_flagged=False,
+                injection_flagged=query_injection_flagged,
                 refused=True,
                 refusal_reason="low_relevance",
                 hyde_enabled=settings.HYDE_ENABLED,
@@ -417,6 +502,7 @@ async def stream_answer_pipeline(
                 "refused": True,
                 "reason": "low_relevance",
                 "total_tokens": 0,
+                "injection_flagged": query_injection_flagged,
             },
         )
         return
@@ -425,7 +511,7 @@ async def stream_answer_pipeline(
     t0 = time.perf_counter()
     ref_map: ReferenceMap = getattr(session, "ref_map", ReferenceMap())
     final_sources = expand_two_hop(
-        query=query,
+        query=effective_query,
         candidates=reranked,
         ref_map=ref_map,
         chunks=session.chunks,
@@ -439,7 +525,7 @@ async def stream_answer_pipeline(
     max_graph_exp = getattr(settings, "GRAPH_MAX_EXPANSION", 4)
     knowledge_graph = getattr(session, "knowledge_graph", None)
     final_sources, graph_expansion_count = expand_graph_knowledge(
-        query=query,
+        query=effective_query,
         candidates=final_sources,
         graph=knowledge_graph,
         max_expansion=max_graph_exp,
@@ -455,12 +541,13 @@ async def stream_answer_pipeline(
     )
 
     # 8. Grounded LLM Stream
-    prompt_messages, injection_flagged = build_grounded_prompt(
-        query, final_sources, return_flagged=True
+    prompt_messages, sources_injection_flagged = build_grounded_prompt(
+        effective_query, final_sources, return_flagged=True
     )
+    injection_flagged = query_injection_flagged or sources_injection_flagged
     if injection_flagged:
         logger.warning(
-            "Adversarial prompt injection attempt detected and neutralized in sources for question %s",
+            "Adversarial prompt injection attempt detected and neutralized in sources or query for question %s",
             qid,
         )
 
@@ -487,6 +574,11 @@ async def stream_answer_pipeline(
         return
     latencies["llm_ms"] = round((time.perf_counter() - t0) * 1000, 2)
 
+    if not raw_accumulated.strip():
+        logger.warning("LLM stream yielded no content for question %s; falling back to absent refusal.", qid)
+        raw_accumulated = ABSENT_REFUSAL_TEXT
+        yield format_sse("token", {"delta": raw_accumulated})
+
     # 8. Citation Post-Pass & Done event
     cleaned_answer, citations = post_pass_citations(raw_accumulated, final_sources)
     logger.info("Answer generated for question %s: %s", qid, cleaned_answer)
@@ -506,7 +598,7 @@ async def stream_answer_pipeline(
     get_trace_manager().record_trace(
         TraceRecord(
             question_id=qid,
-            query=query,
+            query=effective_query,
             route=route_res.route.value,
             route_reason=route_res.reason,
             sub_queries=sub_queries,
@@ -542,7 +634,7 @@ async def stream_answer_pipeline(
     )
     cache.set(
         session_id=session.session_id,
-        query=query,
+        query=effective_query,
         answer=cleaned_answer,
         citations=[c.model_dump() for c in citations],
         model=stored_model,

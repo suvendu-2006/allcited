@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Citation } from "@/lib/sse";
 import { Sparkles } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 
 interface CitationChipProps {
   citation: Citation;
@@ -12,6 +13,7 @@ interface CitationChipProps {
 
 export function CitationChip({ citation, isPinned = false, onClick }: CitationChipProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
 
   const isTwoHop = Boolean(citation.is_two_hop);
   const isOcr = Boolean(citation.is_ocr) || citation.label.includes("(OCR)");
@@ -29,17 +31,22 @@ export function CitationChip({ citation, isPinned = false, onClick }: CitationCh
 
   return (
     <span className="relative inline-block mx-0.5 align-baseline group">
-      <button
+      <motion.button
         type="button"
         onClick={() => onClick?.(citation)}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className={`inline-flex items-center gap-1 px-1.5 py-0.5 font-mono text-[12px] font-medium rounded-[4px] cursor-pointer transition-all duration-150 ease-out select-none motion-reduce:transform-none ${
-          isHovered ? "-translate-y-0.5 shadow-xs" : "translate-y-0"
+        title={sectionText ? `${cleanLabel} · ${sectionText}` : cleanLabel}
+        whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
+        whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
+        animate={{ scale: isPinned && !shouldReduceMotion ? 1.05 : 1 }}
+        transition={{ type: "spring", stiffness: 420, damping: 32 }}
+        className={`inline-flex items-center gap-1 px-1.5 py-0.5 font-mono text-[12px] font-medium rounded-[4px] cursor-pointer transition-colors duration-150 ease-out select-none motion-reduce:transform-none ${
+          isHovered ? "shadow-xs" : ""
         } ${
           isPinned
-            ? "scale-105 ring-2 ring-accent-cite shadow-sm"
-            : "active:scale-95 active:translate-y-0"
+            ? "ring-2 ring-accent-cite shadow-sm"
+            : ""
         } ${
           isTwoHop
             ? "bg-status-twohop/15 dark:bg-status-twohop/20 text-status-twohop border border-status-twohop/40 hover:ring-1 hover:ring-status-twohop/30"
@@ -61,18 +68,12 @@ export function CitationChip({ citation, isPinned = false, onClick }: CitationCh
           />
         </span>
 
-        {sectionText && (
-          <span className="text-[10px] opacity-75 hidden sm:inline max-w-[80px] truncate transition-opacity duration-150 group-hover:opacity-100">
-            {sectionText}
-          </span>
-        )}
-
         {isOcr && (
           <span className="text-[9px] font-bold uppercase tracking-wider px-1 rounded bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 transition-transform duration-150 group-hover:scale-105">
             OCR
           </span>
         )}
-      </button>
+      </motion.button>
     </span>
   );
 }

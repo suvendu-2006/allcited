@@ -5,11 +5,14 @@ import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
+import { useDocumentVisibility } from "@/lib/useVisibility";
 import { Check, Sparkles, X } from "lucide-react";
 
 export default function PricingPage() {
   const [betaModalOpen, setBetaModalOpen] = useState(false);
+  const isVisible = useDocumentVisibility();
+  const shouldReduceMotion = useReducedMotion();
 
   const handleCheckout = () => {
     setBetaModalOpen(true);
@@ -77,14 +80,42 @@ export default function PricingPage() {
 
             <div className="pt-4 border-t border-border/60">
               <Link href="/?workspace=true" className="w-full block">
-                <Button variant="outline" size="lg" className="w-full text-xs">
-                  Start Free
-                </Button>
+                <motion.div
+                  whileHover={shouldReduceMotion ? undefined : { scale: 1.02 }}
+                  whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
+                >
+                  <Button variant="outline" size="lg" className="w-full text-xs">
+                    Start Free
+                  </Button>
+                </motion.div>
               </Link>
             </div>
           </div>
 
-          <div className="p-8 rounded-interactive border-2 border-accent-primary bg-bg-surface flex flex-col justify-between shadow-md space-y-6 relative">
+          <motion.div
+            animate={
+              isVisible && !shouldReduceMotion
+                ? {
+                    boxShadow: [
+                      "0 4px 20px -2px rgba(3, 79, 70, 0.14)",
+                      "0 4px 30px -2px rgba(3, 79, 70, 0.28)",
+                      "0 4px 20px -2px rgba(3, 79, 70, 0.14)",
+                    ],
+                    borderColor: [
+                      "rgba(3, 79, 70, 0.6)",
+                      "rgba(49, 199, 165, 0.9)",
+                      "rgba(3, 79, 70, 0.6)",
+                    ],
+                  }
+                : undefined
+            }
+            transition={{
+              duration: 6,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            className="p-8 rounded-interactive border-2 border-accent-primary bg-bg-surface flex flex-col justify-between shadow-md space-y-6 relative"
+          >
             <div className="space-y-4">
               <div className="flex items-baseline justify-between border-b border-border/60 pb-4">
                 <div>
@@ -120,16 +151,17 @@ export default function PricingPage() {
             </div>
 
             <div className="pt-4 border-t border-border/60 space-y-2">
-              <Button
-                variant="primary"
-                size="lg"
+              <motion.button
+                type="button"
+                whileHover={shouldReduceMotion ? undefined : { scale: 1.02 }}
+                whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
                 onClick={handleCheckout}
-                className="w-full text-xs cursor-pointer shadow-sm"
+                className="w-full h-10 px-4 rounded-interactive bg-accent-primary text-white font-medium text-xs cursor-pointer shadow-sm hover:opacity-95 transition-opacity"
               >
                 Start Pro
-              </Button>
+              </motion.button>
             </div>
-          </div>
+          </motion.div>
         </section>
 
         <section className="text-center font-mono text-xs text-gray-warm pt-4 border-t border-border/60">
@@ -157,11 +189,11 @@ export default function PricingPage() {
               </div>
 
               <p className="text-xs text-gray-warm leading-relaxed">
-                We are actively testing our precision retrieval pipelines and haven&apos;t added the live payment gateway yet.
+                We are actively testing our precision retrieval pipelines.
               </p>
 
               <p className="text-xs text-ink-primary font-medium leading-relaxed bg-bg-sunken p-3 rounded border border-border">
-                Paid plans will be available once the beta phase finishes. In the meantime, you can plug in your own free Groq/Ollama API key in Settings to enjoy unlimited questions with zero wait!
+                Paid plans will be available once the beta phase finishes. In the meantime, you can plug in your own API key in Settings to enjoy unlimited questions with zero wait!
               </p>
 
               <div className="pt-2 flex items-center justify-end gap-2">

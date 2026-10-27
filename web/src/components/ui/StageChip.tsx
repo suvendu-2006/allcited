@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { useDocumentVisibility } from "@/lib/useVisibility";
 
 export type StageType = "searching" | "reranking" | "twohop" | "caching" | "composing";
 
@@ -17,6 +19,9 @@ export function StageChip({
   isActive = false,
   isCompleted = false,
 }: StageChipProps) {
+  const shouldReduceMotion = useReducedMotion();
+  const isVisible = useDocumentVisibility();
+
   // Styles per stage according to §3.1 & §3.2
   const getStageStyle = () => {
     switch (stage) {
@@ -44,19 +49,32 @@ export function StageChip({
   };
 
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 font-mono text-[11.5px] rounded-[4px] border transition-all duration-200 ${getStageStyle()} ${
-        isCompleted ? "opacity-40" : ""
-      } ${isActive ? "scale-[1.02] shadow-2xs" : "scale-100"}`}
+    <motion.span
+      animate={{
+        opacity: isCompleted ? 0.45 : 1,
+        scale: isActive && !shouldReduceMotion ? 1.02 : 1,
+      }}
+      transition={{ duration: shouldReduceMotion ? 0.08 : 0.2 }}
+      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 font-mono text-[11.5px] rounded-[4px] border transition-colors duration-200 ${getStageStyle()}`}
     >
       {isActive && (
-        <span className="flex items-center gap-0.5">
-          <span className="w-1 h-1 rounded-full bg-current animate-pulse" />
-          <span className="w-1 h-1 rounded-full bg-current animate-pulse [animation-delay:150ms]" />
-          <span className="w-1 h-1 rounded-full bg-current animate-pulse [animation-delay:300ms]" />
+        <span className="flex items-center gap-1">
+          <motion.span
+            animate={
+              !shouldReduceMotion && isVisible
+                ? { scale: [1, 1.3, 1] }
+                : { scale: 1 }
+            }
+            transition={{
+              duration: 1.2,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            className="w-1.5 h-1.5 rounded-full bg-current"
+          />
         </span>
       )}
       <span>{label}</span>
-    </span>
+    </motion.span>
   );
 }

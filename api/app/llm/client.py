@@ -358,8 +358,8 @@ class BrainClient:
                         continue
                     break
 
-                # Model not found on provider: fall through to fallback models immediately
-                if response.status_code == 404:
+                # Model not found on provider (404) or retired/end of life (410): fall through to fallback models immediately
+                if response.status_code in (404, 410):
                     last_error = LLMClientError(response.status_code, response.text[:200], provider.provider_type)
                     break
 
@@ -407,6 +407,45 @@ class BrainClient:
                                 return content.strip()
                 except Exception as fb_err:
                     logger.warning("Fallback model %s also encountered error: %s", fb_model, fb_err)
+
+        # Fallback to active models on NVIDIA NIM if current model hits 404, 410, or 429
+        is_nvidia_target = (
+            (provider.api_key and provider.api_key.startswith("nvapi-"))
+            or ("nvidia.com" in provider.base_url)
+        )
+        if is_nvidia_target and last_error and (
+            isinstance(last_error, LLMClientError) and last_error.status_code in (404, 410, 429)
+        ):
+            nv_candidates = ["nvidia/nemotron-3.5-bolt-e4b", "minimaxai/minimax-m3.1-flash", "nvidia/nemotron-3.5-lightning-30b-a3b"]
+            for fb_model in nv_candidates:
+                if fb_model == payload.get("model"):
+                    continue
+                logger.warning("NVIDIA model %s unavailable (%s); attempting non-streaming fallback to %s...", payload.get("model"), last_error.status_code, fb_model)
+                fallback_payload = dict(payload)
+                fallback_payload["model"] = fb_model
+                fallback_headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {provider.api_key}",
+                }
+                try:
+                    async with httpx.AsyncClient(timeout=self.timeout) as client:
+                        fb_resp = await client.post(url, headers=fallback_headers, json=fallback_payload)
+                        if fb_resp.status_code == 200:
+                            data = fb_resp.json()
+                            choices = data.get("choices", [])
+                            if choices and "message" in choices[0]:
+                                self.last_used_provider = provider.provider_type
+                                self.last_used_model = fb_model
+                                content = choices[0]["message"].get("content", "")
+                                if not content:
+                                    content = (
+                                        choices[0]["message"].get("reasoning_content")
+                                        or choices[0]["message"].get("reasoning")
+                                        or ""
+                                    )
+                                return content.strip()
+                except Exception as fb_err:
+                    logger.warning("NVIDIA fallback model %s also encountered error: %s", fb_model, fb_err)
 
         # Ultimate failover: If all Groq attempts fail, shift request to NVIDIA NIM
         settings = get_settings()
@@ -502,6 +541,8 @@ class BrainClient:
                         if response.status_code == 200:
                             self.last_used_provider = provider.provider_type
                             self.last_used_model = provider.model
+                            tokens_yielded = 0
+                            accumulated_reasoning = ""
                             async for line in response.aiter_lines():
                                 line = line.strip()
                                 if not line or not line.startswith("data:"):
@@ -515,10 +556,17 @@ class BrainClient:
                                     if choices:
                                         delta = choices[0].get("delta", {})
                                         content_piece = delta.get("content", "")
+                                        reasoning_piece = delta.get("reasoning_content") or delta.get("reasoning") or ""
+                                        if reasoning_piece:
+                                            accumulated_reasoning += reasoning_piece
                                         if content_piece:
+                                            tokens_yielded += 1
                                             yield content_piece
                                 except json.JSONDecodeError:
                                     continue
+                            # Safety net: If model only emitted reasoning tokens and no content, yield reasoning so answer is never empty
+                            if tokens_yielded == 0 and accumulated_reasoning.strip():
+                                yield accumulated_reasoning.strip()
                             return
 
                         # Shift to next key immediately on 429 if multiple keys exist in pool
@@ -542,8 +590,8 @@ class BrainClient:
                                 continue
                             break
 
-                        # Model not found on provider: fall through to fallback models immediately
-                        if response.status_code == 404:
+                        # Model not found on provider (404) or retired/end of life (410): fall through to fallback models immediately
+                        if response.status_code in (404, 410):
                             err_bytes = await response.aread()
                             err_msg = err_bytes.decode("utf-8", errors="replace")[:200]
                             last_error = LLMClientError(response.status_code, err_msg, provider.provider_type)
@@ -606,6 +654,55 @@ class BrainClient:
                                     return
                 except Exception as fb_err:
                     logger.warning("Fallback model %s also encountered error: %s", fb_model, fb_err)
+
+        # Fallback to active models on NVIDIA NIM if current model hits 404, 410, or 429
+        is_nvidia_target = (
+            (provider.api_key and provider.api_key.startswith("nvapi-"))
+            or ("nvidia.com" in provider.base_url)
+        )
+        if is_nvidia_target and last_error and (
+            isinstance(last_error, LLMClientError) and last_error.status_code in (404, 410, 429)
+        ):
+            nv_candidates = ["nvidia/nemotron-3.5-bolt-e4b", "minimaxai/minimax-m3.1-flash", "nvidia/nemotron-3.5-lightning-30b-a3b"]
+            for fb_model in nv_candidates:
+                if fb_model == payload.get("model"):
+                    continue
+                logger.warning("NVIDIA model %s unavailable (%s); attempting streaming fallback to %s...", payload.get("model"), last_error.status_code, fb_model)
+                fallback_payload = dict(payload)
+                fallback_payload["model"] = fb_model
+                fallback_headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {provider.api_key}",
+                }
+                try:
+                    async with httpx.AsyncClient(timeout=self.timeout) as client:
+                        async with client.stream("POST", url, headers=fallback_headers, json=fallback_payload) as response:
+                            if response.status_code == 200:
+                                self.last_used_provider = provider.provider_type
+                                self.last_used_model = fb_model
+                                tokens_yielded = 0
+                                async for line in response.aiter_lines():
+                                    line = line.strip()
+                                    if not line or not line.startswith("data:"):
+                                        continue
+                                    data_str = line[5:].strip()
+                                    if data_str == "[DONE]":
+                                        break
+                                    try:
+                                        chunk_json = json.loads(data_str)
+                                        choices = chunk_json.get("choices", [])
+                                        if choices:
+                                            delta = choices[0].get("delta", {})
+                                            content_piece = delta.get("content", "")
+                                            if content_piece:
+                                                tokens_yielded += 1
+                                                yield content_piece
+                                    except json.JSONDecodeError:
+                                        continue
+                                if tokens_yielded > 0:
+                                    return
+                except Exception as fb_err:
+                    logger.warning("NVIDIA fallback model %s also encountered error: %s", fb_model, fb_err)
 
         # Ultimate failover: If all Groq attempts fail, shift request to NVIDIA NIM
         settings = get_settings()
@@ -682,3 +779,9 @@ def get_brain_client() -> BrainClient:
     if _brain_client is None:
         _brain_client = BrainClient()
     return _brain_client
+
+
+def reset_brain_client() -> None:
+    global _brain_client
+    _brain_client = None
+

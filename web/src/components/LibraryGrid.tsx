@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth, SignInButton } from "@clerk/nextjs";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { LibraryDocCard, LibraryDocument } from "./LibraryDocCard";
 import { Skeleton } from "./ui/Skeleton";
 import { Button } from "./ui/button";
@@ -19,6 +20,7 @@ export function LibraryGrid({
   onSelectDocForChat,
   onAskAcrossShelf,
 }: LibraryGridProps) {
+  const shouldReduceMotion = useReducedMotion();
   const { isLoaded, isSignedIn: clerkSignedIn, getToken } = useAuth();
   const [docs, setDocs] = useState<LibraryDocument[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,12 +60,17 @@ export function LibraryGrid({
           headers: { Authorization: `Bearer ${token}` },
         });
 
+        if (res.status === 401) {
+          setDocs([]);
+          return;
+        }
+
         if (!res.ok) {
-          if (res.status === 503 || res.status === 500) {
+          if ([500, 502, 503, 504].includes(res.status)) {
             setIsDegraded(true);
             return;
           }
-          throw new Error("Failed to load shelf");
+          return;
         }
 
         const data = await res.json();
@@ -180,10 +187,16 @@ export function LibraryGrid({
             className="w-full pl-9 pr-3 py-2 text-xs rounded-input bg-bg-sunken border border-border text-ink-primary placeholder:text-ink-ghost focus:outline-none focus:ring-1 focus:ring-accent-primary"
           />
         </div>
-        <Button type="submit" size="sm" disabled={!shelfQuery.trim()} className="text-xs h-8 px-3">
+        <motion.button
+          type="submit"
+          disabled={!shelfQuery.trim()}
+          whileHover={shouldReduceMotion || !shelfQuery.trim() ? undefined : { scale: 1.02 }}
+          whileTap={shouldReduceMotion || !shelfQuery.trim() ? undefined : { scale: 0.98 }}
+          className="text-xs h-8 px-3 inline-flex items-center gap-1 rounded-interactive bg-accent-primary text-white font-medium disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed shadow-xs"
+        >
           <span>Search shelf</span>
           <ArrowRight className="w-3.5 h-3.5 ml-1" />
-        </Button>
+        </motion.button>
       </form>
 
       {/* Grid of Documents */}
@@ -192,17 +205,32 @@ export function LibraryGrid({
           No documents saved to your shelf yet. Upload a document in chat and click save.
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {docs.map((doc) => (
-            <LibraryDocCard
-              key={doc.id}
-              doc={doc}
-              onAsk={(d) => onSelectDocForChat?.(d)}
-              onRemove={handleRemove}
-              isRemoving={removingId === doc.id}
-            />
-          ))}
-        </div>
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={{
+            hidden: { opacity: 0 },
+            visible: {
+              opacity: 1,
+              transition: {
+                staggerChildren: shouldReduceMotion ? 0 : 0.06,
+              },
+            },
+          }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+        >
+          <AnimatePresence mode="popLayout">
+            {docs.map((doc) => (
+              <LibraryDocCard
+                key={doc.id}
+                doc={doc}
+                onAsk={(d) => onSelectDocForChat?.(d)}
+                onRemove={handleRemove}
+                isRemoving={removingId === doc.id}
+              />
+            ))}
+          </AnimatePresence>
+        </motion.div>
       )}
     </div>
   );

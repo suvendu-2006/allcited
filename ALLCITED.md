@@ -1437,3 +1437,49 @@ Entering the workspace always shows the auth screen first · "Continue without l
 
 ## §4.2 addendum — Footer link hover ("receipt underline")
 All footer links (Product · How it works · Pricing · Shelf · The exam · Release history · GitHub · Component gallery) get the signature hover: text `gray→ink/primary` + 2px seal-red underline drawing left→right (160ms) + 1px lift (120ms `ease/exit`); exit draws right→left (200ms) via transform-origin swap; `:focus-visible` parity; reduced-motion = color only; headers and mono footer line stay static. Pure CSS (`.footer-link::after` scaleX origin-swap — spec'd in chat, no JS). Column headers/bottom line never animate.
+
+---
+
+# §6.11 — PREMIUM MICRO-ANIMATION PASS (full-app v3, owner directive)
+
+> Audit finding: framer-motion exists on landing pages only; Chat.tsx and LibraryGrid have zero animation; no whileHover/whileTap springs anywhere; reduced-motion only partial. This pass brings every interactive surface to the same premium standard.
+
+## The constitution (applies to every animation below)
+1. **Compositor props only** — transform + opacity. Never animate width/height/top/left.
+2. **Every animation has a reduced-motion path** — `useReducedMotion()` or CSS media query → fade-only 80 ms. No exceptions.
+3. **All ambient loops pause** when `document.hidden`.
+4. **One rhythm app-wide** — sibling stagger 60 ms, letters 40 ms; durations from §4.1 (micro 120 / base 200 / enter 320); springs: stiffness 420 / damping 32 (chips, toggles), 300 / 25 (magnetic).
+5. **Hero/LCP exception** — no entrance animation on critical text before fonts load; animations start after.
+
+## Per-surface prescriptions
+
+**1 · Chat workspace (currently dead — the centerpiece):**
+- User bubble: slide from right (x 24→0, opacity 0→1, 280 ms ease/exit). Assistant card: fade-up (y 12→0, 320 ms). No bounce on text.
+- Streaming: tokens appear in word batches (opacity 0→1, 140 ms, stagger 18 ms); caret = 2 px seal-red block pulsing (opacity 1↔0.2, 800 ms); citation chips spring-pop (scale 0.6→1, spring 420/32, 60 ms stagger) when the `citations` event arrives.
+- Stage chips: active chip dot pulses (scale 1↔1.3, 1.2 s loop) + hue fill 200 ms; completed chips dim to ghost (opacity .45, 200 ms).
+- Composer: focus ring expands 200 ms; send button breathes (scale 1↔1.02, 3 s) only when enabled; on send — press scale .96 + message flies (y −8, fade 160 ms).
+- Feedback 👍👎: spring press (scale .85→1, 60 ms); selected fills amber.
+- Auto-scroll: smooth only when user is already at bottom; never hijack manual scroll.
+
+**2 · Receipts drawer (SourcePanel):** opens x 100%→0 (320 ms ease/exit) + backdrop fade; cards stagger 50 ms; active card's left border grows height 0→100% (240 ms); Esc/× reverses.
+
+**3 · CitationChip:** add framer `whileTap` scale .95 + pinned-state spring pop (complements existing CSS hover).
+
+**4 · Upload tray:** drop → file card flips in (rotateX 8°→0, 240 ms); stage chip transitions; count-up retained.
+
+**5 · LibraryGrid (dead → alive):** cards stagger on load (60 ms); `whileHover` y −4 + shadow grow (200 ms); delete = scale .96 + opacity + height collapse (240 ms) with framer `layout` re-flow; empty-state dot-grid keeps its float.
+
+**6 · Exam page:** scoreboard rows draw in on scroll-view; every number count-ups (900 ms, mono tabular); progression dots light sequentially (80 ms apart).
+
+**7 · Pricing:** Pro card idle glow (border opacity .14↔.2, 6 s loop, pauses hidden); `Start Pro` uses the existing MagneticButton.
+
+**8 · Auth screen:** card entrance (y 16→0, opacity, 360 ms); OTP digits pop (scale .8→1, 120 ms) on entry; guest button hover parity with footer receipt-underline.
+
+**9 · Toasts:** spring in from bottom (y 24, spring 420/32); dismiss = fade + height collapse.
+
+**10 · Skeletons:** warm-tinted shimmer 1.4 s — verify presence in EVERY screen's loading state (§7 four-state rule).
+
+**11 · TraceViewer:** connector lines draw on scroll-in (240 ms); latency figures count up.
+
+## Gates
+`tsc` clean · grep `whileHover|whileTap` ≥ 10 files · Chat.tsx motion > 0 · LibraryGrid stagger present · every animated file has a reduced-motion path · 60 fps (Performance tab) during: streaming, drawer open, theme wave · suite untouched (tests still green).

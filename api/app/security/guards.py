@@ -20,6 +20,43 @@ INJECTION_PATTERNS: List[str] = [
 
 COMPILED_INJECTION_RE = [re.compile(p) for p in INJECTION_PATTERNS]
 
+CONTROL_TOKEN_REGEX = re.compile(
+    r"(?:<\|im_start\|>|<\|im_end\|>|<\|endoftext\|>|\[INST\]|\[/INST\]|<<SYS>>|<</SYS>>|\[SYSTEM\]|\[SYSTEM\s+PROMPT\])",
+    flags=re.IGNORECASE,
+)
+
+
+def check_query_injection(query: str) -> Tuple[str, bool]:
+    """
+    Inspect user query for adversarial prompt injection attempts and control tokens:
+    - Strips raw chat template delimiter tokens (<|im_start|>, <|im_end|>, [INST], [/INST], etc.)
+    - Neutralizes instruction override or jailbreak patterns
+    - Returns (sanitized_query, injection_flagged)
+    """
+    if not query:
+        return "", False
+
+    flagged = False
+    sanitized = query
+
+    # 1. Strip raw chat template delimiter control tokens
+    if CONTROL_TOKEN_REGEX.search(sanitized):
+        flagged = True
+        sanitized = CONTROL_TOKEN_REGEX.sub("", sanitized)
+
+    # 2. Check and neutralize adversarial prompt injection patterns
+    for regex in COMPILED_INJECTION_RE:
+        matches = list(regex.finditer(sanitized))
+        if matches:
+            flagged = True
+            for match in reversed(matches):
+                orig = match.group(0)
+                neutralized = f"[NEUTRALIZED INSTRUCTION: {orig}]"
+                start, end = match.span()
+                sanitized = sanitized[:start] + neutralized + sanitized[end:]
+
+    return sanitized.strip(), flagged
+
 
 def sanitize_chunk_for_prompt(text: str) -> Tuple[str, bool]:
     """

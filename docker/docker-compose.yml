@@ -39,13 +39,15 @@ services:
       - MODE=private
       - OLLAMA_BASE_URL=http://ollama:11434
       - DEFAULT_LLM_MODEL=qwen2.5:3b
-      - ENVIRONMENT=production
+      - ENVIRONMENT=development
       - CORS_ORIGINS=["http://localhost:3000","http://127.0.0.1:3000"]
     depends_on:
       ollama:
         condition: service_healthy
+      ollama-pull:
+        condition: service_completed_successfully
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/readyz"]
       interval: 10s
       timeout: 5s
       retries: 5

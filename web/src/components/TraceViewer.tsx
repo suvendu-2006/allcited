@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   X,
   ChevronDown,
@@ -64,6 +65,7 @@ export function TraceViewer({
   onClose,
   apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
 }: TraceViewerProps) {
+  const shouldReduceMotion = useReducedMotion();
   const [trace, setTrace] = useState<TraceData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -136,10 +138,13 @@ export function TraceViewer({
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
     >
-      <div
+      <motion.div
         role="dialog"
         aria-modal="true"
-        className="bg-bg-surface border border-border rounded-interactive shadow-2xl max-w-xl w-full max-h-[85vh] flex flex-col overflow-hidden animate-slide-up"
+        initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: 16 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 420, damping: 32 }}
+        className="bg-bg-surface border border-border rounded-interactive shadow-2xl max-w-xl w-full max-h-[85vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between px-6 py-4 border-b border-border bg-bg-surface/90">
@@ -148,11 +153,13 @@ export function TraceViewer({
               <h2 className="text-base font-semibold text-ink-primary font-display">
                 Why this answer?
               </h2>
-              <button
+              <motion.button
                 type="button"
                 onClick={handleCopyId}
                 aria-label="Copy trace ID"
-                className="font-mono text-[10px] text-gray-warm hover:text-ink-primary inline-flex items-center gap-1 border border-border px-1.5 py-0.5 rounded-[4px] transition-all duration-120 hover:scale-105 active:scale-95 cursor-pointer"
+                whileHover={shouldReduceMotion ? undefined : { scale: 1.08 }}
+                whileTap={shouldReduceMotion ? undefined : { scale: 0.92 }}
+                className="font-mono text-[10px] text-gray-warm hover:text-ink-primary inline-flex items-center gap-1 border border-border px-1.5 py-0.5 rounded-[4px] transition-colors cursor-pointer"
               >
                 {copiedId ? (
                   <>
@@ -165,7 +172,7 @@ export function TraceViewer({
                     <span>{questionId.slice(0, 8)}</span>
                   </>
                 )}
-              </button>
+              </motion.button>
             </div>
             <p className="font-mono text-[11px] text-gray-warm mt-0.5">
               the whole trail, {(totalMs / 1000).toFixed(1)}s total
@@ -175,14 +182,16 @@ export function TraceViewer({
             </p>
           </div>
 
-          <button
+          <motion.button
             type="button"
             onClick={onClose}
             aria-label="Close trace viewer"
-            className="p-1 rounded-[4px] text-ink-ghost hover:text-ink-primary hover:bg-bg-sunken transition-all duration-150 ease-out hover:rotate-90 active:scale-90 cursor-pointer"
+            whileHover={shouldReduceMotion ? undefined : { rotate: 90 }}
+            whileTap={shouldReduceMotion ? undefined : { scale: 0.9 }}
+            className="p-1 rounded-[4px] text-ink-ghost hover:text-ink-primary hover:bg-bg-sunken transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
-          </button>
+          </motion.button>
         </div>
 
         {/* Content */}
@@ -269,7 +278,7 @@ export function TraceViewer({
                       {composeSeconds}s · {(trace.total_tokens || 1204).toLocaleString()} tokens
                     </span>
                     <span className="text-gray-warm text-[11px] block mt-0.5">
-                      provider: {trace.provider || "groq"} / {trace.model || "llama-3.3-70b"}
+                      provider: {trace.provider === "groq" || !trace.provider ? "Allcited" : trace.provider} / {trace.model || "default"}
                       {trace.provider === "nvidia" && (
                         <span className="ml-2 text-[10px] text-accent-cite font-semibold">[NVIDIA NIM Failover]</span>
                       )}
@@ -289,14 +298,16 @@ export function TraceViewer({
 
               {/* Raw JSON Toggle */}
               <div className="pt-2">
-                <button
+                <motion.button
                   type="button"
+                  whileHover={shouldReduceMotion ? undefined : { x: 2 }}
+                  whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
                   onClick={() => setShowRawJson(!showRawJson)}
-                  className="flex items-center gap-1 font-mono text-[11px] text-gray-warm hover:text-ink-primary transition-colors"
+                  className="flex items-center gap-1 font-mono text-[11px] text-gray-warm hover:text-ink-primary transition-colors cursor-pointer"
                 >
                   {showRawJson ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                   <span>{showRawJson ? "Hide raw JSON ledger" : "Inspect raw JSON ledger"}</span>
-                </button>
+                </motion.button>
 
                 {showRawJson && (
                   <pre className="mt-2 p-3 rounded-none bg-bg-sunken border border-border text-[11px] font-mono overflow-x-auto text-ink-primary max-h-48 leading-relaxed">
@@ -307,7 +318,7 @@ export function TraceViewer({
             </>
           )}
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

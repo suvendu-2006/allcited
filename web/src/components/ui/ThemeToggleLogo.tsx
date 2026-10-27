@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 interface ThemeToggleLogoProps {
   theme: "light" | "dark";
@@ -17,6 +17,7 @@ interface ThemeToggleLogoProps {
  */
 export function ThemeToggleLogo({ theme, className = "" }: ThemeToggleLogoProps) {
   const isDark = theme === "dark";
+  const shouldReduceMotion = useReducedMotion();
 
   return (
     <div
@@ -29,14 +30,18 @@ export function ThemeToggleLogo({ theme, className = "" }: ThemeToggleLogoProps)
         animate={{
           rotate: isDark ? 210 : 35,
         }}
-        transition={{
-          type: "spring",
-          stiffness: 280,
-          damping: 24,
-        }}
+        transition={
+          shouldReduceMotion
+            ? { duration: 0.08 }
+            : {
+                type: "spring",
+                stiffness: 280,
+                damping: 24,
+              }
+        }
       >
         {/* The dot positioned near the perimeter */}
-        <motion.div
+        <div
           className={`w-1.5 h-1.5 rounded-full border border-current ${
             isDark
               ? "bg-accent-primary border-accent-primary shadow-[0_0_6px_rgba(232,118,90,0.8)]"

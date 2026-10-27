@@ -2,6 +2,8 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { ArrowUp, Square, Sparkles } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { useDocumentVisibility } from "@/lib/useVisibility";
 
 interface ComposerProps {
   onSend: (message: string) => void;
@@ -27,6 +29,8 @@ export function Composer({
   const [input, setInput] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const shouldReduceMotion = useReducedMotion();
+  const isVisible = useDocumentVisibility();
 
   useEffect(() => {
     if (!isGenerating && textareaRef.current) {
@@ -61,13 +65,18 @@ export function Composer({
     }
   };
 
+  const canSend = Boolean(input.trim()) && !disabled && !isGenerating;
+
   return (
-    <div
-      className={`relative border border-border rounded-interactive bg-bg-surface shadow-xs transition-all duration-120 p-2.5 ${
-        isFocused
-          ? "border-accent-primary ring-2 ring-accent-primary/20"
-          : "hover:border-border"
-      } ${disabled ? "opacity-60 transition-opacity duration-120 cursor-not-allowed" : ""}`}
+    <motion.div
+      animate={{
+        borderColor: isFocused ? "var(--accent-primary)" : "var(--border)",
+        boxShadow: isFocused ? "0 0 0 3px rgba(166, 54, 47, 0.15)" : "0 1px 2px rgba(0, 0, 0, 0.04)",
+      }}
+      transition={{ duration: shouldReduceMotion ? 0.08 : 0.2 }}
+      className={`relative border border-border rounded-interactive bg-bg-surface p-2.5 ${
+        disabled ? "opacity-60 transition-opacity duration-120 cursor-not-allowed" : ""
+      }`}
     >
       <textarea
         ref={textareaRef}
@@ -85,7 +94,7 @@ export function Composer({
       <div className="flex items-center justify-between pt-1 px-1">
         <div className="flex items-center gap-2">
           {onTogglePrecision && (
-            <button
+            <motion.button
               type="button"
               onClick={() => onTogglePrecision(!isPrecisionMode)}
               aria-label="Toggle Precision Mode"
@@ -94,7 +103,10 @@ export function Composer({
                   ? "Precision Mode: reranks 50 passages before answering"
                   : "Precision Mode (Pro feature: reranks 50 passages)"
               }
-              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono transition-all duration-120 cursor-pointer ${
+              whileHover={{ scale: shouldReduceMotion ? 1 : 1.04 }}
+              whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
+              transition={{ type: "spring", stiffness: 420, damping: 32 }}
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono transition-colors duration-120 cursor-pointer ${
                 isPrecisionMode
                   ? "bg-accent-primary/15 text-accent-primary border border-accent-primary/40 font-medium shadow-xs"
                   : "text-gray-warm hover:text-ink-primary border border-transparent hover:border-border"
@@ -103,7 +115,7 @@ export function Composer({
               <Sparkles className="w-3 h-3 text-accent-primary" />
               <span>Precision</span>
               {isPrecisionMode && <span className="text-[9px] font-bold">ON</span>}
-            </button>
+            </motion.button>
           )}
 
           <span
@@ -116,26 +128,40 @@ export function Composer({
         </div>
 
         {isGenerating ? (
-          <button
+          <motion.button
             type="button"
             onClick={onAbort}
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-[6px] bg-danger text-white text-xs font-medium hover:brightness-110 hover:scale-105 active:scale-95 transition-all duration-150 shadow-xs cursor-pointer motion-reduce:transform-none"
+            whileHover={{ scale: shouldReduceMotion ? 1 : 1.04 }}
+            whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-[6px] bg-danger text-white text-xs font-medium hover:brightness-110 shadow-xs cursor-pointer"
           >
             <Square className="w-3 h-3 fill-current animate-pulse" />
             <span>Stop answering</span>
-          </button>
+          </motion.button>
         ) : (
-          <button
+          <motion.button
             type="button"
             onClick={handleSubmit}
             disabled={!input.trim() || disabled}
             aria-label="Send question"
-            className="group w-8 h-8 rounded-interactive bg-accent-primary text-primary-foreground flex items-center justify-center hover:brightness-95 hover:scale-105 hover:shadow-sm active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none transition-all duration-150 motion-reduce:transform-none cursor-pointer"
+            whileHover={canSend ? { scale: shouldReduceMotion ? 1 : 1.05 } : undefined}
+            whileTap={canSend ? { scale: shouldReduceMotion ? 1 : 0.96 } : undefined}
+            animate={
+              canSend && !shouldReduceMotion && isVisible
+                ? { scale: [1, 1.02, 1] }
+                : { scale: 1 }
+            }
+            transition={
+              canSend && !shouldReduceMotion && isVisible
+                ? { duration: 3, repeat: Infinity, ease: "easeInOut" }
+                : { duration: 0.15 }
+            }
+            className="group w-8 h-8 rounded-interactive bg-accent-primary text-primary-foreground flex items-center justify-center hover:brightness-95 hover:shadow-sm disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
           >
             <ArrowUp className="w-4 h-4 transition-transform duration-150 ease-out group-hover:-translate-y-0.5" />
-          </button>
+          </motion.button>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }

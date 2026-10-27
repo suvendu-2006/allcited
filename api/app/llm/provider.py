@@ -31,12 +31,49 @@ def resolve_provider(
 
     # 1. BYOK Path
     if byok_key and byok_key.strip():
-        base_url = (byok_base_url.strip() if byok_base_url else "https://api.openai.com/v1").rstrip("/")
-        model = byok_model.strip() if byok_model else "gpt-4o-mini"
+        key = byok_key.strip()
+        base_url = (byok_base_url.strip() if byok_base_url else "").rstrip("/")
+        model = byok_model.strip() if byok_model else ""
+
+        # Auto-detect defaults from key format if not provided or set to defaults/deprecated
+        if key.startswith("nvapi-"):
+            if not base_url or "api.openai.com" in base_url:
+                base_url = "https://integrate.api.nvidia.com/v1"
+            deprecated_nvidia = (
+                "gpt-4o-mini",
+                "meta/llama-3.3-70b-instruct",
+                "meta/llama-3.1-70b-instruct",
+                "meta/llama-3.1-8b-instruct",
+                "meta/llama-3.2-3b-instruct",
+                "meta/llama-3.2-11b-vision-instruct",
+                "nvidia/nemotron-3.5-lightning-30b-a3b",
+            )
+            if not model or model in deprecated_nvidia:
+                model = (
+                    settings.NVIDIA_MODEL
+                    if (settings.NVIDIA_MODEL and settings.NVIDIA_MODEL not in deprecated_nvidia)
+                    else "nvidia/nemotron-3.5-bolt-e4b"
+                )
+        elif key.startswith("gsk_"):
+            if not base_url or "api.openai.com" in base_url:
+                base_url = "https://api.groq.com/openai/v1"
+            if not model or model == "gpt-4o-mini":
+                model = "llama-3.3-70b-versatile"
+        elif key.startswith("sk-") and not key.startswith("sk-ant-"):
+            if not base_url:
+                base_url = "https://api.openai.com/v1"
+            if not model:
+                model = "gpt-4o-mini"
+
+        if not base_url:
+            base_url = "https://api.openai.com/v1"
+        if not model:
+            model = "gpt-4o-mini"
+
         return ResolvedProvider(
             provider_type="byok",
             base_url=base_url,
-            api_key=byok_key.strip(),
+            api_key=key,
             model=model,
             is_byok=True,
         )

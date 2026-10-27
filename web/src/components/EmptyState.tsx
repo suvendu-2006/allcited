@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { CitationChip } from "./CitationChip";
 import { FileQuestion, ArrowRight } from "lucide-react";
 
@@ -16,6 +17,8 @@ const SAMPLE_QUESTIONS = [
 ];
 
 export function EmptyState({ onSelectSampleQuestion, isGuest }: EmptyStateProps) {
+  const shouldReduceMotion = useReducedMotion();
+
   return (
     <div className="dot-grid rounded-interactive border border-border/60 p-8 sm:p-12 my-6 text-center relative overflow-hidden bg-bg-surface/30">
       <div className="mb-6 flex justify-center">
@@ -47,16 +50,18 @@ export function EmptyState({ onSelectSampleQuestion, isGuest }: EmptyStateProps)
 
       <div className="flex flex-wrap items-center justify-center gap-2 max-w-xl mx-auto">
         {SAMPLE_QUESTIONS.map((question) => (
-          <button
+          <motion.button
             key={question}
             type="button"
+            whileHover={shouldReduceMotion ? undefined : { y: -2, scale: 1.01 }}
+            whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
             onClick={() => onSelectSampleQuestion(question)}
-            className="group inline-flex items-center gap-2 px-3.5 py-2 rounded-interactive border border-border bg-bg-surface hover:bg-bg-sunken text-xs font-medium text-ink-primary shadow-xs transition-all duration-150 ease-out hover:border-accent-primary hover:-translate-y-0.5 hover:shadow-xs active:translate-y-0 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary cursor-pointer motion-reduce:transform-none"
+            className="group inline-flex items-center gap-2 px-3.5 py-2 rounded-interactive border border-border bg-bg-surface hover:bg-bg-sunken text-xs font-medium text-ink-primary shadow-xs transition-colors hover:border-accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary cursor-pointer"
           >
             <FileQuestion className="w-3.5 h-3.5 text-accent-primary opacity-70 group-hover:opacity-100 transition-all duration-150 group-hover:scale-110" />
             <span>{question}</span>
             <ArrowRight className="w-3 h-3 text-ink-ghost transition-transform duration-150 ease-out group-hover:translate-x-1 group-hover:text-accent-primary" />
-          </button>
+          </motion.button>
         ))}
       </div>
     </div>

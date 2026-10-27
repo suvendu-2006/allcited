@@ -143,3 +143,139 @@ def test_library_save_two_docs_and_query_with_doc_citations():
     assert bob_query.status_code == 200
     assert len(bob_query.json()["citations"]) == 0
     assert "No relevant documents" in bob_query.json()["answer"]
+
+
+def test_ask_about_this_hydrates_saved_document_session():
+    """
+    Verify clicking 'Ask about this' with doc.id resolves session hydration without 404 session_not_found.
+    """
+    set_test_verification_key(_public_pem)
+    from app.library import get_library_store
+    from app.sessions import get_session_store
+
+    get_library_store().reset_for_tests()
+    import uuid
+    user_id = f"user_ask_about_this_{uuid.uuid4().hex[:8]}"
+    token = make_test_token(user_id)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # 1. Ingest a document
+    doc_text = (
+        "## Cloud Storage Encryption\n"
+        "All customer data stored in cloud buckets must be encrypted using customer-managed keys (CMEK). "
+        "Keys must be rotated at least every 90 days.\n"
+    )
+    res = client.post(
+        "/v1/ingest",
+        files={"file": ("cloud_encryption.txt", io.BytesIO(doc_text.encode("utf-8")), "text/plain")},
+    )
+    assert res.status_code == 200
+    ingest_session_id = res.json()["session_id"]
+
+    # 2. Save document to user's library
+    save_res = client.post("/v1/library/save", json={"session_id": ingest_session_id}, headers=headers)
+    assert save_res.status_code == 200
+    doc_id = save_res.json()["document"]["id"]
+
+    # 3. Simulate LRU eviction by deleting the ingest session from session_store
+    session_store = get_session_store()
+    session_store.delete_session(ingest_session_id)
+    assert session_store.get_session(doc_id) is None
+
+    # 4. Ask about this card action calls /v1/session/{doc.id}
+    session_info_res = client.get(f"/v1/session/{doc_id}", headers=headers)
+    assert session_info_res.status_code == 200
+    assert session_info_res.json()["filename"] == "cloud_encryption.txt"
+
+    # 5. Querying with session_id=doc_id (as Chat.tsx does) must hydrate without 404
+    query_res = client.post(
+        "/v1/query",
+        json={"session_id": doc_id, "query": "What is the key rotation period?", "provider": "stub"},
+        headers=headers,
+    )
+    assert query_res.status_code == 200
+    assert "text/event-stream" in query_res.headers.get("content-type", "")
+
+
+def test_delete_document_and_audit_trail_assertion():
+    """
+    Step 5: Formally assert that deleting a document from the Shelf removes it from
+    InMemoryLibraryStore, initiates remote deletion on Supabase, and logs an entry to the audit trail.
+    """
+    set_test_verification_key(_public_pem)
+    import uuid
+
+    from app.audit import get_audit_store
+    from app.library import get_library_store
+
+    get_library_store().reset_for_tests()
+    get_audit_store().reset_for_tests()
+
+    user_a = f"user_del_a_{uuid.uuid4().hex[:8]}"
+    user_b = f"user_del_b_{uuid.uuid4().hex[:8]}"
+    token_a = make_test_token(user_a)
+    token_b = make_test_token(user_b)
+    headers_a = {"Authorization": f"Bearer {token_a}"}
+    headers_b = {"Authorization": f"Bearer {token_b}"}
+
+    # Ingest doc for User A
+    doc_text_a = "Policy Doc A: High priority operations require dual approval."
+    res_a = client.post(
+        "/v1/ingest",
+        files={"file": ("policy_a.txt", io.BytesIO(doc_text_a.encode("utf-8")), "text/plain")},
+    )
+    assert res_a.status_code == 200
+    save_a = client.post("/v1/library/save", json={"session_id": res_a.json()["session_id"]}, headers=headers_a)
+    assert save_a.status_code == 200
+    doc_a_id = save_a.json()["document"]["id"]
+
+    # Ingest doc for User B
+    doc_text_b = "Policy Doc B: General office guidelines and quiet hours."
+    res_b = client.post(
+        "/v1/ingest",
+        files={"file": ("policy_b.txt", io.BytesIO(doc_text_b.encode("utf-8")), "text/plain")},
+    )
+    assert res_b.status_code == 200
+    save_b = client.post("/v1/library/save", json={"session_id": res_b.json()["session_id"]}, headers=headers_b)
+    assert save_b.status_code == 200
+    doc_b_id = save_b.json()["document"]["id"]
+
+    # Verify both exist
+    list_a = client.get("/v1/library/documents", headers=headers_a)
+    assert list_a.status_code == 200
+    assert any(d["id"] == doc_a_id for d in list_a.json()["documents"])
+
+    # 1. Call DELETE /v1/library/{doc_id}
+    del_res = client.delete(f"/v1/library/{doc_a_id}", headers=headers_a)
+    assert del_res.status_code == 200
+    assert del_res.json() == {"status": "deleted", "doc_id": doc_a_id}
+
+    # 2. Call GET /v1/library/documents -> verify deleted doc is absent
+    list_a_after = client.get("/v1/library/documents", headers=headers_a)
+    assert list_a_after.status_code == 200
+    assert not any(d["id"] == doc_a_id for d in list_a_after.json()["documents"])
+
+    # 3. Verify removed from InMemoryLibraryStore
+    store = get_library_store()
+    assert store.get_document(user_a, doc_a_id) is None
+    assert store.get_document_chunks(user_a, doc_a_id) == []
+
+    # 4. Call GET /v1/audit -> verify action == "document_deleted" and details.doc_id == doc_a_id
+    audit_res = client.get("/v1/audit", headers=headers_a)
+    assert audit_res.status_code == 200
+    logs = audit_res.json()["logs"]
+    del_logs = [log for log in logs if log["action"] == "document_deleted" and log.get("details", {}).get("doc_id") == doc_a_id]
+    assert len(del_logs) == 1
+    assert del_logs[0]["user_id"] == user_a
+
+    # 5. Verify deletion does not leak into User B's documents
+    list_b = client.get("/v1/library/documents", headers=headers_b)
+    assert list_b.status_code == 200
+    assert any(d["id"] == doc_b_id for d in list_b.json()["documents"])
+
+    # User A cannot delete User B's document
+    unauth_del = client.delete(f"/v1/library/{doc_b_id}", headers=headers_a)
+    assert unauth_del.status_code == 404
+    assert store.get_document(user_b, doc_b_id) is not None
+
+

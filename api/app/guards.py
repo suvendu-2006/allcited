@@ -5,6 +5,7 @@ guards.py - Prompt-injection defence and PII masking.
 from app.security.guards import (
     COMPILED_INJECTION_RE,
     INJECTION_PATTERNS,
+    check_query_injection,
     format_source_as_data_block,
     sanitize_chunk_for_prompt,
 )
@@ -21,6 +22,7 @@ from app.security.pii import (
 __all__ = [
     "INJECTION_PATTERNS",
     "COMPILED_INJECTION_RE",
+    "check_query_injection",
     "sanitize_chunk_for_prompt",
     "format_source_as_data_block",
     "mask_email",

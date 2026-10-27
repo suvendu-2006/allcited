@@ -11,6 +11,7 @@ from fastapi import HTTPException, status
 from pydantic import BaseModel, Field
 
 from app.config import get_settings
+from app.library import validate_or_sanitize_identifier
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,7 @@ def _sync_subscription_to_supabase(
     if not (settings.SUPABASE_URL and settings.SUPABASE_SERVICE_ROLE_KEY):
         return
     try:
+        clean_user_id = validate_or_sanitize_identifier(user_id)
         base_url = settings.SUPABASE_URL.rstrip("/")
         headers = {
             "apikey": settings.SUPABASE_SERVICE_ROLE_KEY,
@@ -56,7 +58,7 @@ def _sync_subscription_to_supabase(
         }
         now_str = datetime.datetime.now(datetime.timezone.utc).isoformat()
         payload = {
-            "user_id": user_id,
+            "user_id": clean_user_id,
             "plan": plan,
             "stripe_customer_id": customer_id,
             "stripe_subscription_id": subscription_id,
@@ -65,8 +67,9 @@ def _sync_subscription_to_supabase(
         }
         with httpx.Client(timeout=5.0) as client:
             client.post(
-                f"{base_url}/rest/v1/subscriptions?on_conflict=user_id",
+                f"{base_url}/rest/v1/subscriptions",
                 headers=headers,
+                params={"on_conflict": "user_id"},
                 json=payload,
             )
     except Exception as e:
@@ -84,8 +87,14 @@ class SubscriptionStore:
         self._processed_events: Set[str] = set()
 
     def get_plan(self, user_id: str) -> str:
+        try:
+            clean_user_id = validate_or_sanitize_identifier(user_id)
+        except Exception as e:
+            logger.warning("Invalid user_id provided to get_plan: %s", e)
+            return "free"
+
         with self._lock:
-            info = self._subscriptions.get(user_id)
+            info = self._subscriptions.get(clean_user_id) or self._subscriptions.get(user_id)
             if info:
                 return info.plan
 
@@ -98,17 +107,19 @@ class SubscriptionStore:
                     "apikey": settings.SUPABASE_SERVICE_ROLE_KEY,
                     "Authorization": f"Bearer {settings.SUPABASE_SERVICE_ROLE_KEY}",
                 }
+                params = {"user_id": f"eq.{clean_user_id}"}
                 with httpx.Client(timeout=3.0) as client:
                     resp = client.get(
-                        f"{base_url}/rest/v1/subscriptions?user_id=eq.{user_id}",
+                        f"{base_url}/rest/v1/subscriptions",
                         headers=headers,
+                        params=params,
                     )
                     if resp.status_code == 200:
                         rows = resp.json()
                         if rows:
                             row = rows[0]
                             sub = SubscriptionInfo(
-                                user_id=user_id,
+                                user_id=clean_user_id,
                                 plan=row.get("plan", "free"),
                                 customer_id=row.get("stripe_customer_id"),
                                 subscription_id=row.get("stripe_subscription_id"),
@@ -116,7 +127,7 @@ class SubscriptionStore:
                                 updated_at=row.get("updated_at", ""),
                             )
                             with self._lock:
-                                self._subscriptions[user_id] = sub
+                                self._subscriptions[clean_user_id] = sub
                             return sub.plan
             except Exception as e:
                 logger.warning("Supabase get_plan lookup failed: %s", e)

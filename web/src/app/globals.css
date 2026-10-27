@@ -279,6 +279,12 @@
   --cl-color-border: var(--border);
 }
 
+:root:not(.dark) .cl-modalContent:not(:has(.cl-userProfile-root)) {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
 :root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root) .cl-card {
   background: var(--bg-surface) !important;
   background-color: var(--bg-surface) !important;
@@ -288,32 +294,95 @@
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04) !important;
 }
 
-:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root) [class*="headerTitle"] {
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root) [class*="headerTitle"],
+:root:not(.dark) .cl-modalContent:not(:has(.cl-userProfile-root)) [class*="headerTitle"],
+:root:not(.dark) .cl-headerTitle {
   color: var(--ink-primary) !important;
+  -webkit-text-fill-color: var(--ink-primary) !important;
   font-weight: 700 !important;
 }
 
-:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root) [class*="headerSubtitle"] {
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root) [class*="headerSubtitle"],
+:root:not(.dark) .cl-modalContent:not(:has(.cl-userProfile-root)) [class*="headerSubtitle"],
+:root:not(.dark) .cl-headerSubtitle {
   color: var(--gray-warm) !important;
+  -webkit-text-fill-color: var(--gray-warm) !important;
 }
 
-:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root) [class*="socialButtonsBlockButton"],
-:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root) [class*="socialButtonsIconButton"] {
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent) button[class*="socialButtonsBlockButton"],
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent) button[class*="socialButtonsIconButton"],
+:root:not(.dark) button[class*="socialButtonsBlockButton"],
+:root:not(.dark) button[class*="socialButtonsIconButton"],
+:root:not(.dark) button[class*="socialButtonsBlockButton"][data-variant="lastAuthenticationStrategy"],
+:root:not(.dark) button[class*="socialButtonsBlockButton"]:has([class*="lastAuthenticationStrategy"]),
+:root:not(.dark) button[class*="socialButtonsBlockButton__google"],
+:root:not(.dark) button[class*="socialButtonsIconButton__google"],
+:root:not(.dark) .cl-socialButtonsBlockButton,
+:root:not(.dark) .cl-socialButtonsIconButton {
   background: var(--bg-sunken) !important;
   background-color: var(--bg-sunken) !important;
   background-image: none !important;
-  border: 1px solid var(--border) !important;
+  border: 1px solid rgba(26, 25, 24, 0.15) !important;
+  border-color: rgba(26, 25, 24, 0.15) !important;
+  color: var(--ink-primary) !important;
+  box-shadow: none !important;
+  outline: none !important;
+  --border: rgba(26, 25, 24, 0.15) !important;
+  --accent: rgba(26, 25, 24, 0.15) !important;
+}
+
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent) button[class*="socialButtonsBlockButton"]:hover,
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent) button[class*="socialButtonsIconButton"]:hover,
+:root:not(.dark) button[class*="socialButtonsBlockButton__google"]:hover,
+:root:not(.dark) button[class*="socialButtonsIconButton__google"]:hover,
+:root:not(.dark) .cl-socialButtonsBlockButton:hover,
+:root:not(.dark) .cl-socialButtonsIconButton:hover {
+  background-color: var(--bg-surface) !important;
+  border: 1px solid var(--ink-primary) !important;
+  border-color: var(--ink-primary) !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+:root:not(.dark) [class*="socialButtonsBlockButtonText"],
+:root:not(.dark) .cl-socialButtonsBlockButtonText,
+:root:not(.dark) [class*="socialButtonsBlockButton"] span:not([class*="Badge"]):not([class*="badge"]),
+:root:not(.dark) [class*="socialButtonsBlockButton"] div,
+:root:not(.dark) [class*="socialButtonsBlockButton"] * {
+  border: none !important;
+  border-width: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+:root:not(.dark) [class*="lastAuthenticationStrategyBadge"],
+:root:not(.dark) .cl-lastAuthenticationStrategyBadge {
+  background: var(--bg-surface) !important;
+  background-color: var(--bg-surface) !important;
+  color: var(--gray-warm) !important;
+  border: 1px solid rgba(26, 25, 24, 0.15) !important;
+  border-color: rgba(26, 25, 24, 0.15) !important;
+  box-shadow: none !important;
+  outline: none !important;
+  --border: rgba(26, 25, 24, 0.15) !important;
+}
+
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent) [class*="socialButtonsIconButton"] :is(img, svg),
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent) [class*="socialButtonsBlockButton"] :is(img, svg),
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent) [class*="socialButtonsProviderIcon"],
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent) [class*="providerIcon"],
+:root:not(.dark) img[alt*="GitHub" i],
+:root:not(.dark) img[src*="github" i],
+:root:not(.dark) img[alt*="Apple" i],
+:root:not(.dark) img[src*="apple" i] {
+  filter: none !important;
+  -webkit-filter: none !important;
+  opacity: 1 !important;
   color: var(--ink-primary) !important;
 }
 
-:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root) [class*="socialButtonsBlockButton"]:hover,
-:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root) [class*="socialButtonsIconButton"]:hover {
-  background-color: var(--bg-surface) !important;
-  border-color: var(--ink-primary) !important;
-}
-
-:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root) [class*="socialButtonsIconButton"] svg,
-:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root) [class*="socialButtonsBlockButton"] svg {
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent) [class*="socialButtonsIconButton"] svg,
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent) [class*="socialButtonsBlockButton"] svg {
   filter: none !important;
   color: var(--ink-primary) !important;
 }
@@ -331,6 +400,45 @@
   font-weight: 500 !important;
 }
 
+:root:not(.dark) :is(.cl-rootBox, .cl-card, .cl-signIn-root, .cl-signUp-root) {
+  --cl-color-input-text: var(--ink-primary) !important;
+  --cl-color-text: var(--ink-primary) !important;
+  --cl-color-border: rgba(26, 25, 24, 0.25) !important;
+  color: var(--ink-primary) !important;
+  -webkit-text-fill-color: var(--ink-primary) !important;
+}
+
+/* Identity Preview (Email address + edit pencil button) */
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent) [class*="identityPreview"],
+:root:not(.dark) .cl-identityPreview {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+}
+
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent) [class*="identityPreviewText"],
+:root:not(.dark) .cl-identityPreviewText,
+:root:not(.dark) [class*="identityPreviewText"] {
+  color: var(--ink-primary) !important;
+  -webkit-text-fill-color: var(--ink-primary) !important;
+  font-weight: 600 !important;
+  opacity: 1 !important;
+}
+
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent) [class*="identityPreviewEditButton"],
+:root:not(.dark) .cl-identityPreviewEditButton,
+:root:not(.dark) [class*="identityPreviewEditButton"] {
+  color: var(--accent-primary) !important;
+  stroke: var(--accent-primary) !important;
+  fill: var(--accent-primary) !important;
+  opacity: 1 !important;
+  transition: opacity 150ms ease;
+}
+
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent) [class*="identityPreviewEditButton"]:hover {
+  opacity: 0.8 !important;
+}
+
 :root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root) [class*="formFieldInput"] {
   background: var(--bg-surface) !important;
   background-color: var(--bg-surface) !important;
@@ -343,12 +451,146 @@
   border-color: var(--accent-primary) !important;
 }
 
+/* Master hidden OTP input must remain 100% transparent so its internal compressed text never overlaps slots */
+:is(:root, .dark) input[data-input-otp],
+:is(:root, .dark) input[data-input-otp="true"],
+:is(:root, .dark) .cl-otpCodeField input[data-input-otp],
+:is(:root, .dark) [data-input-otp-container] input {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  caret-color: transparent !important;
+  background: transparent !important;
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* OTP Verification Code: Container must NEVER have a border or background */
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent) :is(.cl-otpCodeField, .cl-otpCodeFieldInputs, .cl-otpCodeFieldInputContainer, div[class*="otpCodeFieldInputs"], div[class*="otpCodeFieldInputContainer"]),
+:root:not(.dark) :is(.cl-otpCodeField, .cl-otpCodeFieldInputs, .cl-otpCodeFieldInputContainer, div[class*="otpCodeFieldInputs"], div[class*="otpCodeFieldInputContainer"]) {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-width: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+:root:not(.dark) :is(.cl-otpCodeFieldInputs, div[class*="otpCodeFieldInputs"]) {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+/* OTP Verification Code: 6 separate individual rounded segmented boxes (matches div, span, and input slots) */
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent, .cl-rootBox) :is(div, span).cl-otpCodeFieldInput:not(.cl-otpCodeFieldInputs):not(.cl-otpCodeFieldInputContainer),
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent, .cl-rootBox) [data-testid="otp-input-segment"],
+:root:not(.dark) :is(div, span).cl-otpCodeFieldInput:not(.cl-otpCodeFieldInputs):not(.cl-otpCodeFieldInputContainer),
+:root:not(.dark) [data-testid="otp-input-segment"],
+:root:not(.dark) input.cl-otpCodeFieldInput:not([data-input-otp]),
+:root:not(.dark) input[class*="otpCodeFieldInput"]:not([class*="Inputs"]):not([class*="Container"]):not([data-input-otp]),
+:root:not(.dark) [data-input-otp-slot] {
+  width: 44px !important;
+  min-width: 44px !important;
+  max-width: 44px !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  max-height: 48px !important;
+  flex: 0 0 44px !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: var(--ink-primary) !important;
+  -webkit-text-fill-color: var(--ink-primary) !important;
+  border: 1.5px solid rgba(26, 25, 24, 0.25) !important;
+  border-color: rgba(26, 25, 24, 0.25) !important;
+  border-radius: 8px !important;
+  font-weight: 700 !important;
+  font-size: 1.35rem !important;
+  line-height: 48px !important;
+  text-align: center !important;
+  box-shadow: none !important;
+  outline: none !important;
+  caret-color: var(--ink-primary) !important;
+  margin: 0 4px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+}
+
+/* OTP Verification Code: Digits and characters inside slot MUST be dark charcoal (var(--ink-primary)) */
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent, .cl-rootBox) :is(div, span).cl-otpCodeFieldInput:not(.cl-otpCodeFieldInputs):not(.cl-otpCodeFieldInputContainer) *,
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent, .cl-rootBox) [data-testid="otp-input-segment"] *,
+:root:not(.dark) :is(div, span).cl-otpCodeFieldInput:not(.cl-otpCodeFieldInputs):not(.cl-otpCodeFieldInputContainer) *,
+:root:not(.dark) [data-testid="otp-input-segment"] *,
+:root:not(.dark) [data-input-otp-slot] * {
+  color: var(--ink-primary) !important;
+  -webkit-text-fill-color: var(--ink-primary) !important;
+  font-weight: 700 !important;
+}
+
+/* Blinking caret inside the active OTP slot */
+:root:not(.dark) :is(div, span).cl-otpCodeFieldInput:not(.cl-otpCodeFieldInputs) div:empty,
+:root:not(.dark) [data-testid="otp-input-segment"] div:empty,
+:root:not(.dark) [data-input-otp-slot] div:empty {
+  background-color: var(--ink-primary) !important;
+}
+
+/* Active / Focused OTP individual box */
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent, .cl-rootBox) :is(div, span).cl-otpCodeFieldInput:not(.cl-otpCodeFieldInputs):not(.cl-otpCodeFieldInputContainer):focus,
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent, .cl-rootBox) :is(div, span).cl-otpCodeFieldInput:not(.cl-otpCodeFieldInputs):not(.cl-otpCodeFieldInputContainer):focus-within,
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent, .cl-rootBox) :is(div, span).cl-otpCodeFieldInput:not(.cl-otpCodeFieldInputs):not(.cl-otpCodeFieldInputContainer)[data-focused="true"],
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent, .cl-rootBox) :is(div, span).cl-otpCodeFieldInput:not(.cl-otpCodeFieldInputs):not(.cl-otpCodeFieldInputContainer)[data-active="true"],
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent, .cl-rootBox) [data-testid="otp-input-segment"][data-focused="true"],
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent, .cl-rootBox) [data-testid="otp-input-segment"][data-active="true"],
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent, .cl-rootBox) [data-testid="otp-input-segment"]:focus-within,
+:root:not(.dark) :is(div, span).cl-otpCodeFieldInput:not(.cl-otpCodeFieldInputs):not(.cl-otpCodeFieldInputContainer):focus,
+:root:not(.dark) :is(div, span).cl-otpCodeFieldInput:not(.cl-otpCodeFieldInputs):not(.cl-otpCodeFieldInputContainer):focus-within,
+:root:not(.dark) :is(div, span).cl-otpCodeFieldInput:not(.cl-otpCodeFieldInputs):not(.cl-otpCodeFieldInputContainer)[data-focused="true"],
+:root:not(.dark) :is(div, span).cl-otpCodeFieldInput:not(.cl-otpCodeFieldInputs):not(.cl-otpCodeFieldInputContainer)[data-active="true"],
+:root:not(.dark) [data-testid="otp-input-segment"]:focus-within,
+:root:not(.dark) [data-testid="otp-input-segment"][data-focused="true"],
+:root:not(.dark) [data-testid="otp-input-segment"][data-active="true"],
+:root:not(.dark) [data-input-otp-slot][data-focused="true"],
+:root:not(.dark) [data-input-otp-slot][data-active="true"] {
+  border: 2px solid var(--ink-primary) !important;
+  border-color: var(--ink-primary) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(26, 25, 24, 0.08) !important;
+}
+
+/* Resend Code Link & Countdown */
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent) [class*="formResendCodeLink"],
+:root:not(.dark) .cl-formResendCodeLink,
+:root:not(.dark) [class*="formResendCodeLink"] {
+  color: var(--gray-warm) !important;
+  -webkit-text-fill-color: var(--gray-warm) !important;
+}
+
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent) [class*="formResendCodeLink"] button:not([disabled]),
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent) [class*="formResendCodeLink"] a {
+  color: var(--accent-primary) !important;
+  -webkit-text-fill-color: var(--accent-primary) !important;
+  font-weight: 500 !important;
+}
+
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent) [class*="formResendCodeLink"] button[disabled],
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent) [class*="formResendCodeLink"] [data-disabled="true"] {
+  color: var(--gray-warm) !important;
+  -webkit-text-fill-color: var(--gray-warm) !important;
+  opacity: 0.85 !important;
+}
+
 :root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root) [class*="formButtonPrimary"] {
   background-color: var(--accent-primary) !important;
   color: #ffffff !important;
 }
 
-:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root) [class*="footer"] {
+/* Footer & Actions (Remove beige box from 'Use another method') */
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root) .cl-footer,
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root) [class*="footer"]:not([class*="footerAction"]):not([class*="footerPages"]):not([class*="footerActionLink"]) {
   background: var(--bg-sunken) !important;
   background-color: var(--bg-sunken) !important;
   background-image: none !important;
@@ -361,10 +603,19 @@
   background: transparent !important;
 }
 
-:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root) [class*="footerActionLink"] {
-  color: var(--accent-primary) !important;
-  font-weight: 600 !important;
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent) :is([class*="footerAction"], [class*="footerActionLink"], [class*="alternativeMethods"], [class*="alternativeMethodsBlockButton"], [class*="alternativeMethodsBlockButtonText"]) {
   background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: var(--accent-primary) !important;
+  -webkit-text-fill-color: var(--accent-primary) !important;
+  font-weight: 600 !important;
+}
+
+:root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root, .cl-modalContent) :is([class*="footerActionLink"], [class*="alternativeMethodsBlockButton"]):hover {
+  text-decoration: underline !important;
 }
 
 :root:not(.dark) :is(.cl-signIn-root, .cl-signUp-root) [class*="badge"] {
@@ -581,8 +832,89 @@
 
 .dark .cl-headerTitle,
 .dark .cl-formFieldLabel,
-.dark .cl-identityPreviewText {
-  color: var(--ink-primary) !important;
+.dark .cl-identityPreviewText,
+.dark [class*="identityPreviewText"] {
+  color: #EFEAD9 !important;
+  -webkit-text-fill-color: #EFEAD9 !important;
+}
+
+.dark .cl-identityPreviewEditButton,
+.dark [class*="identityPreviewEditButton"] {
+  color: #E8765A !important;
+  stroke: #E8765A !important;
+  fill: #E8765A !important;
+}
+
+.dark :is(.cl-otpCodeField, .cl-otpCodeFieldInputs, .cl-otpCodeFieldInputContainer, div[class*="otpCodeFieldInputs"], div[class*="otpCodeFieldInputContainer"]) {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-width: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.dark :is(div, span).cl-otpCodeFieldInput:not(.cl-otpCodeFieldInputs):not(.cl-otpCodeFieldInputContainer),
+.dark [data-testid="otp-input-segment"],
+.dark input.cl-otpCodeFieldInput:not([data-input-otp]),
+.dark input[class*="otpCodeFieldInput"]:not([class*="Inputs"]):not([class*="Container"]):not([data-input-otp]),
+.dark [data-input-otp-slot] {
+  width: 44px !important;
+  min-width: 44px !important;
+  max-width: 44px !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  max-height: 48px !important;
+  flex: 0 0 44px !important;
+  background-color: #0D0C0B !important;
+  color: #EFEAD9 !important;
+  -webkit-text-fill-color: #EFEAD9 !important;
+  border: 1.5px solid rgba(239, 234, 217, 0.22) !important;
+  border-color: rgba(239, 234, 217, 0.22) !important;
+  border-radius: 8px !important;
+  font-weight: 700 !important;
+  font-size: 1.35rem !important;
+  line-height: 48px !important;
+  text-align: center !important;
+  margin: 0 4px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+}
+
+.dark :is(div, span, input).cl-otpCodeFieldInput:not(.cl-otpCodeFieldInputs):not(.cl-otpCodeFieldInputContainer) *,
+.dark :is(div, span, input)[data-testid="otp-input-segment"] * {
+  color: #EFEAD9 !important;
+  -webkit-text-fill-color: #EFEAD9 !important;
+}
+
+.dark :is(div, span, input).cl-otpCodeFieldInput:not(.cl-otpCodeFieldInputs):not(.cl-otpCodeFieldInputContainer):focus,
+.dark :is(div, span, input).cl-otpCodeFieldInput:not(.cl-otpCodeFieldInputs):not(.cl-otpCodeFieldInputContainer):focus-within,
+.dark :is(div, span, input)[data-testid="otp-input-segment"]:focus-within,
+.dark input.cl-otpCodeFieldInput:focus,
+.dark input[class*="otpCodeFieldInput"]:focus {
+  border-color: #E8765A !important;
+  box-shadow: 0 0 0 2px rgba(232, 118, 90, 0.25) !important;
+}
+
+.dark .cl-formResendCodeLink,
+.dark [class*="formResendCodeLink"] {
+  color: #A8A69A !important;
+  -webkit-text-fill-color: #A8A69A !important;
+}
+
+.dark .cl-formResendCodeLink button:not([disabled]),
+.dark .cl-formResendCodeLink a {
+  color: #E8765A !important;
+  -webkit-text-fill-color: #E8765A !important;
+}
+
+.dark :is([class*="footerAction"], [class*="footerActionLink"], [class*="alternativeMethods"], [class*="alternativeMethodsBlockButton"]) {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .dark .cl-headerSubtitle {
@@ -618,7 +950,6 @@ body:has(.cl-userProfile-root) .cl-modalBackdrop {
   -webkit-backdrop-filter: blur(8px) !important;
 }
 
-:root .cl-modalContent,
 :root .cl-modalContent:has(.cl-userProfile-root),
 :root .cl-userProfile-root,
 :root .cl-userProfile-root .cl-card,
@@ -636,7 +967,7 @@ body:has(.cl-userProfile-root) .cl-modalBackdrop {
 /* 2. Left navigation sidebar */
 :root .cl-userProfile-root .cl-navbar,
 :root .cl-userProfile-root [class*="navbar"],
-:root .cl-modalContent [class*="navbar"] {
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="navbar"] {
   background: #121110 !important;
   background-color: #121110 !important;
   background-image: none !important;
@@ -644,7 +975,7 @@ body:has(.cl-userProfile-root) .cl-modalBackdrop {
 }
 
 :root .cl-userProfile-root [class*="navbarButton"],
-:root .cl-modalContent [class*="navbarButton"] {
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="navbarButton"] {
   color: #A8A69A !important;
   border-radius: 8px !important;
   font-size: 0.8125rem !important;
@@ -654,15 +985,15 @@ body:has(.cl-userProfile-root) .cl-modalBackdrop {
 }
 
 :root .cl-userProfile-root [class*="navbarButton"]:hover,
-:root .cl-modalContent [class*="navbarButton"]:hover {
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="navbarButton"]:hover {
   color: #EFEAD9 !important;
   background-color: #201D1B !important;
 }
 
 :root .cl-userProfile-root [class*="navbarButton"] svg,
 :root .cl-userProfile-root [class*="navbarButtonIcon"],
-:root .cl-modalContent [class*="navbarButton"] svg,
-:root .cl-modalContent [class*="navbarButtonIcon"] {
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="navbarButton"] svg,
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="navbarButtonIcon"] {
   color: inherit !important;
   fill: currentColor !important;
   opacity: 0.85 !important;
@@ -672,8 +1003,8 @@ body:has(.cl-userProfile-root) .cl-modalBackdrop {
 :root .cl-userProfile-root [class*="navbarButtonActive"],
 :root .cl-userProfile-root [class*="navbarButton"][data-active="true"],
 :root .cl-userProfile-root button[aria-current="page"],
-:root .cl-modalContent [class*="navbarButtonActive"],
-:root .cl-modalContent button[aria-current="page"] {
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="navbarButtonActive"],
+:root .cl-modalContent:has(.cl-userProfile-root) button[aria-current="page"] {
   color: #E8765A !important;
   background-color: rgba(232, 118, 90, 0.15) !important;
   font-weight: 600 !important;
@@ -681,7 +1012,7 @@ body:has(.cl-userProfile-root) .cl-modalBackdrop {
 
 :root .cl-userProfile-root [class*="navbarButtonActive"] svg,
 :root .cl-userProfile-root [class*="navbarButtonActive"] [class*="navbarButtonIcon"],
-:root .cl-modalContent [class*="navbarButtonActive"] svg {
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="navbarButtonActive"] svg {
   color: #E8765A !important;
   fill: #E8765A !important;
   opacity: 1 !important;
@@ -690,7 +1021,7 @@ body:has(.cl-userProfile-root) .cl-modalBackdrop {
 /* 3. Header title & subtitle */
 :root .cl-userProfile-root .cl-headerTitle,
 :root .cl-userProfile-root [class*="headerTitle"],
-:root .cl-modalContent [class*="headerTitle"] {
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="headerTitle"] {
   color: #EFEAD9 !important;
   -webkit-text-fill-color: #EFEAD9 !important;
   font-weight: 700 !important;
@@ -700,7 +1031,7 @@ body:has(.cl-userProfile-root) .cl-modalBackdrop {
 
 :root .cl-userProfile-root .cl-headerSubtitle,
 :root .cl-userProfile-root [class*="headerSubtitle"],
-:root .cl-modalContent [class*="headerSubtitle"] {
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="headerSubtitle"] {
   color: #A8A69A !important;
   -webkit-text-fill-color: #A8A69A !important;
   font-size: 0.8125rem !important;
@@ -711,8 +1042,8 @@ body:has(.cl-userProfile-root) .cl-modalBackdrop {
 :root .cl-userProfile-root .cl-page,
 :root .cl-userProfile-root [class*="pageScrollBox"],
 :root .cl-userProfile-root [class*="pageContent"],
-:root .cl-modalContent [class*="pageScrollBox"],
-:root .cl-modalContent [class*="pageContent"] {
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="pageScrollBox"],
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="pageContent"] {
   background: #171514 !important;
   background-color: #171514 !important;
   color: #EFEAD9 !important;
@@ -728,15 +1059,15 @@ body:has(.cl-userProfile-root) .cl-modalBackdrop {
 :root .cl-userProfile-root [class*="sectionTitle"],
 :root .cl-userProfile-root [class*="formHeaderTitle"],
 :root .cl-userProfile-root [class*="formTitle"],
-:root .cl-modalContent h1,
-:root .cl-modalContent h2,
-:root .cl-modalContent h3,
-:root .cl-modalContent h4,
-:root .cl-modalContent .cl-profileSectionTitleText,
-:root .cl-modalContent [class*="profileSectionTitle"],
-:root .cl-modalContent [class*="sectionTitle"],
-:root .cl-modalContent [class*="formHeaderTitle"],
-:root .cl-modalContent [class*="formTitle"] {
+:root .cl-modalContent:has(.cl-userProfile-root) h1,
+:root .cl-modalContent:has(.cl-userProfile-root) h2,
+:root .cl-modalContent:has(.cl-userProfile-root) h3,
+:root .cl-modalContent:has(.cl-userProfile-root) h4,
+:root .cl-modalContent:has(.cl-userProfile-root) .cl-profileSectionTitleText,
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="profileSectionTitle"],
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="sectionTitle"],
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="formHeaderTitle"],
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="formTitle"] {
   color: #EFEAD9 !important;
   -webkit-text-fill-color: #EFEAD9 !important;
   font-weight: 600 !important;
@@ -757,9 +1088,9 @@ body:has(.cl-userProfile-root) .cl-modalBackdrop {
 :root .cl-userProfile-root [class*="profileSectionItemLabel"],
 :root .cl-userProfile-root [class*="formFieldLabel"],
 :root .cl-userProfile-root label,
-:root .cl-modalContent [class*="profileSectionItemLabel"],
-:root .cl-modalContent [class*="formFieldLabel"],
-:root .cl-modalContent label {
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="profileSectionItemLabel"],
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="formFieldLabel"],
+:root .cl-modalContent:has(.cl-userProfile-root) label {
   color: #A8A69A !important;
   -webkit-text-fill-color: #A8A69A !important;
   font-size: 0.8125rem !important;
@@ -771,9 +1102,9 @@ body:has(.cl-userProfile-root) .cl-modalBackdrop {
 :root .cl-userProfile-root [class*="formHeaderSubtitle"],
 :root .cl-userProfile-root [class*="formFieldDescription"],
 :root .cl-userProfile-root [class*="subtitle"],
-:root .cl-modalContent [class*="formHeaderSubtitle"],
-:root .cl-modalContent [class*="formFieldDescription"],
-:root .cl-modalContent [class*="subtitle"] {
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="formHeaderSubtitle"],
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="formFieldDescription"],
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="subtitle"] {
   color: #A8A69A !important;
   -webkit-text-fill-color: #A8A69A !important;
   font-size: 0.8125rem !important;
@@ -793,10 +1124,10 @@ body:has(.cl-userProfile-root) .cl-modalBackdrop {
 :root .cl-userProfile-root .cl-buttonLink,
 :root .cl-userProfile-root a:not([class*="badge"]),
 :root .cl-userProfile-root button[class*="action"],
-:root .cl-modalContent [class*="profileSectionPrimaryButton"],
-:root .cl-modalContent button[class*="profileSectionPrimaryButton"],
-:root .cl-modalContent .cl-buttonLink,
-:root .cl-modalContent a:not([class*="badge"]) {
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="profileSectionPrimaryButton"],
+:root .cl-modalContent:has(.cl-userProfile-root) button[class*="profileSectionPrimaryButton"],
+:root .cl-modalContent:has(.cl-userProfile-root) .cl-buttonLink,
+:root .cl-modalContent:has(.cl-userProfile-root) a:not([class*="badge"]) {
   color: #E8765A !important;
   font-size: 0.8125rem !important;
   font-weight: 500 !important;
@@ -805,8 +1136,8 @@ body:has(.cl-userProfile-root) .cl-modalBackdrop {
 
 :root .cl-userProfile-root [class*="profileSectionPrimaryButton"]:hover,
 :root .cl-userProfile-root a:hover,
-:root .cl-modalContent [class*="profileSectionPrimaryButton"]:hover,
-:root .cl-modalContent a:hover {
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="profileSectionPrimaryButton"]:hover,
+:root .cl-modalContent:has(.cl-userProfile-root) a:hover {
   opacity: 0.85 !important;
   text-decoration: underline !important;
 }
@@ -814,15 +1145,15 @@ body:has(.cl-userProfile-root) .cl-modalBackdrop {
 /* Danger link: Delete account */
 :root .cl-userProfile-root button[data-localization-key*="deleteAccount"],
 :root .cl-userProfile-root [class*="danger"],
-:root .cl-modalContent [class*="danger"] {
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="danger"] {
   color: #F0788C !important;
 }
 
 /* Badges: "Primary", "This device" */
 :root .cl-userProfile-root [class*="badge"],
 :root .cl-userProfile-root [class*="Badge"],
-:root .cl-modalContent [class*="badge"],
-:root .cl-modalContent [class*="Badge"] {
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="badge"],
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="Badge"] {
   background: #201D1B !important;
   background-color: #201D1B !important;
   color: #EFEAD9 !important;
@@ -838,10 +1169,10 @@ body:has(.cl-userProfile-root) .cl-modalBackdrop {
 :root .cl-userProfile-root [class*="dialogContent"],
 :root .cl-userProfile-root [class*="popoverCard"],
 :root .cl-userProfile-root [class*="accordionContent"],
-:root .cl-modalContent [class*="dialogContent"],
-:root .cl-modalContent [class*="popoverCard"],
-:root .cl-modalContent [class*="accordionContent"],
-:root .cl-modalContent .cl-card {
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="dialogContent"],
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="popoverCard"],
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="accordionContent"],
+:root .cl-modalContent:has(.cl-userProfile-root) .cl-card {
   background: #1C1A18 !important;
   background-color: #1C1A18 !important;
   background-image: none !important;
@@ -855,9 +1186,9 @@ body:has(.cl-userProfile-root) .cl-modalBackdrop {
 :root .cl-userProfile-root input,
 :root .cl-userProfile-root [class*="formFieldInput"],
 :root .cl-userProfile-root [class*="input"],
-:root .cl-modalContent input,
-:root .cl-modalContent [class*="formFieldInput"],
-:root .cl-modalContent [class*="input"] {
+:root .cl-modalContent:has(.cl-userProfile-root) input,
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="formFieldInput"],
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="input"] {
   background: #0D0C0B !important;
   background-color: #0D0C0B !important;
   color: #EFEAD9 !important;
@@ -870,8 +1201,8 @@ body:has(.cl-userProfile-root) .cl-modalBackdrop {
 
 :root .cl-userProfile-root input:focus,
 :root .cl-userProfile-root [class*="formFieldInput"]:focus,
-:root .cl-modalContent input:focus,
-:root .cl-modalContent [class*="formFieldInput"]:focus {
+:root .cl-modalContent:has(.cl-userProfile-root) input:focus,
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="formFieldInput"]:focus {
   border-color: #E8765A !important;
   box-shadow: 0 0 0 1px #E8765A !important;
   outline: none !important;
@@ -880,8 +1211,8 @@ body:has(.cl-userProfile-root) .cl-modalBackdrop {
 /* Action buttons inside forms */
 :root .cl-userProfile-root [class*="formButtonPrimary"],
 :root .cl-userProfile-root button[type="submit"],
-:root .cl-modalContent [class*="formButtonPrimary"],
-:root .cl-modalContent button[type="submit"] {
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="formButtonPrimary"],
+:root .cl-modalContent:has(.cl-userProfile-root) button[type="submit"] {
   background: #E8765A !important;
   background-color: #E8765A !important;
   color: #FFFFFF !important;
@@ -894,14 +1225,14 @@ body:has(.cl-userProfile-root) .cl-modalBackdrop {
 }
 
 :root .cl-userProfile-root [class*="formButtonPrimary"]:hover,
-:root .cl-modalContent [class*="formButtonPrimary"]:hover {
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="formButtonPrimary"]:hover {
   opacity: 0.9 !important;
 }
 
 :root .cl-userProfile-root [class*="formButtonReset"],
 :root .cl-userProfile-root button[type="reset"],
-:root .cl-modalContent [class*="formButtonReset"],
-:root .cl-modalContent button[type="reset"] {
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="formButtonReset"],
+:root .cl-modalContent:has(.cl-userProfile-root) button[type="reset"] {
   background: #201D1B !important;
   background-color: #201D1B !important;
   color: #EFEAD9 !important;
@@ -912,7 +1243,7 @@ body:has(.cl-userProfile-root) .cl-modalBackdrop {
 }
 
 :root .cl-userProfile-root [class*="formButtonReset"]:hover,
-:root .cl-modalContent [class*="formButtonReset"]:hover {
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="formButtonReset"]:hover {
   background-color: #2A2724 !important;
 }
 
@@ -942,7 +1273,7 @@ body:has(.cl-userProfile-root) .cl-modalBackdrop {
 }
 
 :root .cl-userProfile-root [class*="menuList"],
-:root .cl-modalContent [class*="menuList"] {
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="menuList"] {
   background: #1C1A18 !important;
   background-color: #1C1A18 !important;
   border: 1px solid rgba(239, 234, 217, 0.14) !important;
@@ -951,13 +1282,13 @@ body:has(.cl-userProfile-root) .cl-modalBackdrop {
 }
 
 :root .cl-userProfile-root [class*="menuItem"],
-:root .cl-modalContent [class*="menuItem"] {
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="menuItem"] {
   color: #EFEAD9 !important;
   font-size: 0.8125rem !important;
 }
 
 :root .cl-userProfile-root [class*="menuItem"]:hover,
-:root .cl-modalContent [class*="menuItem"]:hover {
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="menuItem"]:hover {
   background-color: #201D1B !important;
   color: #E8765A !important;
 }
@@ -993,15 +1324,15 @@ body:has(.cl-userProfile-root) .cl-modalBackdrop {
 :root .cl-userProfile-root [class*="developmentMode"],
 :root .cl-userProfile-root [class*="devMode"],
 :root .cl-userProfile-root [class*="watermark"],
-:root .cl-modalContent [class*="developmentMode"],
-:root .cl-modalContent [class*="devMode"] {
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="developmentMode"],
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="devMode"] {
   background: transparent !important;
 }
 
 :root .cl-userProfile-root [class*="developmentMode"],
 :root .cl-userProfile-root [class*="devMode"],
-:root .cl-modalContent [class*="developmentMode"],
-:root .cl-modalContent [class*="devMode"] {
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="developmentMode"],
+:root .cl-modalContent:has(.cl-userProfile-root) [class*="devMode"] {
   color: #E8765A !important;
   font-weight: 500 !important;
 }

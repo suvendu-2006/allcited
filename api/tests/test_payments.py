@@ -148,3 +148,67 @@ def test_stripe_checkout_and_idempotent_webhook(monkeypatch):
     )
     assert bad_res.status_code == 400
     assert bad_res.json()["detail"]["error"]["code"] == "invalid_signature"
+
+
+def test_subscription_store_get_plan_sanitization(monkeypatch):
+    import uuid
+    from unittest.mock import MagicMock, patch
+
+    from app.config import get_settings
+    from app.payments import _sync_subscription_to_supabase
+
+    store = get_subscription_store()
+    store.reset_for_tests()
+
+    unique_user_id = f"test_user_{uuid.uuid4().hex[:8]}"
+    with patch("app.payments._sync_subscription_to_supabase"), patch.object(get_settings(), "SUPABASE_URL", None):
+        # 1. Normal call with unique test user
+        assert store.get_plan(unique_user_id) == "free"
+
+        # Pre-populate store to verify in-memory hit
+        store.update_plan(unique_user_id, "pro")
+        assert store.get_plan(unique_user_id) == "pro"
+
+        # 2. Injection string call returns free safely and does not crash
+        injection_id = "user_123&or=(plan.eq.pro)"
+        assert store.get_plan(injection_id) == "free"
+
+    # 3. Verify get_plan parameterized query passing
+    with patch("app.payments.get_settings") as mock_settings, patch("httpx.Client") as mock_client_cls:
+        mock_settings.return_value.SUPABASE_URL = "https://example.supabase.co"
+        mock_settings.return_value.SUPABASE_SERVICE_ROLE_KEY = "dummy_key"
+        mock_client = MagicMock()
+        mock_client_cls.return_value.__enter__.return_value = mock_client
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = [{"plan": "pro"}]
+        mock_client.get.return_value = mock_resp
+
+        store.reset_for_tests()
+        plan = store.get_plan("remote_user_456")
+        assert plan == "pro"
+        mock_client.get.assert_called_once()
+        args, kwargs = mock_client.get.call_args
+        assert kwargs.get("params") == {"user_id": "eq.remote_user_456"}
+        assert "?" not in args[0]
+
+    # 4. Verify _sync_subscription_to_supabase parameterized call
+    with patch("app.payments.get_settings") as mock_settings, patch("httpx.Client") as mock_client_cls:
+        mock_settings.return_value.SUPABASE_URL = "https://example.supabase.co"
+        mock_settings.return_value.SUPABASE_SERVICE_ROLE_KEY = "dummy_key"
+        mock_client = MagicMock()
+        mock_client_cls.return_value.__enter__.return_value = mock_client
+
+        _sync_subscription_to_supabase(
+            user_id="user_789",
+            plan="pro",
+            customer_id="cus_123",
+            subscription_id="sub_123",
+            status="active",
+        )
+        mock_client.post.assert_called_once()
+        p_args, p_kwargs = mock_client.post.call_args
+        assert p_kwargs.get("params") == {"on_conflict": "user_id"}
+        assert "?" not in p_args[0]
+        assert p_kwargs.get("json")["user_id"] == "user_789"
+

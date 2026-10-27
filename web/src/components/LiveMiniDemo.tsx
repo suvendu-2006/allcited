@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import { CitationChip } from "./CitationChip";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Check, X } from "lucide-react";
 
 export function LiveMiniDemo() {
+  const shouldReduceMotion = useReducedMotion();
   const [isStreaming, setIsStreaming] = useState(false);
   const [displayedText, setDisplayedText] = useState("");
   const [showCitations, setShowCitations] = useState(false);
@@ -100,20 +101,23 @@ export function LiveMiniDemo() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
+            transition={shouldReduceMotion ? { duration: 0.08 } : { duration: 0.2 }}
             className="p-3 rounded-interactive border border-accent-primary/40 bg-accent-primary/5 text-xs font-mono space-y-1"
           >
             <div className="flex items-center justify-between">
               <span className="font-semibold text-accent-primary">
                 [{activeReceipt}] Carry Forward · 2.1 Leave Policy · p.23
               </span>
-              <button
+              <motion.button
                 type="button"
+                whileHover={shouldReduceMotion ? undefined : { scale: 1.15 }}
+                whileTap={shouldReduceMotion ? undefined : { scale: 0.88 }}
                 onClick={() => setActiveReceipt(null)}
                 className="text-gray-warm hover:text-ink-primary p-0.5 rounded cursor-pointer"
                 aria-label="Close quote"
               >
                 <X className="w-3 h-3" />
-              </button>
+              </motion.button>
             </div>
             <p className="font-sans text-xs text-ink-primary leading-relaxed">
               &ldquo;A maximum of 8 unused annual leave days may be carried forward into the subsequent calendar year. Any surplus beyond 8 days will automatically lapse on March 31.&rdquo;

@@ -20,6 +20,7 @@ from app.library import (
     SaveToLibraryRequest,
     ask_my_library,
     get_library_store,
+    validate_or_sanitize_identifier,
 )
 from app.payments import (
     CheckoutRequest,
@@ -30,6 +31,8 @@ from app.payments import (
     handle_stripe_webhook,
 )
 from app.pipeline.answer import stream_answer_pipeline
+from app.pipeline.embed import get_embedding_manager
+from app.pipeline.rerank import get_reranker
 from app.plans import (
     FREE_FILE_SIZE_LIMIT_BYTES,
     PRO_FILE_SIZE_LIMIT_BYTES,
@@ -56,8 +59,9 @@ from app.schemas import (
     UrlIngestRequest,
 )
 from app.security.pii import setup_pii_logging
+from app.security.rate_limit import rate_limit_ingest_dep, rate_limit_query_dep
 from app.security.ssrf import SSRFBlockedError, safe_fetch_url
-from app.sessions import get_session_store
+from app.sessions import DocumentSession, get_session_store
 from app.stats import get_platform_stats
 from app.telegram import router as telegram_router
 from app.telegram import run_telegram_polling
@@ -74,6 +78,16 @@ async def lifespan(app: FastAPI):
     settings = get_settings()
     app.state.settings = settings
     setup_pii_logging()
+
+    if settings.ENVIRONMENT == "production":
+        missing = settings.validate_phase_keys(phase=8)
+        if "GROQ_API_KEY" in missing and settings.get_all_groq_keys():
+            missing.remove("GROQ_API_KEY")
+        if missing:
+            logger.critical("FATAL: Missing mandatory production environment variables: %s", ", ".join(missing))
+            raise RuntimeError(
+                f"Cannot start in production mode. Missing mandatory environment variables: {', '.join(missing)}"
+            )
 
     polling_task = None
     if settings.TELEGRAM_BOT_TOKEN and not settings.TELEGRAM_WEBHOOK_SECRET and settings.ENVIRONMENT != "production":
@@ -122,7 +136,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=settings.get_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -142,6 +156,26 @@ async def request_id_middleware(request: Request, call_next):
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     request_id = getattr(request.state, "request_id", None) or f"req_{uuid.uuid4().hex[:12]}"
+    response_headers = {"X-Request-ID": request_id}
+    if exc.headers:
+        response_headers.update(exc.headers)
+
+    if exc.status_code == 429:
+        msg = str(exc.detail) if exc.detail else "Rate limit exceeded. Please try again later."
+        return JSONResponse(
+            status_code=429,
+            content={
+                "detail": msg,
+                "code": "rate_limit_exceeded",
+                "error": {
+                    "code": "rate_limit_exceeded",
+                    "message": msg,
+                    "request_id": request_id,
+                },
+            },
+            headers=response_headers,
+        )
+
     if isinstance(exc.detail, dict) and "error" in exc.detail:
         error_dict = dict(exc.detail["error"])
         if "request_id" not in error_dict or not error_dict["request_id"]:
@@ -152,7 +186,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
                 "error": error_dict,
                 "detail": {"error": error_dict},
             },
-            headers={"X-Request-ID": request_id},
+            headers=response_headers,
         )
 
     code = "generic"
@@ -165,7 +199,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     elif exc.status_code == 404:
         code = "not_found"
     elif exc.status_code == 429:
-        code = "free_tier_busy"
+        code = "rate_limit_exceeded"
 
     error_dict = {
         "code": code,
@@ -178,7 +212,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
             "error": error_dict,
             "detail": {"error": error_dict},
         },
-        headers={"X-Request-ID": request_id},
+        headers=response_headers,
     )
 
 
@@ -244,6 +278,53 @@ async def health():
     tags=["System"],
 )
 async def readyz():
+    if settings.ENVIRONMENT == "production":
+        missing = settings.validate_phase_keys(phase=8)
+        if "GROQ_API_KEY" in missing and settings.get_all_groq_keys():
+            missing.remove("GROQ_API_KEY")
+        if missing:
+            return JSONResponse(
+                status_code=503,
+                content={
+                    "status": "not_ready",
+                    "ready": False,
+                    "version": "0.1.0",
+                    "mode": settings.MODE,
+                    "environment": settings.ENVIRONMENT,
+                    "missing": missing,
+                    "pipeline": {
+                        "embedding": "not_ready",
+                        "reranker": "not_ready",
+                        "ocr": "not_ready",
+                    },
+                },
+            )
+
+    try:
+        # Active verification check of pipeline dependencies
+        get_embedding_manager().embed_query("ready_check")
+        if settings.RERANKER_ENABLED:
+            reranker = get_reranker()
+            _ = reranker.model
+    except Exception as e:
+        logger.error("Readiness check failed during active pipeline probe: %s", e, exc_info=True)
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "not_ready",
+                "ready": False,
+                "version": "0.1.0",
+                "mode": settings.MODE,
+                "environment": settings.ENVIRONMENT,
+                "error": str(e),
+                "pipeline": {
+                    "embedding": "not_ready",
+                    "reranker": "not_ready",
+                    "ocr": "not_ready",
+                },
+            },
+        )
+
     return {
         "status": "ok",
         "ready": True,
@@ -291,13 +372,29 @@ async def save_session_to_library(
     Save an uploaded document session and its vectors into the user's library.
     RLS/user-isolation enforced: only the authenticated user_id can access.
     """
+    try:
+        clean_session_id = validate_or_sanitize_identifier(request.session_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": {"code": "invalid_parameter", "message": f"Invalid session ID: '{request.session_id}'"}},
+        )
+
     session_store = get_session_store()
-    session = session_store.get_session(request.session_id)
+    session = session_store.get_session(clean_session_id)
     if not session:
         raise HTTPException(
             status_code=404,
-            detail={"error": {"code": "session_not_found", "message": f"Session '{request.session_id}' not found"}},
+            detail={"error": {"code": "session_not_found", "message": f"Session '{clean_session_id}' not found"}},
         )
+
+    session_owner = getattr(session, "user_id", None)
+    if session_owner and session_owner != user_id:
+        raise HTTPException(
+            status_code=403,
+            detail={"error": {"code": "forbidden", "message": "Cannot save another user's document session"}},
+        )
+    session.user_id = user_id
 
     store = get_library_store()
     current_docs = await store.list_documents(user_id=user_id)
@@ -332,23 +429,31 @@ async def delete_library_document(
     """
     Delete a saved document from the authenticated user's library and record in audit log.
     """
+    try:
+        clean_doc_id = validate_or_sanitize_identifier(doc_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": {"code": "invalid_parameter", "message": f"Invalid document ID: '{doc_id}'"}},
+        )
+
     store = get_library_store()
-    deleted = store.delete_document(user_id=user_id, doc_id=doc_id)
+    deleted = store.delete_document(user_id=user_id, doc_id=clean_doc_id)
     if not deleted:
         raise HTTPException(
             status_code=404,
-            detail={"error": {"code": "doc_not_found", "message": f"Document '{doc_id}' not found"}},
+            detail={"error": {"code": "doc_not_found", "message": f"Document '{clean_doc_id}' not found"}},
         )
 
     audit = get_audit_store()
     audit.record_action(
         user_id=user_id,
         action="document_deleted",
-        details={"doc_id": doc_id},
+        details={"doc_id": clean_doc_id},
     )
     return {
         "status": "deleted",
-        "doc_id": doc_id,
+        "doc_id": clean_doc_id,
     }
 
 
@@ -400,6 +505,7 @@ async def delete_library_alias(doc_id: str, user_id: str = Depends(get_current_u
 async def query_user_library(
     request: LibraryQueryRequest,
     user_id: str = Depends(get_current_user),
+    _rate_limit: None = Depends(rate_limit_query_dep),
 ):
     """
     Query across all saved documents in user's library.
@@ -451,6 +557,11 @@ async def stripe_checkout(
     return checkout_res
 
 
+@app.post(
+    "/v1/payments/webhook",
+    summary="Alias for Stripe webhook",
+    tags=["Payments"],
+)
 @app.post(
     "/v1/stripe/webhook",
     summary="Process incoming Stripe webhook events",
@@ -565,6 +676,7 @@ async def ingest_document(
     file: Optional[UploadFile] = File(None),
     url: Optional[str] = Form(None),
     user_id: Optional[str] = Depends(get_optional_user),
+    _rate_limit: None = Depends(rate_limit_ingest_dep),
 ):
     """
     Upload and index a document (PDF, DOCX, PPTX, XLSX, HTML, MD, TXT, or URL) into an in-memory session.
@@ -638,11 +750,14 @@ async def ingest_document(
     check_plan_limit(user_id=user_id, feature="file_upload", value=len(content_bytes))
 
     session_store = get_session_store()
-    session = session_store.create_session_from_bytes(
+    session = await asyncio.to_thread(
+        session_store.create_session_from_bytes,
         filename=target_filename,
         content=content_bytes,
         max_file_size_bytes=max_allowed,
     )
+    if user_id:
+        session.user_id = user_id
 
     get_platform_stats().record_chunks(len(session.chunks))
 
@@ -665,13 +780,21 @@ async def ingest_document(
     operation_id="ingestUrl",
     tags=["Ingestion"],
 )
-async def ingest_url_endpoint(request: UrlIngestRequest):
+async def ingest_url_endpoint(
+    request: UrlIngestRequest,
+    user_id: Optional[str] = Depends(get_optional_user),
+    _rate_limit: None = Depends(rate_limit_ingest_dep),
+):
     """
-    Dedicated endpoint to ingest a web URL with SSRF protection.
+    Dedicated endpoint to ingest a web URL with SSRF protection, authentication, and plan tier limits.
     """
+    sub_store = get_subscription_store()
+    plan = sub_store.get_plan(user_id) if user_id else "free"
+    max_allowed = 2 * 1024 * 1024 if plan == "free" else PRO_FILE_SIZE_LIMIT_BYTES
+
     target_url = request.url.strip()
     try:
-        content_bytes = await safe_fetch_url(target_url)
+        content_bytes = await safe_fetch_url(target_url, max_size_bytes=max_allowed)
     except SSRFBlockedError as e:
         raise HTTPException(
             status_code=400,
@@ -683,11 +806,20 @@ async def ingest_url_endpoint(request: UrlIngestRequest):
             detail={"error": {"code": "doc_unreadable", "message": f"Could not fetch URL: {str(e)}"}},
         ) from e
 
+    # Double check plan file size limit
+    check_plan_limit(user_id=user_id, feature="file_upload", value=len(content_bytes))
+
     session_store = get_session_store()
-    session = session_store.create_session_from_bytes(
+    session = await asyncio.to_thread(
+        session_store.create_session_from_bytes,
         filename=target_url,
         content=content_bytes,
+        max_file_size_bytes=max_allowed,
     )
+    if user_id:
+        session.user_id = user_id
+
+    get_platform_stats().record_chunks(len(session.chunks))
 
     return IngestResponse(
         session_id=session.session_id,
@@ -701,6 +833,94 @@ async def ingest_url_endpoint(request: UrlIngestRequest):
     )
 
 
+def hydrate_session_from_library(session_id: str, user_id: Optional[str] = None) -> Optional[DocumentSession]:
+    """
+    Hydrate a DocumentSession from library_store if session_id corresponds
+    to a stored document in the user's shelf (resolving 'Ask about this' card action).
+    Enforces strict user isolation: only the document owner can hydrate the session.
+    """
+    if not user_id:
+        return None
+
+    try:
+        clean_session_id = validate_or_sanitize_identifier(session_id)
+        clean_user_id = validate_or_sanitize_identifier(user_id)
+    except ValueError:
+        logger.warning(
+            "Invalid identifier passed to hydrate_session_from_library: session=%s, user=%s",
+            session_id,
+            user_id,
+        )
+        return None
+
+    library_store = get_library_store()
+    doc_item = library_store.get_document(clean_user_id, clean_session_id)
+
+    # If not found yet and Supabase is configured, lookup strictly by document ID and user_id
+    if not doc_item:
+        settings = get_settings()
+        if settings.SUPABASE_URL and settings.SUPABASE_SERVICE_ROLE_KEY:
+            try:
+                base_url = settings.SUPABASE_URL.rstrip("/")
+                headers = {
+                    "apikey": settings.SUPABASE_SERVICE_ROLE_KEY,
+                    "Authorization": f"Bearer {settings.SUPABASE_SERVICE_ROLE_KEY}",
+                }
+                params = {
+                    "id": f"eq.{clean_session_id}",
+                    "user_id": f"eq.{clean_user_id}",
+                }
+                with httpx.Client(timeout=4.0) as client:
+                    try:
+                        resp = client.get(
+                            f"{base_url}/rest/v1/saved_documents",
+                            headers=headers,
+                            params=params,
+                        )
+                    except TypeError:
+                        resp = client.get(
+                            f"{base_url}/rest/v1/saved_documents?id=eq.{clean_session_id}&user_id=eq.{clean_user_id}",
+                            headers=headers,
+                        )
+                    if resp.status_code == 200 and resp.json():
+                        library_store._sync_rehydrate_user(clean_user_id)
+                        doc_item = library_store.get_document(clean_user_id, clean_session_id)
+            except Exception as e:
+                logger.warning("Supabase lookup for doc %s user %s failed: %s", clean_session_id, clean_user_id, e)
+
+    if doc_item:
+        chunks = library_store.get_document_chunks(clean_user_id, clean_session_id)
+        if chunks:
+            from app.pipeline.graph import extract_heuristic_entities
+            from app.pipeline.indexes import DocumentIndex
+            from app.pipeline.refmap import build_reference_map
+
+            ref_map = build_reference_map(chunks)
+            doc_index = DocumentIndex()
+            embed_stats = doc_index.build(chunks)
+            knowledge_graph = extract_heuristic_entities(chunks)
+
+            session = DocumentSession(
+                session_id=clean_session_id,
+                filename=doc_item.filename,
+                file_size_bytes=doc_item.file_size_bytes,
+                page_count=doc_item.page_count,
+                blocks=[],
+                chunks=chunks,
+                ref_map=ref_map,
+                doc_index=doc_index,
+                delta_stats=embed_stats,
+                knowledge_graph=knowledge_graph,
+                user_id=clean_user_id,
+            )
+            session_store = get_session_store()
+            session_store._evict_lru_if_needed()
+            session_store._sessions[clean_session_id] = session
+            return session
+
+    return None
+
+
 @app.get(
     "/v1/session/{session_id}",
     response_model=SessionInfoResponse,
@@ -708,14 +928,28 @@ async def ingest_url_endpoint(request: UrlIngestRequest):
     operation_id="getSessionInfo",
     tags=["Ingestion"],
 )
-async def get_session_info(session_id: str):
+@app.get(
+    "/v1/sessions/{session_id}",
+    response_model=SessionInfoResponse,
+    include_in_schema=False,
+)
+async def get_session_info(session_id: str, user_id: Optional[str] = Depends(get_optional_user)):
     """Retrieve session metadata and chunk count."""
     session_store = get_session_store()
     session = session_store.get_session(session_id)
     if not session:
+        session = hydrate_session_from_library(session_id, user_id=user_id)
+    if not session:
         raise HTTPException(
             status_code=404,
             detail={"error": {"code": "session_not_found", "message": f"Session '{session_id}' not found or expired"}},
+        )
+
+    session_owner = getattr(session, "user_id", None)
+    if session_owner and session_owner != user_id:
+        raise HTTPException(
+            status_code=403,
+            detail={"error": {"code": "forbidden", "message": "Access to another user's document session is prohibited"}},
         )
 
     return SessionInfoResponse(
@@ -808,6 +1042,7 @@ async def get_cache_stats():
 async def query_document(
     request: QueryRequest,
     user_id: Optional[str] = Depends(get_optional_user),
+    _rate_limit: None = Depends(rate_limit_query_dep),
     x_byok_key: Optional[str] = Header(None, alias="X-BYOK-Key"),
     x_byok_base_url: Optional[str] = Header(None, alias="X-BYOK-Base-URL"),
     x_byok_model: Optional[str] = Header(None, alias="X-BYOK-Model"),
@@ -817,7 +1052,12 @@ async def query_document(
     Query an active document session with grounded citations via Server-Sent Events (SSE).
     Events emitted: route -> cache -> rewrite -> retrieve -> rerank -> expand -> token -> citations -> done
     """
-    if request.mode == "precision":
+    byok_key = request.byok_key or x_byok_key
+    byok_base_url = request.byok_base_url or x_byok_base_url
+    byok_model = request.byok_model or x_byok_model
+    preferred_provider = request.provider or request.preferred_provider or x_provider
+
+    if request.mode == "precision" and not byok_key:
         check_plan_limit(user_id=user_id, feature="precision_mode")
 
     get_platform_stats().record_query()
@@ -825,15 +1065,19 @@ async def query_document(
     session_store = get_session_store()
     session = session_store.get_session(request.session_id)
     if not session:
+        session = hydrate_session_from_library(request.session_id, user_id=user_id)
+    if not session:
         raise HTTPException(
             status_code=404,
             detail={"error": {"code": "session_not_found", "message": f"Session '{request.session_id}' not found or expired"}},
         )
 
-    byok_key = request.byok_key or x_byok_key
-    byok_base_url = request.byok_base_url or x_byok_base_url
-    byok_model = request.byok_model or x_byok_model
-    preferred_provider = request.provider or request.preferred_provider or x_provider
+    session_owner = getattr(session, "user_id", None)
+    if session_owner and session_owner != user_id:
+        raise HTTPException(
+            status_code=403,
+            detail={"error": {"code": "forbidden", "message": "Access to another user's document session is prohibited"}},
+        )
 
     return StreamingResponse(
         stream_answer_pipeline(
@@ -867,6 +1111,8 @@ async def query_document(
 )
 async def summarize_document(
     request: SummarizeRequest,
+    user_id: Optional[str] = Depends(get_optional_user),
+    _rate_limit: None = Depends(rate_limit_query_dep),
     x_byok_key: Optional[str] = Header(None, alias="X-BYOK-Key"),
     x_byok_base_url: Optional[str] = Header(None, alias="X-BYOK-Base-URL"),
     x_byok_model: Optional[str] = Header(None, alias="X-BYOK-Model"),
@@ -879,9 +1125,18 @@ async def summarize_document(
     session_store = get_session_store()
     session = session_store.get_session(request.session_id)
     if not session:
+        session = hydrate_session_from_library(request.session_id, user_id=user_id)
+    if not session:
         raise HTTPException(
             status_code=404,
             detail={"error": {"code": "session_not_found", "message": f"Session '{request.session_id}' not found or expired"}},
+        )
+
+    session_owner = getattr(session, "user_id", None)
+    if session_owner and session_owner != user_id:
+        raise HTTPException(
+            status_code=403,
+            detail={"error": {"code": "forbidden", "message": "Access to another user's document session is prohibited"}},
         )
 
     byok_key = request.byok_key or x_byok_key

@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Citation } from "@/lib/sse";
 import { X, Check, Copy, Sparkles } from "lucide-react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 interface SourcePanelProps {
   citations: Citation[];
@@ -24,6 +25,7 @@ export function SourcePanel({
   const [copiedLabel, setCopiedLabel] = useState<string | null>(null);
   const [expandedLabels, setExpandedLabels] = useState<Set<string>>(new Set());
   const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const shouldReduceMotion = useReducedMotion();
 
   // Scroll to active citation card when activeLabel changes
   useEffect(() => {
@@ -66,20 +68,36 @@ export function SourcePanel({
   return (
     <>
       {/* Mobile backdrop */}
-      {isOpen && (
-        <div
-          onClick={onClose}
-          aria-hidden="true"
-          className="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 sm:hidden transition-opacity"
-        />
-      )}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            key="drawer-backdrop"
+            onClick={onClose}
+            aria-hidden="true"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: shouldReduceMotion ? 0.08 : 0.2 }}
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 sm:hidden"
+          />
+        )}
+      </AnimatePresence>
 
       {/* Receipts Drawer */}
-      <aside
+      <motion.aside
         role="complementary"
         aria-label="Source receipts drawer"
-        className={`fixed top-0 right-0 bottom-0 w-full sm:w-[360px] bg-bg-surface border-l border-border h-full flex flex-col shadow-2xl z-50 transition-transform duration-200 ease-out select-text ${
-          isOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
+        initial={false}
+        animate={{
+          x: isOpen ? "0%" : "100%",
+          opacity: isOpen ? 1 : shouldReduceMotion ? 0 : 1,
+        }}
+        transition={{
+          duration: shouldReduceMotion ? 0.08 : 0.32,
+          ease: [0.16, 1, 0.3, 1],
+        }}
+        className={`fixed top-0 right-0 bottom-0 w-full sm:w-[360px] bg-bg-surface border-l border-border h-full flex flex-col shadow-2xl z-50 select-text ${
+          isOpen ? "pointer-events-auto" : "pointer-events-none"
         }`}
       >
         <div className="p-4 border-b border-border flex items-center justify-between flex-shrink-0 bg-bg-surface/90 backdrop-blur-sm">
@@ -101,14 +119,16 @@ export function SourcePanel({
             </p>
           </div>
 
-          <button
+          <motion.button
             type="button"
             onClick={onClose}
             aria-label="Close receipts drawer (Esc)"
-            className="p-1.5 rounded-[4px] text-ink-ghost hover:text-ink-primary hover:bg-bg-sunken transition-all duration-150 ease-out focus:outline-none focus:ring-1 focus:ring-accent-primary flex-shrink-0 cursor-pointer hover:rotate-90 active:scale-90"
+            whileHover={{ rotate: shouldReduceMotion ? 0 : 90, scale: shouldReduceMotion ? 1 : 1.05 }}
+            whileTap={{ scale: shouldReduceMotion ? 1 : 0.9 }}
+            className="p-1.5 rounded-[4px] text-ink-ghost hover:text-ink-primary hover:bg-bg-sunken transition-colors duration-150 ease-out focus:outline-none focus:ring-1 focus:ring-accent-primary flex-shrink-0 cursor-pointer"
           >
             <X className="w-4 h-4" />
-          </button>
+          </motion.button>
         </div>
 
         {/* Source Cards Viewport */}
@@ -123,7 +143,7 @@ export function SourcePanel({
               </p>
             </div>
           ) : (
-            citations.map((c) => {
+            citations.map((c, index) => {
               const cleanLabel = c.label.replace(/\s*\(OCR\)/gi, "").trim();
               const isSelected =
                 activeLabel === c.label ||
@@ -137,26 +157,46 @@ export function SourcePanel({
               const sectionName = c.section_path?.length ? c.section_path.slice(-1)[0] : "";
               const pageNum = c.page_number != null ? c.page_number : c.page != null ? c.page : null;
               const pageStr = pageNum != null ? `p.${pageNum}` : "";
-              const chunkLabel = [sectionName, pageStr].filter(Boolean).join(" · ");
+              const chunkLabel = [c.doc_name, sectionName, pageStr].filter(Boolean).join(" · ");
 
               return (
-                <div
+                <motion.div
                   key={c.label}
                   ref={(el) => {
                     if (el) cardRefs.current.set(c.label, el);
                     else cardRefs.current.delete(c.label);
                   }}
                   onClick={() => onSelectCitation?.(c.label)}
-                  className={`p-3.5 rounded-interactive text-xs transition-all duration-150 ease-out cursor-pointer bg-bg-sunken border-t-0 border-r-0 border-b-0 group motion-reduce:transform-none ${
+                  initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: shouldReduceMotion ? 0.08 : 0.24,
+                    delay: shouldReduceMotion ? 0 : index * 0.05,
+                    ease: [0.16, 1, 0.3, 1],
+                  }}
+                  whileHover={{ y: shouldReduceMotion ? 0 : -2 }}
+                  whileTap={{ scale: shouldReduceMotion ? 1 : 0.99 }}
+                  className={`relative p-3.5 rounded-interactive text-xs transition-colors duration-150 ease-out cursor-pointer bg-bg-sunken border-t-0 border-r-0 border-b-0 group overflow-hidden ${
                     isTwoHop
                       ? isSelected
-                        ? "border-l-[3px] border-l-status-twohop -translate-y-0.5 shadow-sm ring-1 ring-status-twohop/40"
-                        : "border-l-[3px] border-l-status-twohop/70 hover:border-l-status-twohop hover:-translate-y-0.5 hover:shadow-xs"
+                        ? "border-l-[3px] border-l-status-twohop shadow-sm ring-1 ring-status-twohop/40"
+                        : "border-l-[3px] border-l-status-twohop/70 hover:border-l-status-twohop hover:shadow-xs"
                       : isSelected
-                      ? "border-l-[3px] border-l-accent-primary -translate-y-0.5 shadow-sm ring-1 ring-accent-primary/40"
-                      : "border-l-[3px] border-l-accent-primary/70 hover:border-l-accent-primary hover:-translate-y-0.5 hover:shadow-xs"
+                      ? "border-l-[3px] border-l-accent-primary shadow-sm ring-1 ring-accent-primary/40"
+                      : "border-l-[3px] border-l-accent-primary/70 hover:border-l-accent-primary hover:shadow-xs"
                   }`}
                 >
+                  {/* Active card left border height grow 0 -> 100% (240ms) */}
+                  {isSelected && (
+                    <motion.span
+                      initial={{ scaleY: 0 }}
+                      animate={{ scaleY: 1 }}
+                      transition={{ duration: shouldReduceMotion ? 0.08 : 0.24, ease: "easeOut" }}
+                      className={`absolute left-0 top-0 bottom-0 w-[3px] origin-top ${
+                        isTwoHop ? "bg-status-twohop" : "bg-accent-primary"
+                      }`}
+                    />
+                  )}
                   {/* Header: [S#] + section · page + copy */}
                   <div className="flex items-center justify-between pb-2 mb-2 border-b border-border/40">
                     <div className="flex items-center gap-2 min-w-0 pr-2">
@@ -177,21 +217,23 @@ export function SourcePanel({
                       )}
                     </div>
 
-                    <button
+                    <motion.button
                       type="button"
                       title="Copy passage quote"
+                      whileHover={{ scale: shouldReduceMotion ? 1 : 1.15 }}
+                      whileTap={{ scale: shouldReduceMotion ? 1 : 0.85 }}
                       onClick={(e) => {
                         e.stopPropagation();
                         copyToClipboard(c.text_preview, c.label);
                       }}
-                      className="p-1 rounded-[4px] hover:bg-bg-surface text-ink-ghost hover:text-ink-primary transition-all duration-120 flex-shrink-0 cursor-pointer active:scale-90 hover:scale-110"
+                      className="p-1 rounded-[4px] hover:bg-bg-surface text-ink-ghost hover:text-ink-primary transition-colors duration-120 flex-shrink-0 cursor-pointer"
                     >
                       {copiedLabel === c.label ? (
                         <Check className="w-3.5 h-3.5 text-accent-primary animate-in zoom-in-75 duration-150" />
                       ) : (
-                        <Copy className="w-3.5 h-3.5 transition-transform duration-120" />
+                        <Copy className="w-3.5 h-3.5" />
                       )}
-                    </button>
+                    </motion.button>
                   </div>
 
                   {isTwoHop && (
@@ -250,12 +292,12 @@ export function SourcePanel({
                       </button>
                     </div>
                   )}
-                </div>
+                </motion.div>
               );
             })
           )}
         </div>
-      </aside>
+      </motion.aside>
     </>
   );
 }

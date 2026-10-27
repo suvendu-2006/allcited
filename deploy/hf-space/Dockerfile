@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /srv
 
 # CPU-only torch first (keeps the image ~1.5GB instead of ~4GB CUDA)
-COPY app-requirements.txt /tmp/torch.txt
+COPY requirements.txt /tmp/torch.txt
 RUN grep -iE "^torch" /tmp/torch.txt || echo "torch>=2.2" > /tmp/torch.txt; \
     pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu \
       $(grep -iE "^torch" /tmp/torch.txt || echo "torch>=2.2")
@@ -22,7 +22,18 @@ RUN grep -iE "^torch" /tmp/torch.txt || echo "torch>=2.2" > /tmp/torch.txt; \
 COPY requirements.txt /srv/requirements.txt
 RUN pip install --no-cache-dir -r /srv/requirements.txt
 
+# Pre-cache SentenceTransformer and CrossEncoder models during build
+RUN python -c "from sentence_transformers import SentenceTransformer, CrossEncoder; \
+    SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2'); \
+    CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')"
+
 COPY app /srv/app
+
+RUN useradd -u 1000 -m -s /bin/bash appuser && \
+    mkdir -p /srv/app /tmp/hf_cache && \
+    chown -R appuser:appuser /srv /srv/app /home/appuser /tmp/hf_cache
+
+USER appuser
 
 # HF Docker Spaces route traffic to app_port (8000); bind 0.0.0.0
 EXPOSE 8000
