@@ -37,6 +37,8 @@ export interface TraceData {
   citations: Array<{
     label: string;
     chunk_id: string;
+    page?: number | null;
+    page_number?: number | null;
     section_path?: string[];
     is_two_hop?: boolean;
     added_reason?: string | null;
@@ -129,8 +131,13 @@ export function TraceViewer({
 
   // Determine margin note text
   const twoHopCitation = trace?.citations?.find((c) => c.is_two_hop);
+  const twoHopPage = twoHopCitation?.page ?? twoHopCitation?.page_number;
+  const twoHopRef =
+    twoHopCitation?.section_path && twoHopCitation.section_path.length > 0
+      ? twoHopCitation.section_path.join(" > ")
+      : twoHopCitation?.added_reason || "cross-reference";
   const marginNote = twoHopCitation
-    ? `found on p.23 — 2nd hop via rule 63.7.4`
+    ? `found${twoHopPage != null ? ` on p.${twoHopPage}` : ""} — 2nd hop via ${twoHopRef}`
     : `found via hybrid retrieval — best score ${(trace?.top_rerank_score || 0.71).toFixed(2)}`;
 
   return (

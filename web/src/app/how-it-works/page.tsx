@@ -170,14 +170,32 @@ export default function HowItWorksPage() {
               </p>
             </div>
 
-            <div className="p-3.5 rounded bg-accent-primary/5 border border-accent-primary/30">
-              <span className="text-accent-primary block text-[10.5px] uppercase tracking-wider mb-1 font-bold">
-                Receipt:
-              </span>
+            <motion.div
+              animate={{
+                scale: activeReceipt ? (shouldReduceMotion ? 1 : 1.01) : 1,
+              }}
+              transition={{ duration: shouldReduceMotion ? 0.05 : 0.2 }}
+              className={`p-3.5 rounded transition-all duration-200 ${
+                activeReceipt
+                  ? "bg-accent-primary/10 ring-2 ring-accent-primary/40 shadow-xs border border-accent-primary"
+                  : "bg-accent-primary/5 border border-accent-primary/30"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-accent-primary block text-[10.5px] uppercase tracking-wider font-bold">
+                  Receipt:
+                </span>
+                {activeReceipt && (
+                  <span className="text-[10.5px] text-accent-primary font-mono font-medium animate-fade-in flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-accent-primary animate-pulse" />
+                    Inspected from [S1] click
+                  </span>
+                )}
+              </div>
               <p className="text-ink-primary font-sans text-xs leading-relaxed">
                 <code>[S1] 2.1 Leave Policy · p.23 — &ldquo;A maximum of 8 unused annual leave days may be carried forward into the subsequent calendar year.&rdquo;</code>
               </p>
-            </div>
+            </motion.div>
           </div>
         </section>
 

@@ -11,11 +11,32 @@ import { Check, Sparkles, X } from "lucide-react";
 
 export default function PricingPage() {
   const [betaModalOpen, setBetaModalOpen] = useState(false);
+  const [isLoadingCheckout, setIsLoadingCheckout] = useState(false);
   const isVisible = useDocumentVisibility();
   const shouldReduceMotion = useReducedMotion();
 
-  const handleCheckout = () => {
-    setBetaModalOpen(true);
+  const handleCheckout = async () => {
+    setIsLoadingCheckout(true);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://subh-007-allcited-api.hf.space";
+      const res = await fetch(`${apiUrl.replace(/\/$/, "")}/v1/stripe/checkout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.checkout_url && !data.checkout_url.includes("cs_test_")) {
+          window.location.href = data.checkout_url;
+          return;
+        }
+      }
+      setBetaModalOpen(true);
+    } catch {
+      setBetaModalOpen(true);
+    } finally {
+      setIsLoadingCheckout(false);
+    }
   };
 
   return (
@@ -156,9 +177,10 @@ export default function PricingPage() {
                 whileHover={shouldReduceMotion ? undefined : { scale: 1.02 }}
                 whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
                 onClick={handleCheckout}
-                className="w-full h-10 px-4 rounded-interactive bg-accent-primary text-white font-medium text-xs cursor-pointer shadow-sm hover:opacity-95 transition-opacity"
+                disabled={isLoadingCheckout}
+                className="w-full h-10 px-4 rounded-interactive bg-accent-primary text-white font-medium text-xs cursor-pointer shadow-sm hover:opacity-95 transition-opacity disabled:opacity-75"
               >
-                Start Pro
+                {isLoadingCheckout ? "Connecting to checkout…" : "Start Pro"}
               </motion.button>
             </div>
           </motion.div>

@@ -171,17 +171,37 @@ export function HeroCubesCanvas() {
     render();
     window.addEventListener("resize", handleResize);
 
+    const prefersReducedMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
     const loop = () => {
+      if (document.hidden || prefersReducedMotion) {
+        return;
+      }
       render();
       animId = requestAnimationFrame(loop);
     };
 
-    animId = requestAnimationFrame(loop);
+    if (!prefersReducedMotion) {
+      animId = requestAnimationFrame(loop);
+    }
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden && !prefersReducedMotion) {
+        cancelAnimationFrame(animId);
+        animId = requestAnimationFrame(loop);
+      } else {
+        cancelAnimationFrame(animId);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("pointermove", onPointerMove);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       observer.disconnect();
     };
   }, []);

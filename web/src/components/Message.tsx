@@ -42,7 +42,6 @@ export function Message({ message, onCitationClick }: MessageProps) {
     setFeedback(score === 1 ? "up" : "down");
     if (score === -1 && note === undefined) {
       setShowNoteInput(true);
-      return;
     }
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
     try {
@@ -56,7 +55,9 @@ export function Message({ message, onCitationClick }: MessageProps) {
           answer: message.content,
         }),
       });
-      setShowNoteInput(false);
+      if (note !== undefined) {
+        setShowNoteInput(false);
+      }
     } catch (e) {
       console.error("Failed to submit feedback", e);
     }
@@ -343,20 +344,32 @@ export function Message({ message, onCitationClick }: MessageProps) {
 
           {/* Optional Feedback Note Input */}
           {showNoteInput && (
-            <div className="mt-2 p-2 rounded-interactive bg-bg-surface border border-border flex items-center gap-2">
+            <div className="mt-2 p-2 rounded-interactive bg-bg-surface border border-border flex items-center gap-2 animate-fade-in shadow-xs">
               <input
                 type="text"
                 value={feedbackNote}
                 onChange={(e) => setFeedbackNote(e.target.value)}
                 placeholder="What went wrong? (optional)"
                 className="flex-1 bg-transparent text-xs text-ink-primary outline-none placeholder:text-ink-ghost"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleFeedback(-1, feedbackNote);
+                  if (e.key === "Escape") setShowNoteInput(false);
+                }}
               />
               <button
                 type="button"
                 onClick={() => handleFeedback(-1, feedbackNote)}
-                className="text-xs px-2 py-1 rounded bg-bg-sunken hover:bg-bg-hover text-ink-primary font-medium"
+                className="text-xs px-2.5 py-1 rounded bg-accent-primary text-white font-medium hover:opacity-90 cursor-pointer"
               >
-                Submit
+                Send
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowNoteInput(false)}
+                className="text-xs px-2 py-1 rounded bg-bg-sunken hover:bg-bg-hover text-gray-warm cursor-pointer"
+                aria-label="Cancel note"
+              >
+                Cancel
               </button>
             </div>
           )}

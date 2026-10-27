@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { Citation, PipelineStage, streamQuery } from "@/lib/sse";
 import { ChatMessage, Message } from "./Message";
@@ -11,6 +12,7 @@ import { ErrorState } from "./ErrorState";
 import { checkRateLimit, recordFreeQuery, RateLimitState } from "@/lib/rateLimit";
 import { RateLimitBanner } from "./RateLimitBanner";
 import { motion, useReducedMotion } from "framer-motion";
+import { AlertCircle, X } from "lucide-react";
 
 interface ChatProps {
   sessionId?: string | null;
@@ -57,12 +59,14 @@ export function Chat({
   initialShelfQuery,
   onClearInitialShelfQuery,
 }: ChatProps) {
+  const router = useRouter();
   const { getToken, isSignedIn } = useAuth();
   const { user } = useUser();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPrecisionMode, setIsPrecisionMode] = useState(false);
   const [isProUser, setIsProUser] = useState<boolean>(Boolean(isPro));
+  const [docPromptWarning, setDocPromptWarning] = useState<string | null>(null);
   const [streamError, setStreamError] = useState<{
     code?: string;
     message?: string;
@@ -171,9 +175,10 @@ export function Chat({
 
   const handleSend = async (queryText: string) => {
     if (!sessionId && !isShelfMode) {
-      alert("Drop or select a document first.");
+      setDocPromptWarning("Drop or select a document first.");
       return;
     }
+    setDocPromptWarning(null);
 
     // Check rate limit for free tier (exempt for BYOK, local Ollama, and Pro subscribers)
     if (!isRateLimitExempt) {
@@ -311,7 +316,7 @@ export function Chat({
     }
 
     if (!sessionId) {
-      alert("Drop or select a document first.");
+      setDocPromptWarning("Drop or select a document first.");
       setIsGenerating(false);
       return;
     }
@@ -520,7 +525,7 @@ export function Chat({
                   }}
                   onOpenSettings={onOpenSettings}
                   onOpenUpgrade={() => {
-                    window.location.href = "/pricing";
+                    router.push("/pricing");
                   }}
                 />
               )}
@@ -533,6 +538,25 @@ export function Chat({
       {/* Composer Dock */}
       <div className="p-4 bg-bg-surface/90 backdrop-blur-md border-t border-border">
         <div className="max-w-[640px] w-full mx-auto">
+          {docPromptWarning && (
+            <div
+              role="alert"
+              className="mx-4 mb-3 px-3.5 py-2.5 rounded-interactive border border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300 text-xs flex items-center justify-between gap-2 shadow-xs animate-fade-in"
+            >
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                <span className="font-mono">{docPromptWarning}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDocPromptWarning(null)}
+                aria-label="Dismiss warning"
+                className="text-amber-600 dark:text-amber-400 hover:opacity-75 p-0.5 cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
           {!isRateLimitExempt && rateLimitState.isRateLimited && rateLimitState.resetAt && (
             <RateLimitBanner
               resetAt={rateLimitState.resetAt}

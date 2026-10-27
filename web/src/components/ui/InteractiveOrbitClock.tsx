@@ -237,9 +237,17 @@ export function InteractiveOrbitClock({ className = "" }: InteractiveOrbitClockP
       <div
         ref={dialRef}
         data-testid="orbit-clock-dial"
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            toggleTheme();
+          }
+        }}
         onPointerDown={handlePointerDown}
         aria-label="Orbit clock theme switcher"
-        className={`relative w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-ink-primary/25 dark:border-ink-primary/35 bg-transparent flex items-center justify-center transition-all duration-200 touch-none cursor-pointer flex-shrink-0 ${
+        className={`relative w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-ink-primary/25 dark:border-ink-primary/35 bg-transparent flex items-center justify-center transition-all duration-200 touch-none cursor-pointer flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary focus-visible:ring-offset-2 ${
           isDragging
             ? "cursor-grabbing scale-110 border-accent-primary/80 shadow-[0_0_8px_rgba(232,118,90,0.3)]"
             : "cursor-grab hover:border-accent-primary/60 hover:scale-105 active:scale-95"

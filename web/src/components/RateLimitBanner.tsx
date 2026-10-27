@@ -52,23 +52,27 @@ export function RateLimitBanner({ resetAt, onReset, onOpenSettings }: RateLimitB
           <span>Resets in {formatRemaining(timeRemaining)}</span>
         </div>
 
-        {onOpenSettings ? (
-          <button
-            type="button"
-            onClick={onOpenSettings}
-            className="font-mono text-[11px] text-gray-warm hover:text-ink-primary hover:underline flex items-center gap-1 cursor-pointer"
-          >
-            <Zap className="w-3 h-3 text-amber-500" />
-            <span>Use BYOK to skip</span>
-          </button>
-        ) : (
+        <div className="flex items-center gap-2.5">
           <Link
             href="/pricing"
-            className="font-mono text-[11px] text-accent-primary hover:underline"
+            className="font-mono text-[11px] text-accent-primary font-medium hover:underline flex items-center gap-1"
           >
-            View Pro
+            Upgrade to Pro
           </Link>
-        )}
+          {onOpenSettings && (
+            <>
+              <span className="text-border">·</span>
+              <button
+                type="button"
+                onClick={onOpenSettings}
+                className="font-mono text-[11px] text-gray-warm hover:text-ink-primary hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <Zap className="w-3 h-3 text-amber-500" />
+                <span>Use BYOK</span>
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

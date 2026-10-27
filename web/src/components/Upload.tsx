@@ -334,10 +334,19 @@ export function Upload({
             }
           }}
           onClick={() => !isUploading && fileInputRef.current?.click()}
+          role="button"
+          tabIndex={0}
+          aria-label="Upload document"
+          onKeyDown={(e) => {
+            if (!isUploading && (e.key === "Enter" || e.key === " ")) {
+              e.preventDefault();
+              fileInputRef.current?.click();
+            }
+          }}
           whileHover={shouldReduceMotion ? undefined : { scale: 1.008, y: -2 }}
           whileTap={shouldReduceMotion ? undefined : { scale: 0.992 }}
           transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-          className={`group relative rounded-interactive p-6 text-center cursor-pointer bg-bg-surface ${
+          className={`group relative rounded-interactive p-6 text-center cursor-pointer bg-bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary ${
             isDragging
               ? "waving-border bg-accent-primary/5 shadow-sm"
               : "border border-dashed border-border hover:border-accent-primary/60 hover:bg-bg-sunken/40 shadow-xs"
@@ -346,7 +355,7 @@ export function Upload({
           <input
             ref={fileInputRef}
             type="file"
-            accept=".pdf,.md,.txt,.docx,.pptx,.xlsx,.html"
+            accept=".pdf,.md,.txt,.docx,.pptx,.xlsx,.xlsm,.html,.htm"
             onChange={(e) => {
               if (e.target.files && e.target.files.length > 0) {
                 handleFile(e.target.files[0]);

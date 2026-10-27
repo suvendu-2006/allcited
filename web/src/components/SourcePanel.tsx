@@ -269,27 +269,37 @@ export function SourcePanel({
                   ) : (
                     <div>
                       <div
-                        className="line-clamp-6 text-ink-primary font-sans text-[13px] leading-relaxed select-text"
-                        style={{
-                          maskImage:
-                            "linear-gradient(to bottom, black 65%, transparent 100%)",
-                          WebkitMaskImage:
-                            "linear-gradient(to bottom, black 65%, transparent 100%)",
-                        }}
+                        className={
+                          (c.text_preview?.length || 0) > 180
+                            ? "line-clamp-6 text-ink-primary font-sans text-[13px] leading-relaxed select-text"
+                            : "text-ink-primary font-sans text-[13px] leading-relaxed select-text"
+                        }
+                        style={
+                          (c.text_preview?.length || 0) > 180
+                            ? {
+                                maskImage:
+                                  "linear-gradient(to bottom, black 65%, transparent 100%)",
+                                WebkitMaskImage:
+                                  "linear-gradient(to bottom, black 65%, transparent 100%)",
+                              }
+                            : undefined
+                        }
                       >
                         {c.text_preview}
                       </div>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleExpand(c.label);
-                        }}
-                        className="text-xs font-mono text-accent-primary hover:underline cursor-pointer pt-1.5 flex items-center gap-1 group/btn"
-                      >
-                        <span>Read the full passage</span>
-                        <span className="transition-transform duration-150 group-hover/btn:translate-x-0.5">→</span>
-                      </button>
+                      {(c.text_preview?.length || 0) > 180 && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleExpand(c.label);
+                          }}
+                          className="text-xs font-mono text-accent-primary hover:underline cursor-pointer pt-1.5 flex items-center gap-1 group/btn"
+                        >
+                          <span>Read the full passage</span>
+                          <span className="transition-transform duration-150 group-hover/btn:translate-x-0.5">→</span>
+                        </button>
+                      )}
                     </div>
                   )}
                 </motion.div>
