@@ -2,8 +2,8 @@ name: Keep-Alive Ping
 
 on:
   schedule:
-    # Run every 30 minutes to prevent cold starts / idle sleep on free tiers
-    - cron: "*/30 * * * *"
+    # Run every 10 minutes to prevent cold starts / idle sleep on free tiers
+    - cron: "*/10 * * * *"
   workflow_dispatch:
 
 jobs:
