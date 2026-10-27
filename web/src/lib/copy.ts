@@ -43,7 +43,7 @@ export const PRICING_COPY = {
     name: "Free",
     price: "₹0",
     badge: "for everyone",
-    description: "Unlimited questions · documents up to 10 MB · all 6 formats · every citation, every trace.",
+    description: "10 questions / hour · documents up to 10 MB · all 6 formats · every citation, every trace.",
   },
   pro: {
     name: "Pro",

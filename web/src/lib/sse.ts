@@ -28,6 +28,7 @@ export interface StreamQueryOptions {
   apiUrl?: string;
   sessionId: string;
   query: string;
+  mode?: "precision" | "fast" | string | null;
   authToken?: string | null;
   byokKey?: string | null;
   byokBaseUrl?: string | null;
@@ -56,6 +57,7 @@ export async function streamQuery(options: StreamQueryOptions): Promise<void> {
     apiUrl = DEFAULT_API_URL,
     sessionId,
     query,
+    mode,
     authToken,
     byokKey,
     byokBaseUrl,
@@ -98,6 +100,9 @@ export async function streamQuery(options: StreamQueryOptions): Promise<void> {
     provider: preferredProvider || null,
     preferred_provider: preferredProvider || null,
   };
+  if (mode) {
+    payload.mode = mode;
+  }
 
   try {
     onStageChange?.("routing", "Analyzing question intent...");

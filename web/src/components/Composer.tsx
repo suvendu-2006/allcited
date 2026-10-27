@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { ArrowUp, Square } from "lucide-react";
+import { ArrowUp, Square, Sparkles } from "lucide-react";
 
 interface ComposerProps {
   onSend: (message: string) => void;
@@ -9,6 +9,9 @@ interface ComposerProps {
   isGenerating?: boolean;
   disabled?: boolean;
   placeholder?: string;
+  isPrecisionMode?: boolean;
+  onTogglePrecision?: (enabled: boolean) => void;
+  isPro?: boolean;
 }
 
 export function Composer({
@@ -17,6 +20,9 @@ export function Composer({
   isGenerating = false,
   disabled = false,
   placeholder = "Ask your document anything…",
+  isPrecisionMode = false,
+  onTogglePrecision,
+  isPro = false,
 }: ComposerProps) {
   const [input, setInput] = useState("");
   const [isFocused, setIsFocused] = useState(false);
@@ -77,13 +83,37 @@ export function Composer({
       />
 
       <div className="flex items-center justify-between pt-1 px-1">
-        <span
-          className={`font-mono text-[11px] text-gray-warm transition-opacity duration-120 ${
-            isFocused ? "opacity-100" : "opacity-0 sm:opacity-80"
-          }`}
-        >
-          ↵ to send · ⇧↵ for a new line
-        </span>
+        <div className="flex items-center gap-2">
+          {onTogglePrecision && (
+            <button
+              type="button"
+              onClick={() => onTogglePrecision(!isPrecisionMode)}
+              aria-label="Toggle Precision Mode"
+              title={
+                isPro
+                  ? "Precision Mode: reranks 50 passages before answering"
+                  : "Precision Mode (Pro feature: reranks 50 passages)"
+              }
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono transition-all duration-120 cursor-pointer ${
+                isPrecisionMode
+                  ? "bg-accent-primary/15 text-accent-primary border border-accent-primary/40 font-medium shadow-xs"
+                  : "text-gray-warm hover:text-ink-primary border border-transparent hover:border-border"
+              }`}
+            >
+              <Sparkles className="w-3 h-3 text-accent-primary" />
+              <span>Precision</span>
+              {isPrecisionMode && <span className="text-[9px] font-bold">ON</span>}
+            </button>
+          )}
+
+          <span
+            className={`font-mono text-[11px] text-gray-warm transition-opacity duration-120 ${
+              isFocused ? "opacity-100" : "opacity-0 sm:opacity-80"
+            }`}
+          >
+            ↵ to send · ⇧↵ for a new line
+          </span>
+        </div>
 
         {isGenerating ? (
           <button

@@ -208,12 +208,12 @@ class InMemoryLibraryStore:
 
         return doc_item
 
-    def list_documents(self, user_id: str) -> List[LibraryDocumentItem]:
+    async def list_documents(self, user_id: str) -> List[LibraryDocumentItem]:
         with self._lock:
             if user_id in self._docs and self._docs[user_id]:
                 return list(self._docs[user_id].values())
 
-        # Attempt fetching from Supabase if not loaded in memory (outside lock)
+        # Attempt fetching from Supabase asynchronously if not loaded in memory (outside lock)
         settings = get_settings()
         if settings.SUPABASE_URL and settings.SUPABASE_SERVICE_ROLE_KEY:
             try:
@@ -222,8 +222,8 @@ class InMemoryLibraryStore:
                     "apikey": settings.SUPABASE_SERVICE_ROLE_KEY,
                     "Authorization": f"Bearer {settings.SUPABASE_SERVICE_ROLE_KEY}",
                 }
-                with httpx.Client(timeout=5.0) as client:
-                    resp = client.get(
+                async with httpx.AsyncClient(timeout=5.0) as client:
+                    resp = await client.get(
                         f"{base_url}/rest/v1/saved_documents?user_id=eq.{user_id}&order=created_at.desc",
                         headers=headers,
                     )

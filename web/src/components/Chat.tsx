@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import { Citation, PipelineStage, streamQuery } from "@/lib/sse";
 import { ChatMessage, Message } from "./Message";
 import { Composer } from "./Composer";
@@ -18,6 +18,7 @@ interface ChatProps {
   byokBaseUrl?: string | null;
   byokModel?: string | null;
   preferredProvider?: string | null;
+  isPro?: boolean;
   onCitationClick?: (citation: Citation, allCitations?: Citation[]) => void;
   onUploadSuccess?: (data: {
     sessionId: string;
@@ -43,14 +44,18 @@ export function Chat({
   byokBaseUrl,
   byokModel,
   preferredProvider,
+  isPro,
   onCitationClick,
   onUploadSuccess,
   onOpenSettings,
   isGuest,
 }: ChatProps) {
-  const { getToken } = useAuth();
+  const { getToken, isSignedIn } = useAuth();
+  const { user } = useUser();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isPrecisionMode, setIsPrecisionMode] = useState(false);
+  const [isProUser, setIsProUser] = useState<boolean>(Boolean(isPro));
   const [streamError, setStreamError] = useState<{
     code?: string;
     message?: string;
@@ -61,26 +66,56 @@ export function Chat({
   const scrollEndRef = useRef<HTMLDivElement>(null);
   const searchVariantIdx = useRef(0);
 
-  // Rate Limiter: Free tier is limited to 10 queries / hour (BYOK users are exempt)
-  const isByokActive = Boolean(byokKey || preferredProvider === "ollama");
+  // Pro status detection (via prop, Clerk metadata, or Stripe subscription endpoint)
+  useEffect(() => {
+    if (isPro) {
+      setIsProUser(true);
+      return;
+    }
+    const metaPlan = (user?.publicMetadata?.plan as string) || (user?.unsafeMetadata?.plan as string);
+    if (metaPlan === "pro") {
+      setIsProUser(true);
+      return;
+    }
+    if (isSignedIn) {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      getToken()
+        .then((token) => {
+          if (!token) return;
+          return fetch(`${apiUrl.replace(/\/$/, "")}/v1/stripe/subscription`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        })
+        .then((res) => (res && res.ok ? res.json() : null))
+        .then((data) => {
+          if (data?.plan === "pro") {
+            setIsProUser(true);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [isPro, user, isSignedIn, getToken]);
+
+  // Rate Limiter: Free tier is limited to 10 queries / hour (BYOK and paying Pro users are exempt)
+  const isRateLimitExempt = Boolean(byokKey || preferredProvider === "ollama" || isProUser);
   const [rateLimitState, setRateLimitState] = useState<RateLimitState>(() =>
-    checkRateLimit(isByokActive)
+    checkRateLimit(isRateLimitExempt)
   );
 
   useEffect(() => {
-    setRateLimitState(checkRateLimit(isByokActive));
-  }, [isByokActive]);
+    setRateLimitState(checkRateLimit(isRateLimitExempt));
+  }, [isRateLimitExempt]);
 
   // Synchronize rate limit status across multiple browser tabs
   useEffect(() => {
     const handleStorage = (e: StorageEvent) => {
       if (e.key === "allcited_free_queries") {
-        setRateLimitState(checkRateLimit(isByokActive));
+        setRateLimitState(checkRateLimit(isRateLimitExempt));
       }
     };
     window.addEventListener("storage", handleStorage);
     return () => window.removeEventListener("storage", handleStorage);
-  }, [isByokActive]);
+  }, [isRateLimitExempt]);
 
   // Auto-scroll to bottom on incoming message updates
   const scrollToBottom = () => {
@@ -111,8 +146,8 @@ export function Chat({
       return;
     }
 
-    // Check rate limit for free tier
-    if (!isByokActive) {
+    // Check rate limit for free tier (exempt for BYOK, local Ollama, and Pro subscribers)
+    if (!isRateLimitExempt) {
       const current = checkRateLimit(false);
       if (current.isRateLimited) {
         setRateLimitState(current);
@@ -123,8 +158,8 @@ export function Chat({
     setStreamError(null);
     searchVariantIdx.current = (searchVariantIdx.current + 1) % SEARCHING_VARIANTS.length;
 
-    // Record question in free tier history
-    if (!isByokActive) {
+    // Record question in free tier history if not exempt
+    if (!isRateLimitExempt) {
       const updated = recordFreeQuery(false);
       setRateLimitState(updated);
     }
@@ -160,6 +195,7 @@ export function Chat({
       await streamQuery({
         sessionId,
         query: queryText,
+        mode: isPrecisionMode ? "precision" : undefined,
         authToken,
         byokKey,
         byokBaseUrl,
@@ -321,10 +357,10 @@ export function Chat({
       {/* Composer Dock */}
       <div className="p-4 bg-bg-surface/90 backdrop-blur-md border-t border-border">
         <div className="max-w-[640px] w-full mx-auto">
-          {rateLimitState.isRateLimited && rateLimitState.resetAt && (
+          {!isRateLimitExempt && rateLimitState.isRateLimited && rateLimitState.resetAt && (
             <RateLimitBanner
               resetAt={rateLimitState.resetAt}
-              onReset={() => setRateLimitState(checkRateLimit(isByokActive))}
+              onReset={() => setRateLimitState(checkRateLimit(isRateLimitExempt))}
               onOpenSettings={onOpenSettings}
             />
           )}
@@ -332,9 +368,12 @@ export function Chat({
             onSend={handleSend}
             onAbort={handleAbort}
             isGenerating={isGenerating}
-            disabled={!sessionId || rateLimitState.isRateLimited}
+            isPrecisionMode={isPrecisionMode}
+            onTogglePrecision={setIsPrecisionMode}
+            isPro={isProUser}
+            disabled={!sessionId || (!isRateLimitExempt && rateLimitState.isRateLimited)}
             placeholder={
-              rateLimitState.isRateLimited
+              !isRateLimitExempt && rateLimitState.isRateLimited
                 ? "Free tier limit reached (10 questions / hour). Resets soon or use BYOK."
                 : undefined
             }

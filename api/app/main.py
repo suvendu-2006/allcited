@@ -300,7 +300,7 @@ async def save_session_to_library(
         )
 
     store = get_library_store()
-    current_docs = store.list_documents(user_id=user_id)
+    current_docs = await store.list_documents(user_id=user_id)
     check_plan_limit(user_id, "library_save", len(current_docs))
 
     doc_item = store.save_document(user_id=user_id, session=session)
@@ -364,7 +364,7 @@ async def list_library_documents(user_id: str = Depends(get_current_user)):
     List all documents saved in the authenticated user's library.
     """
     store = get_library_store()
-    docs = store.list_documents(user_id=user_id)
+    docs = await store.list_documents(user_id=user_id)
     return {
         "status": "ok",
         "count": len(docs),
