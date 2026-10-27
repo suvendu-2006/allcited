@@ -2,20 +2,37 @@ name: Keep-Alive Ping
 
 on:
   schedule:
-    # Run every 10 minutes to prevent cold starts / idle sleep on free tiers
-    - cron: "*/10 * * * *"
+    # Run every 5 minutes to guarantee zero idle sleep on Hugging Face ZeroGPU and Vercel
+    - cron: "*/5 * * * *"
   workflow_dispatch:
+
+concurrency:
+  group: keep-alive
+  cancel-in-progress: true
 
 jobs:
   ping:
+    name: Ping Backend & Frontend
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - name: Ping Allcited Production API
-        env:
-          API_URL: ${{ secrets.PROD_API_URL || 'https://subh-007-allcited-api.hf.space' }}
+      - name: Ping Allcited Production Backend (/v1/readyz)
         run: |
+          API_URL="https://subh-007-allcited-api.hf.space"
           echo "Pinging $API_URL/v1/readyz..."
-          curl -f -s -S --max-time 15 "$API_URL/v1/readyz" || {
-            echo "Keep-alive ping failed or timed out"
-            exit 1
-          }
+          RESPONSE=$(curl -f -s -S --retry 3 --retry-delay 3 --retry-connrefused --max-time 20 "$API_URL/v1/readyz")
+          echo "Backend Readyz response: $RESPONSE"
+
+      - name: Ping Allcited Production Backend (/v1/health)
+        run: |
+          API_URL="https://subh-007-allcited-api.hf.space"
+          echo "Pinging $API_URL/v1/health..."
+          RESPONSE=$(curl -f -s -S --retry 3 --retry-delay 3 --retry-connrefused --max-time 15 "$API_URL/v1/health")
+          echo "Backend Health response: $RESPONSE"
+
+      - name: Ping Allcited Frontend (Vercel)
+        run: |
+          FRONTEND_URL="https://allcited.vercel.app"
+          echo "Pinging $FRONTEND_URL..."
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --retry 2 --max-time 15 "$FRONTEND_URL")
+          echo "Frontend returned HTTP $HTTP_CODE"
