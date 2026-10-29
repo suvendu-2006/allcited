@@ -1443,4 +1443,14 @@ body:has(.cl-userProfile-root) .cl-modalBackdrop {
   }
 }
 
+/* ==========================================================================
+   Structured Markdown & Responsive Table Enhancements (§FormattedMessage)
+   ========================================================================== */
+.table-scrollbar-touch {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+
 

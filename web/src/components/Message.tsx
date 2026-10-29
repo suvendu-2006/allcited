@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Citation, PipelineStage } from "@/lib/sse";
-import { CitationChip } from "./CitationChip";
+import { FormattedMessage } from "./FormattedMessage";
 import { TraceViewer } from "./TraceViewer";
 import { StageChip } from "./ui/StageChip";
 import { ShieldAlert, ThumbsUp, ThumbsDown, Sparkles } from "lucide-react";
@@ -64,97 +64,6 @@ export function Message({ message, onCitationClick }: MessageProps) {
     }
   };
 
-  const citationsMap = new Map<string, Citation>();
-  (message.citations || []).forEach((c) => {
-    citationsMap.set(c.label, c);
-    const stripped = c.label.replace(/\s*\(OCR\)/gi, "").trim();
-    if (stripped) {
-      citationsMap.set(stripped, c);
-    }
-  });
-
-  // Consolidate citation markers to appear only once at the end of each sentence
-  const consolidateSentenceCitations = (srcText: string): string => {
-    if (!srcText) return "";
-    const citPattern = /(\[\s*(?:related:\s*)?S\d+(?:\s*\(OCR\))?\s*\]|\(\s*related:\s*\[?S\d+\]?\s*\))/gi;
-    const paragraphs = srcText.split("\n");
-    const cleanedParagraphs: string[] = [];
-
-    for (const para of paragraphs) {
-      if (!para.trim()) {
-        cleanedParagraphs.push(para);
-        continue;
-      }
-
-      const sentenceParts = para.split(/([.!?]+(?:\s+|$))/);
-      const newParaParts: string[] = [];
-
-      for (let i = 0; i < sentenceParts.length; i += 2) {
-        const sent = sentenceParts[i];
-        const delim = sentenceParts[i + 1] || "";
-
-        const cits = sent.match(citPattern);
-        if (!cits || cits.length === 0) {
-          newParaParts.push(sent + delim);
-          continue;
-        }
-
-        const uniqueCits: string[] = [];
-        const seen = new Set<string>();
-        for (const c of cits) {
-          const norm = c.replace(/\s+/g, "").toUpperCase();
-          if (!seen.has(norm)) {
-            seen.add(norm);
-            uniqueCits.push(c.trim());
-          }
-        }
-
-        const sentClean = sent.replace(citPattern, "").replace(/[ \t]+/g, " ").trim();
-        const citsStr = " " + uniqueCits.join(" ");
-
-        if (sentClean) {
-          newParaParts.push(sentClean + citsStr + delim);
-        } else {
-          newParaParts.push(citsStr.trim() + delim);
-        }
-      }
-
-      cleanedParagraphs.push(newParaParts.join(""));
-    }
-
-    return cleanedParagraphs.join("\n");
-  };
-
-  // Parse [S#] and [related: S#] citations into interactive CitationChips
-  const renderFormattedText = (text: string) => {
-    if (!text) return null;
-
-    const consolidated = consolidateSentenceCitations(text);
-    const normalizedText = consolidated.replace(/【/g, "[").replace(/】/g, "]");
-    const parts = normalizedText.split(/(\[(?:related:\s*)?S\d+(?:\s*\(OCR\))?\])/gi);
-    return parts.map((part, idx) => {
-      const match = part.match(/\[(?:related:\s*)?S(\d+)(?:\s*\(OCR\))?\]/i);
-      if (match) {
-        const baseLabel = `S${match[1]}`;
-        const relatedLabel = `related: S${match[1]}`;
-        const rawKey = part.slice(1, -1).trim();
-        const citation =
-          citationsMap.get(rawKey) ||
-          citationsMap.get(relatedLabel) ||
-          citationsMap.get(baseLabel);
-        if (citation) {
-          return (
-            <CitationChip
-              key={idx}
-              citation={citation}
-              onClick={(c) => onCitationClick?.(c, message.citations)}
-            />
-          );
-        }
-      }
-      return <span key={idx}>{part}</span>;
-    });
-  };
 
   // User Message Turn
   if (isUser) {
@@ -264,8 +173,13 @@ export function Message({ message, onCitationClick }: MessageProps) {
           ) : (
             /* Normal Grounded Answer Card */
             <div className="p-4 rounded-interactive border border-border bg-bg-surface text-ink-primary shadow-xs">
-              <div className="text-[14px] leading-relaxed prose prose-neutral dark:prose-invert max-w-none break-words">
-                {renderFormattedText(message.content)}
+              <div className="text-[14px] leading-relaxed text-ink-primary max-w-none break-words">
+                <FormattedMessage
+                  content={message.content}
+                  citations={message.citations}
+                  onCitationClick={onCitationClick}
+                  isStreaming={isPending}
+                />
                 {/* 2px seal-red block pulsing caret when composing */}
                 {isPending && (
                   <motion.span
