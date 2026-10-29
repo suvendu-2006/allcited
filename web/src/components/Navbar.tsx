@@ -17,7 +17,7 @@ interface NavbarProps {
   isInApp?: boolean;
 }
 
-export function Navbar({ onOpenSettings, onOpenWorkspace, onGoHome, isInApp }: NavbarProps) {
+export function Navbar({ onOpenSettings, onOpenWorkspace, onGoHome, apiConnected, isInApp }: NavbarProps) {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const isAppView = isInApp || pathname === "/exam" || pathname === "/library" || pathname === "/dev";
@@ -94,6 +94,23 @@ export function Navbar({ onOpenSettings, onOpenWorkspace, onGoHome, isInApp }: N
 
         {/* Right: Theme Toggle Dial + Auth + Settings + Mobile Menu Button */}
         <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
+          {/* Subtle Backend Connection Status Indicator */}
+          {apiConnected !== undefined && (
+            <div
+              className="flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-border/60 bg-bg-surface text-[10px] font-mono select-none transition-colors"
+              title={apiConnected ? "Backend connected (HF Space)" : "Citation engine is connecting…"}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  apiConnected ? "bg-accent-primary animate-pulse" : "bg-amber-400 animate-ping"
+                }`}
+              />
+              <span className="hidden sm:inline text-ink-ghost text-[10px]">
+                {apiConnected ? "live" : "connecting"}
+              </span>
+            </div>
+          )}
+
           {/* Theme Toggle Orbit Dial */}
           <InteractiveOrbitClock />
 

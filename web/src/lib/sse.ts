@@ -24,6 +24,8 @@ export type PipelineStage =
   | "done"
   | "error";
 
+import { getApiUrl } from "./api";
+
 export interface StreamQueryOptions {
   apiUrl?: string;
   sessionId: string;
@@ -50,7 +52,7 @@ export interface StreamQueryOptions {
   onError?: (error: Error) => void;
 }
 
-const DEFAULT_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const DEFAULT_API_URL = getApiUrl();
 
 export async function streamQuery(options: StreamQueryOptions): Promise<void> {
   const {

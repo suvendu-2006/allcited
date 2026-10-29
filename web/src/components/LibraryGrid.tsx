@@ -8,6 +8,7 @@ import { LibraryDocCard, LibraryDocument } from "./LibraryDocCard";
 import { Skeleton } from "./ui/Skeleton";
 import { Button } from "./ui/button";
 import { BookOpen, AlertTriangle, ArrowRight, Search } from "lucide-react";
+import { getApiUrl } from "@/lib/api";
 
 interface LibraryGridProps {
   apiUrl?: string;
@@ -16,7 +17,7 @@ interface LibraryGridProps {
 }
 
 export function LibraryGrid({
-  apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
+  apiUrl = getApiUrl(),
   onSelectDocForChat,
   onAskAcrossShelf,
 }: LibraryGridProps) {

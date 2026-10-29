@@ -1483,3 +1483,128 @@ All footer links (Product · How it works · Pricing · Shelf · The exam · Rel
 
 ## Gates
 `tsc` clean · grep `whileHover|whileTap` ≥ 10 files · Chat.tsx motion > 0 · LibraryGrid stagger present · every animated file has a reduced-motion path · 60 fps (Performance tab) during: streaming, drawer open, theme wave · suite untouched (tests still green).
+
+---
+
+# §7 — THE PROMO FILM (Apple-style, ≤25s, real footage only)
+
+> Owner requirements locked: top-notch video quality · Apple-style motion and presentation · premium background · subtle sound design (NO voiceover of any kind) · **100% real product footage — zero AI-generated visuals, zero stock b-roll** · duration ≤ 25.0s.
+
+## 7.1 The Apple motion constitution (every element obeys)
+1. **The ease:** all entrances use `cubic-bezier(0.16, 1, 0.3, 1)` — fast attack, long luxurious settle. Exits: 300 ms fade only. No bounces, no overshoot, no springs in the film.
+2. **Text reveals:** words enter as `blur(14px)→0` + `y 24px→0` + `opacity 0→1`, 700 ms, staggered 90 ms per word. Never letter-by-letter typing effects.
+3. **Camera:** each scene is one continuous slow push-in, `scale 1.00→1.05` across its full duration (Ken Burns precision, 60 fps smooth). No whip pans, no cuts mid-scene.
+4. **Scene transitions:** 350 ms cross-dissolve to/from pure black. Nothing else.
+5. **Stage:** pure `#000000` black — not warm-ink, not dark-gray. Product footage floats on it edge-to-edge or inside a 28px-radius rounded frame with a 1px `rgba(255,255,255,0.08)` hairline.
+6. **Typography in film:** Inter (captions) + JetBrains Mono (numbers only). Max 6 words per line, max 2 lines on screen. Caption color `#F2EFE0` at 92% opacity; numbers in seal red `#E8765A` (dark-stage variant).
+7. **One idea per scene. Five scenes. Five seconds each.** If a scene needs explaining, cut the explanation, not the scene.
+
+## 7.2 Storyboard — frame-accurate (total 25.0s)
+
+| Scene | Time | Visual (REAL footage) | Caption (verbatim) | Motion |
+|---|---|---|---|---|
+| 1 · Cold open | 0.0–5.0 | Pure black. A dimmed (12% opacity) slow-drifting screenshot of the dense handbook behind type. | L1: "The answer is on page 23." (0.4s in) · L2: "You'll never find it." (2.6s in, smaller, ghost gray) | Type blur-ins per constitution; bg drifts x −2%; push-in 1.00→1.03 |
+| 2 · The drop | 5.0–10.0 | REAL: cursor drags handbook.pdf into Allcited; "214 chunks ready" counter rolls. Dark theme. | "Drop it in." (6.0s) | footage rises from black 350 ms; push-in 1.00→1.05; counter finishes ≥0.5s before cut |
+| 3 · The ask | 10.0–16.0 | REAL: types "Can I carry my leaves forward?" (typing timed 1.5s), streamed answer writes in, [S1] chip pops | "Ask like a human." (10.8s) | full-bleed footage; push-in continues; answer stream NOT sped up beyond 1.2× |
+| 4 · The receipt ★ | 16.0–21.0 | REAL: cursor glides to [S1], click → receipts drawer slides open, passage highlights. **Play at 0.85× speed — the slow-mo signature moment** | "Every claim. Proven." (18.2s) | drawer-open moment gets a 4px soft glow pulse (400 ms) on the highlighted passage |
+| 5 · Proof + end card | 21.0–25.0 | Black card: "82.9%" → "95.1%" counts up huge (mono, 900ms), then Allcited wordmark + "allcited.vercel.app" | none — the numbers are the caption | count-up 21.2–22.4s; wordmark blur-in 22.8s; hold to 25.0; fade to black last 200 ms |
+
+## 7.3 Real-footage capture spec (the non-negotiables)
+- **Source:** production URLs (allcited.vercel.app) or localhost production build — same UI. Dark theme locked. The seeded handbook fixture as the document (no personal files).
+- **Recording:** 60 fps, 2560×1440 minimum (Retina 2x), macOS QuickTime screen recording or OBS. Hide desktop/dock/notifications (Do Not Disturb ON), clean browser profile, no extensions, hide bookmarks bar; browser chrome cropped out — UI only.
+- **Cursor:** macOS cursor at normal size, moves in slow deliberate arcs, 300+ ms before every click. Never jittery. (Practice runs first; retake until smooth.)
+- **Realness gate:** product UI visible in ≥ 60% of total runtime. Zero mockups, zero AI images, zero stock, zero particles/sparkle effects.
+
+## 7.4 Sound design (subtle, no voice — total 4 elements)
+| t | Element | Character | Level |
+|---|---|---|---|
+| 0.0s | low sub-bass swell (1.5s) | warm, cinematic, felt-not-heard | −24 dB |
+| 0.4 / 6.0 / 10.8 / 18.2s | soft tick on each caption reveal | felt "click", dry | −30 dB |
+| 16.6s | gentle whoosh on drawer open | airy, short (300ms) | −26 dB |
+| 21.2s | warm major-resolve pad (2.5s) | closure, fades with end card | −22 dB |
+Sources: CC0 (freesound.org) or synthesized. Master: quiet — target −16 LUFS, peaks −6 dB. **No music bed, no voice, no narration.**
+
+## 7.5 Assembly method
+1. Capture the four real clips per §7.3 (raw, longer than needed; trim in edit).
+2. Build scenes 1 & 5 (typography cards) as a 2560×1440 HTML page animated with the constitution's keyframes; render via browser screenshot-sequence → 60 fps frames. (Fallback: ffmpeg `drawtext` with blur-in via `tblend` — acceptable but HTML route preferred for word-stagger.)
+3. Composite in ffmpeg: conform all media to 60 fps 2560×1440 → scene push-ins via `zoompan` (precision keyframes) → 350 ms `xfade` dissolves → captions burned in → grain: 2% film-noise overlay for the premium texture → grade: lift blacks to pure #000, +5% contrast.
+4. Speed: scene 4 retimed 0.85× (`setpts`), audio unaffected.
+5. Exports → `assets/promo/`: `promo_16x9.mp4` (1920×1080, YouTube) · `promo_9x16.mp4` (1080×1920 — reframe: product center-cropped, captions repositioned to upper third, safe-zone checked) · `promo_4x5.mp4` (1080×1350, LinkedIn) · `promo_cover.jpg` (the receipt frame, 1920×1080).
+
+## 7.6 Banned list (instant rejection)
+AI-generated imagery · stock footage · voiceover of any kind · music beds · fast cuts (<3s scenes) · >2 fonts · bright backgrounds · particles/glitter · zoom-out reveals · bouncing text · watermarks.
+
+## 7.7 Gates
+Frame-timeline matches §7.2 within ±0.3s per scene · 60 fps output, zero dropped frames · real UI ≥ 60% of runtime · all 4 sound elements present, no others · master −16 LUFS · captions readable at arm's-length phone distance with sound OFF · 3 aspect exports + cover · owner reviews on a phone before publish.
+
+## 7.8 — THE SHOT SCRIPT (second-by-second, the editor's master document)
+
+> Legend: CAPTION = burned-in text (blur-in 700ms unless noted) · SFX = sound cue · PUSH = scene push-in · All times in seconds. Total 25.0.
+
+### RAW CLIPS TO RECORD (before editing)
+- CLIP-A: handbook screenshot (still frame, dimmed source for Scene 1)
+- CLIP-B: drag-drop take — finder→browser dropzone, dark theme (record 15s, trim)
+- CLIP-C: type+stream take — composer click, typing, Enter, stream, [S1] pop (record 20s, retake until cursor arcs are smooth)
+- CLIP-D: chip-click take — cursor glide + click + drawer open (record 15s, real speed; slow-mo added in edit)
+- Numbers/end-card = motion graphics, not footage.
+
+### SCENE 1 — COLD OPEN (0.0 → 5.0)
+| t | Visual | Audio |
+|---|---|---|
+| 0.0–0.4 | Pure black; CLIP-A at 12% opacity begins drifting x −2% | SFX-1 sub-bass swell starts |
+| 0.4–1.4 | CAPTION-1 blur-in: "The answer is on page 23." | SFX-2 tick @ 0.4 |
+| 1.4–2.6 | Hold L1; PUSH 1.00→1.015 | swell decays |
+| 2.6–3.4 | CAPTION-2 blur-in (smaller, ghost gray): "You'll never find it." | SFX-2 tick @ 2.6 |
+| 3.4–4.65 | Hold both; PUSH → 1.03 | — |
+| 4.65–5.0 | 350ms dissolve to black | — |
+
+### SCENE 2 — THE DROP (5.0 → 10.0)
+| t | Visual | Audio |
+|---|---|---|
+| 5.0–6.0 | Dissolve in: CLIP-B full-bleed; cursor arcs to file icon; PUSH 1.00→1.02 | — |
+| 6.0–6.4 | CAPTION blur-in: "Drop it in." | SFX-2 tick @ 6.0 |
+| 6.2–7.2 | Cursor drags handbook.pdf onto dropzone (release @ 7.2) | soft UI tick @ 7.2 |
+| 7.2–8.8 | Stage chips cycle; chunk counter rolls 0→214 (completes 8.8) | — |
+| 8.8–9.65 | "214 chunks ready" settles; hold; PUSH → 1.035 | — |
+| 9.65–10.0 | Dissolve to black | — |
+
+### SCENE 3 — THE ASK (10.0 → 16.0)
+| t | Visual | Audio |
+|---|---|---|
+| 10.0–10.4 | Dissolve in: CLIP-C chat workspace, document loaded | — |
+| 10.3 | Cursor clicks composer; focus ring animates | — |
+| 10.8–11.6 | CAPTION blur-in: "Ask like a human." | SFX-2 tick @ 10.8 |
+| 10.8–12.3 | Typing: "Can I carry my leaves forward?" (natural 8 chars/s) | key ticks OFF (too busy) |
+| 12.3–12.5 | Enter pressed; message flies | — |
+| 12.5–13.2 | Stage line cycles: searching → re-reading → writing | — |
+| 13.2–15.0 | Answer streams in word batches; caret pulses; PUSH → 1.045 | — |
+| 15.0–15.3 | [S1] chip spring-pops in | — |
+| 15.4–16.0 | Answer holds; cursor begins glide toward [S1] | — |
+
+### SCENE 4 — THE RECEIPT ★ (16.0 → 21.0) — EDIT AT 0.85× SPEED
+| t | Visual | Audio |
+|---|---|---|
+| 16.0–16.6 | Dissolve in: CLIP-D; cursor completes glide to [S1] | — |
+| 16.6 | CLICK — drawer begins sliding open | SFX-3 whoosh @ 16.6 |
+| 16.6–18.0 | Drawer slides (slow-mo); receipt cards stagger; passage highlight + 4px glow pulse (400ms) | — |
+| 18.0–18.6 | CAPTION blur-in: "Every claim. Proven." | SFX-2 tick @ 18.2 |
+| 18.6–20.6 | Hold drawer; PUSH → 1.05; cursor rests | — |
+| 20.6–21.0 | Dissolve to black | — |
+
+### SCENE 5 — PROOF + END CARD (21.0 → 25.0)
+| t | Visual | Audio |
+|---|---|---|
+| 21.0–21.2 | Black | SFX-4 warm pad starts |
+| 21.2–22.4 | Count-up: "82.9%" → "95.1%" (mono, huge, seal-red accent) | — |
+| 22.4–22.8 | Hold numbers | — |
+| 22.8–23.6 | Wordmark "Allcited." blur-in; "allcited.vercel.app" fades in beneath (mono) | — |
+| 23.6–24.8 | Hold end card; pad fades out by 23.7 | pad decay |
+| 24.8–25.0 | Fade to black (200ms) | silence |
+
+### EDIT CONFORM NOTES
+- Conform all clips 60fps / 2560×1440 before timeline assembly.
+- PUSH = zoompan scale per scene (1.00→end-value), one continuous keyframe — never reset mid-scene.
+- Captions: Inter, #F2EFE0 @92%; numbers JetBrains Mono; red accents #E8765A.
+- Scene 4 retimed with setpts 1.1769 (→0.85×) AFTER trimming to the 5s window.
+- Final: 2% grain overlay, true-black lift, −16 LUFS master.
+- Phone test with sound OFF, twice, before delivery.

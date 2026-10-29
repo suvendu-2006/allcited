@@ -13,8 +13,10 @@ import { checkRateLimit, recordFreeQuery, RateLimitState } from "@/lib/rateLimit
 import { RateLimitBanner } from "./RateLimitBanner";
 import { motion, useReducedMotion } from "framer-motion";
 import { AlertCircle, X } from "lucide-react";
+import { getApiUrl } from "@/lib/api";
 
 interface ChatProps {
+  apiUrl?: string;
   sessionId?: string | null;
   documentName?: string | null;
   byokKey?: string | null;
@@ -44,6 +46,7 @@ const SEARCHING_VARIANTS = [
 ];
 
 export function Chat({
+  apiUrl,
   sessionId,
   documentName,
   byokKey,
@@ -60,6 +63,7 @@ export function Chat({
   onClearInitialShelfQuery,
 }: ChatProps) {
   const router = useRouter();
+  const effectiveApiUrl = apiUrl || getApiUrl();
   const { getToken, isSignedIn } = useAuth();
   const { user } = useUser();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -92,11 +96,10 @@ export function Chat({
       return;
     }
     if (isSignedIn) {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       getToken()
         .then((token) => {
           if (!token) return;
-          return fetch(`${apiUrl.replace(/\/$/, "")}/v1/stripe/subscription`, {
+          return fetch(`${effectiveApiUrl}/v1/stripe/subscription`, {
             headers: { Authorization: `Bearer ${token}` },
           });
         })
@@ -108,7 +111,7 @@ export function Chat({
         })
         .catch(() => {});
     }
-  }, [isPro, user, isSignedIn, getToken]);
+  }, [isPro, user, isSignedIn, getToken, effectiveApiUrl]);
 
   // Rate Limiter: Free tier is limited to 10 queries / hour (BYOK and paying Pro users are exempt)
   const isRateLimitExempt = Boolean(byokKey || preferredProvider === "ollama" || isProUser);
@@ -229,7 +232,6 @@ export function Chat({
     // 3. Handle Shelf Query mode (POST /v1/library/query across all saved docs)
     if (isShelfMode) {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
         let authToken: string | null = null;
         try {
           authToken = await getToken();
@@ -254,7 +256,7 @@ export function Chat({
           return;
         }
 
-        const res = await fetch(`${apiUrl.replace(/\/$/, "")}/v1/library/query`, {
+        const res = await fetch(`${effectiveApiUrl}/v1/library/query`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -324,6 +326,7 @@ export function Chat({
     try {
       const authToken = await getToken().catch(() => null);
       await streamQuery({
+        apiUrl: effectiveApiUrl,
         sessionId,
         query: queryText,
         mode: isPrecisionMode ? "precision" : undefined,
@@ -477,7 +480,7 @@ export function Chat({
             >
               {!sessionId && !isShelfMode && onUploadSuccess && (
                 <div className="max-w-[640px] w-full mx-auto mb-6">
-                  <Upload onUploadSuccess={onUploadSuccess} />
+                  <Upload apiUrl={effectiveApiUrl} onUploadSuccess={onUploadSuccess} />
                 </div>
               )}
               <EmptyState

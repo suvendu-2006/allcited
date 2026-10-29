@@ -5,6 +5,7 @@ import { useAuth } from "@clerk/nextjs";
 import { UploadCloud, CheckCircle2, AlertCircle, Link2, ArrowRight, X } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Button } from "./ui/button";
+import { getApiUrl } from "@/lib/api";
 
 interface UploadProps {
   apiUrl?: string;
@@ -27,7 +28,7 @@ const PROGRESS_STEPS = [
 ];
 
 export function Upload({
-  apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
+  apiUrl = getApiUrl(),
   onUploadSuccess,
   className = "",
 }: UploadProps) {
@@ -116,11 +117,35 @@ export function Upload({
         headers["Authorization"] = `Bearer ${token}`;
       }
 
-      const res = await fetch(`${apiUrl.replace(/\/$/, "")}/v1/ingest`, {
-        method: "POST",
-        headers,
-        body: formData,
-      });
+      const endpoint = `${apiUrl.replace(/\/$/, "")}/v1/ingest`;
+      let res: Response | null = null;
+      let lastNetworkErr: unknown = null;
+
+      // Retry loop to handle Hugging Face Spaces cold start / container spin-up
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          res = await fetch(endpoint, {
+            method: "POST",
+            headers,
+            body: formData,
+          });
+          // If server responded with 502/503/504 (starting up), retry after short delay
+          if ([502, 503, 504].includes(res.status) && attempt < 2) {
+            await new Promise((resolve) => setTimeout(resolve, 2500));
+            continue;
+          }
+          break;
+        } catch (fetchErr) {
+          lastNetworkErr = fetchErr;
+          if (attempt < 2) {
+            await new Promise((resolve) => setTimeout(resolve, 2500));
+          }
+        }
+      }
+
+      if (!res) {
+        throw lastNetworkErr || new Error("Failed to connect to the backend server.");
+      }
 
       if (!res.ok) {
         const errJson = await res.json().catch(() => null);
@@ -133,7 +158,7 @@ export function Upload({
           throw new Error("Couldn't read this file — it may be corrupt or password-protected. Nothing was saved.");
         }
         if (res.status === 404 || res.status >= 500) {
-          throw new Error(`Backend service is not running or unreachable (${res.status}). The API server at ${apiUrl} has not been deployed yet.`);
+          throw new Error(`Citation engine is unreachable (${res.status}). The backend space may still be starting up — please try again in a moment.`);
         }
         throw new Error(msg || "Couldn't read this file — it may be corrupt or password-protected. Nothing was saved.");
       }
@@ -155,7 +180,7 @@ export function Upload({
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       if (msg === "Load failed" || msg === "Failed to fetch" || msg.toLowerCase().includes("networkerror")) {
-        setErrorMessage("Could not connect to the backend server. Please ensure the backend is running.");
+        setErrorMessage("Could not reach the citation engine. If the cloud backend was sleeping, please wait a few seconds and try again.");
       } else {
         setErrorMessage(msg);
       }
@@ -182,11 +207,33 @@ export function Upload({
         headers["Authorization"] = `Bearer ${token}`;
       }
 
-      const res = await fetch(`${apiUrl.replace(/\/$/, "")}/v1/ingest/url`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ url: urlInput.trim() }),
-      });
+      const endpoint = `${apiUrl.replace(/\/$/, "")}/v1/ingest/url`;
+      let res: Response | null = null;
+      let lastNetworkErr: unknown = null;
+
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          res = await fetch(endpoint, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ url: urlInput.trim() }),
+          });
+          if ([502, 503, 504].includes(res.status) && attempt < 2) {
+            await new Promise((resolve) => setTimeout(resolve, 2500));
+            continue;
+          }
+          break;
+        } catch (fetchErr) {
+          lastNetworkErr = fetchErr;
+          if (attempt < 2) {
+            await new Promise((resolve) => setTimeout(resolve, 2500));
+          }
+        }
+      }
+
+      if (!res) {
+        throw lastNetworkErr || new Error("Failed to connect to the backend server.");
+      }
 
       if (!res.ok) {
         const errJson = await res.json().catch(() => null);
@@ -196,7 +243,7 @@ export function Upload({
           throw new Error("That link points somewhere private — we don't fetch those. Safety thing.");
         }
         if (res.status === 404 || res.status >= 500) {
-          throw new Error(`Backend service is not running or unreachable (${res.status}). The API server at ${apiUrl} has not been deployed yet.`);
+          throw new Error(`Citation engine is unreachable (${res.status}). The backend space may still be starting up — please try again in a moment.`);
         }
         throw new Error(msg || "Couldn't read from that URL. Check the link and try again.");
       }
@@ -220,7 +267,7 @@ export function Upload({
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       if (msg === "Load failed" || msg === "Failed to fetch" || msg.toLowerCase().includes("networkerror")) {
-        setErrorMessage("Could not connect to the backend server. Please ensure the backend is running.");
+        setErrorMessage("Could not reach the citation engine. If the cloud backend was sleeping, please wait a few seconds and try again.");
       } else {
         setErrorMessage(msg);
       }

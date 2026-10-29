@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { motion, useReducedMotion } from "framer-motion";
 import { useDocumentVisibility } from "@/lib/useVisibility";
 import { Check, Sparkles, X } from "lucide-react";
+import { getApiUrl } from "@/lib/api";
 
 export default function PricingPage() {
   const [betaModalOpen, setBetaModalOpen] = useState(false);
@@ -18,7 +19,7 @@ export default function PricingPage() {
   const handleCheckout = async () => {
     setIsLoadingCheckout(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://subh-007-allcited-api.hf.space";
+      const apiUrl = getApiUrl();
       const res = await fetch(`${apiUrl.replace(/\/$/, "")}/v1/stripe/checkout`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/Input";
+import { getApiUrl } from "@/lib/api";
 
 export type ProviderMode = "groq" | "byok" | "ollama";
 
@@ -120,7 +121,7 @@ export function ModelSettings({
   onClose,
   config,
   onSave,
-  apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
+  apiUrl = getApiUrl(),
 }: ModelSettingsProps) {
   const shouldReduceMotion = useReducedMotion();
   const [mode, setMode] = useState<ProviderMode>(config.mode);

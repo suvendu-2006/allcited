@@ -7,6 +7,7 @@ import { TraceViewer } from "./TraceViewer";
 import { StageChip } from "./ui/StageChip";
 import { ShieldAlert, ThumbsUp, ThumbsDown, Sparkles } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
+import { getApiUrl } from "@/lib/api";
 
 export interface ChatMessage {
   id: string;
@@ -43,7 +44,7 @@ export function Message({ message, onCitationClick }: MessageProps) {
     if (score === -1 && note === undefined) {
       setShowNoteInput(true);
     }
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    const apiUrl = getApiUrl();
     try {
       await fetch(`${apiUrl}/v1/feedback`, {
         method: "POST",

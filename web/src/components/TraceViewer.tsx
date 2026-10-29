@@ -11,6 +11,7 @@ import {
   Copy,
   Check,
 } from "lucide-react";
+import { getApiUrl } from "@/lib/api";
 
 export interface TraceData {
   question_id: string;
@@ -65,7 +66,7 @@ export function TraceViewer({
   questionId,
   isOpen,
   onClose,
-  apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
+  apiUrl = getApiUrl(),
 }: TraceViewerProps) {
   const shouldReduceMotion = useReducedMotion();
   const [trace, setTrace] = useState<TraceData | null>(null);

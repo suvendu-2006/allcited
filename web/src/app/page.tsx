@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Footer } from "@/components/Footer";
 import { motion, useReducedMotion } from "framer-motion";
 import { Star, Settings } from "lucide-react";
+import { getApiUrl } from "@/lib/api";
 
 const PROOF_TICKER_ITEMS = [
   { text: "Every claim, cited", isStamp: false },
@@ -57,19 +58,28 @@ export default function Home() {
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  const apiUrl = getApiUrl();
   const workspaceRef = useRef<HTMLDivElement>(null);
 
-  // Check health and load saved localStorage configs on mount
+  // Check health and load saved localStorage configs on mount (with retry to handle cold starts)
   useEffect(() => {
-    async function checkHealthAndInit() {
+    let isMounted = true;
+    let retryTimer: NodeJS.Timeout;
+
+    async function checkHealthAndInit(retries = 4) {
       try {
-        const res = await fetch(`${apiUrl}/v1/health`);
-        if (res.ok) {
+        const res = await fetch(`${apiUrl}/v1/health`, { cache: "no-store" });
+        if (res.ok && isMounted) {
           setApiConnected(true);
+          return;
         }
       } catch {
-        setApiConnected(false);
+        if (isMounted) {
+          setApiConnected(false);
+        }
+      }
+      if (retries > 0 && isMounted) {
+        retryTimer = setTimeout(() => checkHealthAndInit(retries - 1), 3000);
       }
     }
     checkHealthAndInit();
@@ -110,6 +120,11 @@ export default function Home() {
         setIsGuest(true);
       }
     }
+
+    return () => {
+      isMounted = false;
+      clearTimeout(retryTimer);
+    };
   }, [apiUrl]);
 
   // Sync workspace state from URL query parameters (supports back/forward & client navigation)
@@ -347,6 +362,7 @@ export default function Home() {
               )}
 
               <Chat
+                apiUrl={apiUrl}
                 sessionId={sessionId}
                 documentName={documentName}
                 isShelfMode={isShelfMode}
