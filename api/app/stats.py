@@ -78,7 +78,9 @@ class PlatformStats:
         total_formats = sum(fmt_counts.values())
         format_percentages = {}
         for fmt, cnt in fmt_counts.items():
-            format_percentages[fmt] = round((cnt / total_formats * 100), 1) if total_formats > 0 else 0.0
+            format_percentages[fmt] = (
+                round((cnt / total_formats * 100), 1) if total_formats > 0 else 0.0
+            )
 
         # Estimated inference cost at ~$0.0005 per 1,000 tokens
         est_cost = round(total_toks * 0.0000005, 6)

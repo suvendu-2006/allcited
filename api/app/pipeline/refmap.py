@@ -10,12 +10,16 @@ from app.pipeline.chunker import Chunk
 class RefLink(BaseModel):
     ref_id: str = Field(..., description="Normalized reference identifier (e.g., 'rule:63.7.4')")
     raw_text: str = Field(..., description="Raw string match from text")
-    ref_type: str = Field(..., description="Type of reference: rule, clause, section, form, standard")
+    ref_type: str = Field(
+        ..., description="Type of reference: rule, clause, section, form, standard"
+    )
 
 
 # Regex families
 RULE_PATTERN = re.compile(r"\b(?:rule|regulation)\s+(\d+(?:\.\d+)+)\b", re.IGNORECASE)
-CLAUSE_SECTION_PATTERN = re.compile(r"\b(?:clause|section|§|sec\.)\s+(\d+(?:\.\d+)+)\b", re.IGNORECASE)
+CLAUSE_SECTION_PATTERN = re.compile(
+    r"\b(?:clause|section|§|sec\.)\s+(\d+(?:\.\d+)+)\b", re.IGNORECASE
+)
 FORM_DOC_PATTERN = re.compile(
     r"\b(?:form|schedule|procedure|standard)\s+([A-Z]{2,4}-[A-Z0-9]{2,5})\b",
     re.IGNORECASE,
@@ -28,9 +32,9 @@ AS_DEFINED_PATTERN = re.compile(
 # False positive indicators
 FALSE_POSITIVE_INDICATORS = [
     re.compile(r"\b(?:v|ver|version)\s*\d", re.IGNORECASE),  # Software versions: v1.2.3
-    re.compile(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$"),     # IP addresses: 192.168.1.1
-    re.compile(r"^\d{4}\.\d{2}\.\d{2}$"),                     # Dates: 2026.10.24
-    re.compile(r"^\d+\.\d{3,}$"),                             # Floats with many decimals: 3.14159
+    re.compile(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$"),  # IP addresses: 192.168.1.1
+    re.compile(r"^\d{4}\.\d{2}\.\d{2}$"),  # Dates: 2026.10.24
+    re.compile(r"^\d+\.\d{3,}$"),  # Floats with many decimals: 3.14159
 ]
 
 
@@ -156,16 +160,13 @@ def build_reference_map(chunks: List[Chunk]) -> ReferenceMap:
                 )
             )
             # Check definition: in heading path or appears as definition heading/title in text
-            is_def = (
-                bref.ref_id in [h.ref_id for h in heading_refs]
-                or (
-                    not is_mention
-                    and bool(
-                        re.search(
-                            rf"\b{re.escape(bref.raw_text)}\b(?:\s*[:\-\—]|\s+[A-Z][a-zA-Z]+)",
-                            chunk.text,
-                            re.IGNORECASE,
-                        )
+            is_def = bref.ref_id in [h.ref_id for h in heading_refs] or (
+                not is_mention
+                and bool(
+                    re.search(
+                        rf"\b{re.escape(bref.raw_text)}\b(?:\s*[:\-\—]|\s+[A-Z][a-zA-Z]+)",
+                        chunk.text,
+                        re.IGNORECASE,
                     )
                 )
             )

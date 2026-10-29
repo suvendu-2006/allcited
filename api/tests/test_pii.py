@@ -23,9 +23,9 @@ def parse_sse_events(text: str) -> List[dict]:
         if not line:
             continue
         if line.startswith("event:"):
-            current_event = line[len("event:"):].strip()
+            current_event = line[len("event:") :].strip()
         elif line.startswith("data:"):
-            data_str = line[len("data:"):].strip()
+            data_str = line[len("data:") :].strip()
             try:
                 data_json = json.loads(data_str)
             except json.JSONDecodeError:
@@ -119,8 +119,7 @@ def test_e2e_logged_answer_masks_email_while_stored_answer_unchanged(caplog):
 
     # 2. Check the logged answer line in log records
     answer_log_records = [
-        rec for rec in caplog.records
-        if "Answer generated for question" in rec.message
+        rec for rec in caplog.records if "Answer generated for question" in rec.message
     ]
     assert len(answer_log_records) > 0
 

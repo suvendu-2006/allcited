@@ -133,7 +133,9 @@ def test_compute_latencies():
 
 
 def test_extract_numbers_and_codes():
-    text = "Under Rule 63.7.4 and standard ISO-27001, procedure EC-101 requires 60 days and 24 days."
+    text = (
+        "Under Rule 63.7.4 and standard ISO-27001, procedure EC-101 requires 60 days and 24 days."
+    )
     codes = extract_numbers_and_codes(text)
     assert "63.7.4" in codes
     assert "iso-27001" in codes
@@ -151,8 +153,12 @@ def test_token_f1():
 
 def test_summary_and_table_format():
     s = AggregateSummary("hybrid")
-    s.record_question("normal", retrieval_hit=True, answer_correct=True, refusal_correct=True, latency_ms=25.0)
-    s.record_question("absent", retrieval_hit=True, answer_correct=True, refusal_correct=True, latency_ms=10.0)
+    s.record_question(
+        "normal", retrieval_hit=True, answer_correct=True, refusal_correct=True, latency_ms=25.0
+    )
+    s.record_question(
+        "absent", retrieval_hit=True, answer_correct=True, refusal_correct=True, latency_ms=10.0
+    )
     d = s.to_dict()
     assert d["retrieval_hit_rate"] == 100.0
     assert d["refusal_accuracy"] == 100.0

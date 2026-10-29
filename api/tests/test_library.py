@@ -23,10 +23,14 @@ _private_pem = _private_key.private_bytes(
     format=serialization.PrivateFormat.PKCS8,
     encryption_algorithm=serialization.NoEncryption(),
 ).decode("utf-8")
-_public_pem = _private_key.public_key().public_bytes(
-    encoding=serialization.Encoding.PEM,
-    format=serialization.PublicFormat.SubjectPublicKeyInfo,
-).decode("utf-8")
+_public_pem = (
+    _private_key.public_key()
+    .public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo,
+    )
+    .decode("utf-8")
+)
 
 set_test_verification_key(_public_pem)
 
@@ -48,8 +52,10 @@ def test_library_save_two_docs_and_query_with_doc_citations():
     """
     set_test_verification_key(_public_pem)
     from app.library import get_library_store
+
     get_library_store().reset_for_tests()
     import uuid
+
     alice_id = f"user_alice_library_test_{uuid.uuid4().hex[:8]}"
     alice_token = make_test_token(alice_id)
     headers = {"Authorization": f"Bearer {alice_token}"}
@@ -62,7 +68,9 @@ def test_library_save_two_docs_and_query_with_doc_citations():
     )
     res_a = client.post(
         "/v1/ingest",
-        files={"file": ("security_policy.txt", io.BytesIO(doc_a_text.encode("utf-8")), "text/plain")},
+        files={
+            "file": ("security_policy.txt", io.BytesIO(doc_a_text.encode("utf-8")), "text/plain")
+        },
     )
     assert res_a.status_code == 200, res_a.text
     session_a_id = res_a.json()["session_id"]
@@ -103,7 +111,10 @@ def test_library_save_two_docs_and_query_with_doc_citations():
     # 5. Query Alice's library about Security -> citations must identify security_policy.txt
     query_sec = client.post(
         "/v1/library/query",
-        json={"query": "What is the session inactivity timeout for database access?", "provider": "stub"},
+        json={
+            "query": "What is the session inactivity timeout for database access?",
+            "provider": "stub",
+        },
         headers=headers,
     )
     assert query_sec.status_code == 200, query_sec.text
@@ -116,7 +127,10 @@ def test_library_save_two_docs_and_query_with_doc_citations():
     # 6. Query Alice's library about Travel -> citations must identify travel_guide.txt
     query_trv = client.post(
         "/v1/library/query",
-        json={"query": "What is the daily per diem cap for international business travel?", "provider": "stub"},
+        json={
+            "query": "What is the daily per diem cap for international business travel?",
+            "provider": "stub",
+        },
         headers=headers,
     )
     assert query_trv.status_code == 200, query_trv.text
@@ -155,6 +169,7 @@ def test_ask_about_this_hydrates_saved_document_session():
 
     get_library_store().reset_for_tests()
     import uuid
+
     user_id = f"user_ask_about_this_{uuid.uuid4().hex[:8]}"
     token = make_test_token(user_id)
     headers = {"Authorization": f"Bearer {token}"}
@@ -167,13 +182,17 @@ def test_ask_about_this_hydrates_saved_document_session():
     )
     res = client.post(
         "/v1/ingest",
-        files={"file": ("cloud_encryption.txt", io.BytesIO(doc_text.encode("utf-8")), "text/plain")},
+        files={
+            "file": ("cloud_encryption.txt", io.BytesIO(doc_text.encode("utf-8")), "text/plain")
+        },
     )
     assert res.status_code == 200
     ingest_session_id = res.json()["session_id"]
 
     # 2. Save document to user's library
-    save_res = client.post("/v1/library/save", json={"session_id": ingest_session_id}, headers=headers)
+    save_res = client.post(
+        "/v1/library/save", json={"session_id": ingest_session_id}, headers=headers
+    )
     assert save_res.status_code == 200
     doc_id = save_res.json()["document"]["id"]
 
@@ -190,7 +209,11 @@ def test_ask_about_this_hydrates_saved_document_session():
     # 5. Querying with session_id=doc_id (as Chat.tsx does) must hydrate without 404
     query_res = client.post(
         "/v1/query",
-        json={"session_id": doc_id, "query": "What is the key rotation period?", "provider": "stub"},
+        json={
+            "session_id": doc_id,
+            "query": "What is the key rotation period?",
+            "provider": "stub",
+        },
         headers=headers,
     )
     assert query_res.status_code == 200
@@ -225,7 +248,9 @@ def test_delete_document_and_audit_trail_assertion():
         files={"file": ("policy_a.txt", io.BytesIO(doc_text_a.encode("utf-8")), "text/plain")},
     )
     assert res_a.status_code == 200
-    save_a = client.post("/v1/library/save", json={"session_id": res_a.json()["session_id"]}, headers=headers_a)
+    save_a = client.post(
+        "/v1/library/save", json={"session_id": res_a.json()["session_id"]}, headers=headers_a
+    )
     assert save_a.status_code == 200
     doc_a_id = save_a.json()["document"]["id"]
 
@@ -236,7 +261,9 @@ def test_delete_document_and_audit_trail_assertion():
         files={"file": ("policy_b.txt", io.BytesIO(doc_text_b.encode("utf-8")), "text/plain")},
     )
     assert res_b.status_code == 200
-    save_b = client.post("/v1/library/save", json={"session_id": res_b.json()["session_id"]}, headers=headers_b)
+    save_b = client.post(
+        "/v1/library/save", json={"session_id": res_b.json()["session_id"]}, headers=headers_b
+    )
     assert save_b.status_code == 200
     doc_b_id = save_b.json()["document"]["id"]
 
@@ -264,7 +291,11 @@ def test_delete_document_and_audit_trail_assertion():
     audit_res = client.get("/v1/audit", headers=headers_a)
     assert audit_res.status_code == 200
     logs = audit_res.json()["logs"]
-    del_logs = [log for log in logs if log["action"] == "document_deleted" and log.get("details", {}).get("doc_id") == doc_a_id]
+    del_logs = [
+        log
+        for log in logs
+        if log["action"] == "document_deleted" and log.get("details", {}).get("doc_id") == doc_a_id
+    ]
     assert len(del_logs) == 1
     assert del_logs[0]["user_id"] == user_a
 
@@ -277,5 +308,3 @@ def test_delete_document_and_audit_trail_assertion():
     unauth_del = client.delete(f"/v1/library/{doc_b_id}", headers=headers_a)
     assert unauth_del.status_code == 404
     assert store.get_document(user_b, doc_b_id) is not None
-
-

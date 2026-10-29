@@ -42,6 +42,7 @@ def test_same_question_answered_three_ways_identical_code_path(monkeypatch):
     Gate check: same question answered 3 ways — server key, a test BYOK header,
     and local Ollama — identical code path.
     """
+
     async def run_test():
         calls_made = []
 
@@ -112,6 +113,7 @@ def test_same_question_answered_three_ways_identical_code_path(monkeypatch):
 
 def test_llm_client_retries_on_429(monkeypatch):
     """Verify that client retries on 429 rate limit before succeeding."""
+
     async def run_test():
         attempts = 0
 
@@ -137,6 +139,7 @@ def test_llm_client_retries_on_429(monkeypatch):
         brain = BrainClient()
         # Set backoff to 0 for instant tests
         from app.llm import client as client_mod
+
         monkeypatch.setattr(client_mod, "INITIAL_BACKOFF_SECONDS", 0.01)
 
         res = await brain.generate([{"role": "user", "content": "ping"}])
@@ -148,6 +151,7 @@ def test_llm_client_retries_on_429(monkeypatch):
 
 def test_llm_client_fails_fast_on_401(monkeypatch):
     """Verify that client fails fast on 401 without retries."""
+
     async def run_test():
         attempts = 0
 
@@ -167,6 +171,7 @@ def test_llm_client_fails_fast_on_401(monkeypatch):
 
         brain = BrainClient()
         import pytest
+
         with pytest.raises(LLMClientError) as exc_info:
             await brain.generate([{"role": "user", "content": "ping"}])
         assert exc_info.value.status_code == 401
@@ -188,6 +193,7 @@ def test_get_models_endpoint():
 
 def test_groq_key_pool_failover_on_429(monkeypatch):
     """Verify that when 429 hits, BrainClient shifts to the next key in the pool."""
+
     async def run_test():
         brain = BrainClient()
         brain.groq_pool._keys = ["key_1_aaa", "key_2_bbb", "key_3_ccc"]
@@ -201,7 +207,9 @@ def test_groq_key_pool_failover_on_429(monkeypatch):
             # Fail first key with 429, succeed on second key
             if "key_1_aaa" in auth:
                 return httpx.Response(429, text="Rate limit reached on TPM")
-            return httpx.Response(200, json={"choices": [{"message": {"content": "Answer with key 2"}}]})
+            return httpx.Response(
+                200, json={"choices": [{"message": {"content": "Answer with key 2"}}]}
+            )
 
         transport = httpx.MockTransport(mock_handler)
         original_init = httpx.AsyncClient.__init__
@@ -223,6 +231,7 @@ def test_groq_key_pool_failover_on_429(monkeypatch):
 
 def test_groq_key_pool_streaming_failover_on_429(monkeypatch):
     """Verify that when 429 hits during stream_generate, BrainClient shifts to the next key."""
+
     async def run_test():
         brain = BrainClient()
         brain.groq_pool._keys = ["key_1_aaa", "key_2_bbb"]
@@ -236,7 +245,7 @@ def test_groq_key_pool_streaming_failover_on_429(monkeypatch):
             if "key_1_aaa" in auth:
                 return httpx.Response(429, text="Rate limit reached on TPM")
             # Stream SSE response on key 2
-            content = "data: {\"choices\": [{\"delta\": {\"content\": \"Streamed \"}}]}\n\ndata: {\"choices\": [{\"delta\": {\"content\": \"answer\"}}]}\n\ndata: [DONE]\n\n"
+            content = 'data: {"choices": [{"delta": {"content": "Streamed "}}]}\n\ndata: {"choices": [{"delta": {"content": "answer"}}]}\n\ndata: [DONE]\n\n'
             return httpx.Response(200, text=content)
 
         transport = httpx.MockTransport(mock_handler)
@@ -286,7 +295,9 @@ def test_nvidia_fallback_when_all_groq_fail(monkeypatch):
             if "groq.com" in url_str:
                 return httpx.Response(429, text="Groq rate limit 429")
             if "nvidia.com" in url_str:
-                return httpx.Response(200, json={"choices": [{"message": {"content": "Answer from NVIDIA NIM"}}]})
+                return httpx.Response(
+                    200, json={"choices": [{"message": {"content": "Answer from NVIDIA NIM"}}]}
+                )
             return httpx.Response(400, text="Unknown")
 
         transport = httpx.MockTransport(mock_handler)
@@ -302,7 +313,11 @@ def test_nvidia_fallback_when_all_groq_fail(monkeypatch):
         assert res == "Answer from NVIDIA NIM"
         assert any("nvidia.com" in u for u in urls_called)
         assert brain.last_used_provider == "nvidia"
-        assert (brain.last_used_model == settings.NVIDIA_MODEL) or ("llama-3.2-11b" in brain.last_used_model) or ("nemotron" in brain.last_used_model)
+        assert (
+            (brain.last_used_model == settings.NVIDIA_MODEL)
+            or ("llama-3.2-11b" in brain.last_used_model)
+            or ("nemotron" in brain.last_used_model)
+        )
 
     try:
         asyncio.run(run_test())
@@ -334,8 +349,8 @@ def test_nvidia_streaming_fallback_when_all_groq_fail(monkeypatch):
                 return httpx.Response(429, text="Rate limited on all keys")
             if "nvidia.com" in url_str:
                 content = (
-                    "data: {\"choices\": [{\"delta\": {\"content\": \"NVIDIA \"}}]}\n\n"
-                    "data: {\"choices\": [{\"delta\": {\"content\": \"streamed response\"}}]}\n\n"
+                    'data: {"choices": [{"delta": {"content": "NVIDIA "}}]}\n\n'
+                    'data: {"choices": [{"delta": {"content": "streamed response"}}]}\n\n'
                     "data: [DONE]\n\n"
                 )
                 return httpx.Response(200, text=content)
@@ -357,7 +372,11 @@ def test_nvidia_streaming_fallback_when_all_groq_fail(monkeypatch):
         assert "".join(chunks) == "NVIDIA streamed response"
         assert any("nvidia.com" in u for u in urls_called)
         assert brain.last_used_provider == "nvidia"
-        assert (brain.last_used_model == settings.NVIDIA_MODEL) or ("llama-3.2-11b" in brain.last_used_model) or ("nemotron" in brain.last_used_model)
+        assert (
+            (brain.last_used_model == settings.NVIDIA_MODEL)
+            or ("llama-3.2-11b" in brain.last_used_model)
+            or ("nemotron" in brain.last_used_model)
+        )
 
     try:
         asyncio.run(run_test())
@@ -381,6 +400,7 @@ def test_pipeline_e2e_groq_failover_to_nvidia(monkeypatch):
 
         async def instant_sleep(*args, **kwargs):
             return
+
         monkeypatch.setattr(asyncio, "sleep", instant_sleep)
 
         # Mock HTTP transport
@@ -390,7 +410,7 @@ def test_pipeline_e2e_groq_failover_to_nvidia(monkeypatch):
                 return httpx.Response(429, text="Groq rate limit 429")
             if "nvidia.com" in url_str:
                 content = (
-                    "data: {\"choices\": [{\"delta\": {\"content\": \"Notice period is 60 calendar days [S1].\"}}]}\n\n"
+                    'data: {"choices": [{"delta": {"content": "Notice period is 60 calendar days [S1]."}}]}\n\n'
                     "data: [DONE]\n\n"
                 )
                 return httpx.Response(200, text=content)
@@ -409,7 +429,15 @@ def test_pipeline_e2e_groq_failover_to_nvidia(monkeypatch):
         from app.pipeline.refmap import ReferenceMap
 
         # Create session with 1 chunk
-        c = Chunk(id="c1", doc_id="d1", content_hash="h1", text="Notice period is 60 calendar days.", section_path=["Separation"], token_count=10, page=1)
+        c = Chunk(
+            id="c1",
+            doc_id="d1",
+            content_hash="h1",
+            text="Notice period is 60 calendar days.",
+            section_path=["Separation"],
+            token_count=10,
+            page=1,
+        )
         doc_index = DocumentIndex()
         doc_index.build([c])
         sess = DocumentSession(
@@ -436,7 +464,11 @@ def test_pipeline_e2e_groq_failover_to_nvidia(monkeypatch):
 
         done_event = events[-1] if events else {}
         assert done_event.get("provider") == "nvidia"
-        assert (done_event.get("model", "") == settings.NVIDIA_MODEL) or ("llama-3.2-11b" in done_event.get("model", "")) or ("nemotron" in done_event.get("model", ""))
+        assert (
+            (done_event.get("model", "") == settings.NVIDIA_MODEL)
+            or ("llama-3.2-11b" in done_event.get("model", ""))
+            or ("nemotron" in done_event.get("model", ""))
+        )
         assert "60 calendar days" in done_event.get("answer", "")
 
     try:

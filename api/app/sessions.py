@@ -87,7 +87,8 @@ class SessionStore:
     def _cleanup_expired(self):
         now = time.time()
         expired_keys = [
-            sid for sid, s in self._sessions.items()
+            sid
+            for sid, s in self._sessions.items()
             if (now - s.last_accessed) > SESSION_TTL_SECONDS
         ]
         for sid in expired_keys:
@@ -96,14 +97,17 @@ class SessionStore:
     def _evict_lru_if_needed(self):
         if len(self._sessions) >= MAX_SESSIONS:
             candidates = [
-                sid for sid in self._sessions
+                sid
+                for sid in self._sessions
                 if not (sid.startswith("sess_shared") or sid.startswith("sess_scanned"))
             ]
             if candidates:
                 oldest_sid = min(candidates, key=lambda sid: self._sessions[sid].last_accessed)
                 del self._sessions[oldest_sid]
             else:
-                oldest_sid = min(self._sessions.keys(), key=lambda sid: self._sessions[sid].last_accessed)
+                oldest_sid = min(
+                    self._sessions.keys(), key=lambda sid: self._sessions[sid].last_accessed
+                )
                 del self._sessions[oldest_sid]
 
     def create_session_from_bytes(
@@ -122,7 +126,12 @@ class SessionStore:
             limit_mb = max_file_size_bytes // (1024 * 1024)
             raise HTTPException(
                 status_code=400,
-                detail={"error": {"code": "plan_limit_reached", "message": f"File size ({file_size} bytes) exceeds {limit_mb} MB cap"}},
+                detail={
+                    "error": {
+                        "code": "plan_limit_reached",
+                        "message": f"File size ({file_size} bytes) exceeds {limit_mb} MB cap",
+                    }
+                },
             )
 
         self._cleanup_expired()
@@ -144,7 +153,12 @@ class SessionStore:
                 if page_count > MAX_PAGES:
                     raise HTTPException(
                         status_code=400,
-                        detail={"error": {"code": "plan_limit_reached", "message": f"Document has {page_count} pages, exceeding the 300-page cap"}},
+                        detail={
+                            "error": {
+                                "code": "plan_limit_reached",
+                                "message": f"Document has {page_count} pages, exceeding the 300-page cap",
+                            }
+                        },
                     )
                 blocks = parse_pdf(content, source_name=filename)
             except HTTPException:
@@ -152,7 +166,12 @@ class SessionStore:
             except (PDFParserError, Exception) as e:
                 raise HTTPException(
                     status_code=400,
-                    detail={"error": {"code": "doc_unreadable", "message": f"Couldn't read this file: {str(e)}"}},
+                    detail={
+                        "error": {
+                            "code": "doc_unreadable",
+                            "message": f"Couldn't read this file: {str(e)}",
+                        }
+                    },
                 ) from e
         elif lower_name.endswith((".md", ".txt")):
             blocks = parse_md_txt(content, source_name=filename)
@@ -184,7 +203,9 @@ class SessionStore:
                     status_code=400,
                     detail={"error": {"code": "doc_unreadable", "message": str(e)}},
                 ) from e
-        elif lower_name.startswith(("http://", "https://")) or lower_name.endswith((".html", ".htm")):
+        elif lower_name.startswith(("http://", "https://")) or lower_name.endswith(
+            (".html", ".htm")
+        ):
             try:
                 blocks = parse_html(content, source_name=filename)
                 page_count = 1
@@ -200,7 +221,12 @@ class SessionStore:
         if not blocks:
             raise HTTPException(
                 status_code=400,
-                detail={"error": {"code": "doc_unreadable", "message": "No readable text extracted from document"}},
+                detail={
+                    "error": {
+                        "code": "doc_unreadable",
+                        "message": "No readable text extracted from document",
+                    }
+                },
             )
 
         # 3. Chunk document
@@ -250,10 +276,12 @@ class SessionStore:
 
         # 6. Extract GraphRAG-lite knowledge graph
         from app.pipeline.graph import extract_heuristic_entities
+
         knowledge_graph = extract_heuristic_entities(chunks)
 
         # 7. Record stats
         from app.stats import get_platform_stats
+
         p_stats = get_platform_stats()
         p_stats.record_chunks(len(chunks))
         if lower_name.endswith(".pdf"):
@@ -264,7 +292,9 @@ class SessionStore:
             p_stats.record_format("pptx")
         elif lower_name.endswith((".xlsx", ".xlsm")):
             p_stats.record_format("xlsx")
-        elif lower_name.startswith(("http://", "https://")) or lower_name.endswith((".html", ".htm")):
+        elif lower_name.startswith(("http://", "https://")) or lower_name.endswith(
+            (".html", ".htm")
+        ):
             p_stats.record_format("html")
         else:
             p_stats.record_format("md_txt")
@@ -286,6 +316,7 @@ class SessionStore:
 
         # 6. Invalidate semantic cache entries for this document
         from app.cache import get_semantic_cache
+
         get_semantic_cache().invalidate_filename(filename)
 
         return session

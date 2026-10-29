@@ -28,10 +28,14 @@ _private_pem = _private_key.private_bytes(
     format=serialization.PrivateFormat.PKCS8,
     encryption_algorithm=serialization.NoEncryption(),
 ).decode("utf-8")
-_public_pem = _private_key.public_key().public_bytes(
-    encoding=serialization.Encoding.PEM,
-    format=serialization.PublicFormat.SubjectPublicKeyInfo,
-).decode("utf-8")
+_public_pem = (
+    _private_key.public_key()
+    .public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo,
+    )
+    .decode("utf-8")
+)
 
 
 def make_test_token(user_id: str) -> str:
@@ -55,9 +59,11 @@ def test_plan_gates_and_live_upgrade_flip():
     stats = get_platform_stats()
     stats.reset_for_tests()
     from app.library import get_library_store
+
     get_library_store().reset_for_tests()
 
     import uuid
+
     user_id = f"user_free_plan_tester_{uuid.uuid4().hex[:8]}"
     token = make_test_token(user_id)
     headers = {"Authorization": f"Bearer {token}"}
@@ -76,7 +82,9 @@ def test_plan_gates_and_live_upgrade_flip():
     normal_text = "Rule POL-1: Standard office hours are 9am to 5pm Monday through Friday.\n"
     res_normal = client.post(
         "/v1/ingest",
-        files={"file": ("handbook_sample.txt", io.BytesIO(normal_text.encode("utf-8")), "text/plain")},
+        files={
+            "file": ("handbook_sample.txt", io.BytesIO(normal_text.encode("utf-8")), "text/plain")
+        },
         headers=headers,
     )
     assert res_normal.status_code == 200
@@ -119,7 +127,12 @@ def test_plan_gates_and_live_upgrade_flip():
     # B) Upgraded user can now run precision mode query
     precision_pro = client.post(
         "/v1/query",
-        json={"session_id": session_id, "query": "What are office hours?", "mode": "precision", "provider": "stub"},
+        json={
+            "session_id": session_id,
+            "query": "What are office hours?",
+            "mode": "precision",
+            "provider": "stub",
+        },
         headers=headers,
     )
     assert precision_pro.status_code == 200  # SSE stream accepted

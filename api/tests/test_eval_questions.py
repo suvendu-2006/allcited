@@ -52,12 +52,22 @@ def test_eval_questions_schema_and_distribution():
     assert type_counts["P4"] >= 4, f"P4 trap requires >= 4 questions, got {type_counts['P4']}"
 
     # Required absent questions count
-    assert type_counts["absent"] == 4, f"Absent set must equal exactly 4, got {type_counts['absent']}"
+    assert type_counts["absent"] == 4, (
+        f"Absent set must equal exactly 4, got {type_counts['absent']}"
+    )
 
     # Verify absent and refusal questions have empty chunk expectations
     for q in parsed_questions:
-        if q.type == "absent" or (q.type == "scope_boundary" and "Not covered" in q.expected_answer):
-            assert len(q.expected_chunk_ids) == 0, f"Refusal question {q.id} should have empty expected_chunk_ids"
-            assert "Not covered" in q.expected_answer, f"Refusal question {q.id} expected_answer must state 'Not covered'"
+        if q.type == "absent" or (
+            q.type == "scope_boundary" and "Not covered" in q.expected_answer
+        ):
+            assert len(q.expected_chunk_ids) == 0, (
+                f"Refusal question {q.id} should have empty expected_chunk_ids"
+            )
+            assert "Not covered" in q.expected_answer, (
+                f"Refusal question {q.id} expected_answer must state 'Not covered'"
+            )
         else:
-            assert len(q.expected_chunk_ids) >= 1, f"Question {q.id} of type {q.type} must have >= 1 expected chunk"
+            assert len(q.expected_chunk_ids) >= 1, (
+                f"Question {q.id} of type {q.type} must have >= 1 expected chunk"
+            )

@@ -14,7 +14,9 @@ class Settings(BaseSettings):
     )
 
     # Core environment & server
-    ENVIRONMENT: str = Field(default="development", description="Environment: development, test, production")
+    ENVIRONMENT: str = Field(
+        default="development", description="Environment: development, test, production"
+    )
     PORT: int = Field(default=8000, description="Server port")
     MODE: str = Field(default="cloud", description="Operating mode: cloud or private")
     CORS_ORIGINS: Union[str, List[str]] = Field(
@@ -35,47 +37,88 @@ class Settings(BaseSettings):
     )
 
     # LLM / Brain settings
-    GROQ_API_KEY: Optional[str] = Field(default=None, description="Groq API key for default cloud brain")
+    GROQ_API_KEY: Optional[str] = Field(
+        default=None, description="Groq API key for default cloud brain"
+    )
     GROQ_API_KEYS: Union[str, List[str]] = Field(
         default_factory=list,
         description="Comma-separated or list of Groq API keys for failover and rate-limit rotation",
     )
-    NVIDIA_API_KEY: Optional[str] = Field(default=None, description="NVIDIA NIM API key for ultimate cloud brain failover")
-    NVIDIA_BASE_URL: str = Field(default="https://integrate.api.nvidia.com/v1", description="Base URL for NVIDIA NIM")
-    NVIDIA_MODEL: str = Field(default="nvidia/nemotron-3.5-bolt-e4b", description="NVIDIA fallback model")
-    OLLAMA_BASE_URL: str = Field(default="http://localhost:11434", description="Base URL for local Ollama")
+    NVIDIA_API_KEY: Optional[str] = Field(
+        default=None, description="NVIDIA NIM API key for ultimate cloud brain failover"
+    )
+    NVIDIA_BASE_URL: str = Field(
+        default="https://integrate.api.nvidia.com/v1", description="Base URL for NVIDIA NIM"
+    )
+    NVIDIA_MODEL: str = Field(
+        default="nvidia/nemotron-3.5-bolt-e4b", description="NVIDIA fallback model"
+    )
+    OLLAMA_BASE_URL: str = Field(
+        default="http://localhost:11434", description="Base URL for local Ollama"
+    )
     DEFAULT_LLM_MODEL: str = Field(default="qwen/qwen3.8-27b", description="Default LLM model name")
 
     # Pipeline & Tuning settings (Plan §9)
-    CACHE_THRESHOLD: float = Field(default=0.96, ge=0.0, le=1.0, description="Cosine similarity threshold for semantic cache")
+    CACHE_THRESHOLD: float = Field(
+        default=0.96, ge=0.0, le=1.0, description="Cosine similarity threshold for semantic cache"
+    )
     HYDE_ENABLED: bool = Field(default=True, description="Enable HyDE retrieval augmentation")
-    AGENTIC_ENABLED: bool = Field(default=True, description="Enable iterative agentic retrieval loop")
+    AGENTIC_ENABLED: bool = Field(
+        default=True, description="Enable iterative agentic retrieval loop"
+    )
     RERANKER_ENABLED: bool = Field(default=True, description="Enable cross-encoder re-ranker stage")
-    RELEVANCE_FLOOR: float = Field(default=0.0001, ge=0.0, le=1.0, description="Cross-encoder relevance floor for early refusal")
+    RELEVANCE_FLOOR: float = Field(
+        default=0.0001,
+        ge=0.0,
+        le=1.0,
+        description="Cross-encoder relevance floor for early refusal",
+    )
     GUARDS: str = Field(default="on", description="Prompt injection & PII guards: on or off")
-    GRAPH_MAX_EXPANSION: int = Field(default=4, ge=1, le=10, description="Max neighbor facts in GraphRAG-lite")
-    OCR_LANGS: str = Field(default="eng+hin", description="OCR language list (e.g. 'eng+hin' or 'en+hi')")
-    OCR_PROVIDER: str = Field(default="tesseract", description="OCR provider engine: 'tesseract' or 'easyocr'")
-    TRACES_DIR: str = Field(default="data/traces", description="Directory path for per-question JSONL traces")
+    GRAPH_MAX_EXPANSION: int = Field(
+        default=4, ge=1, le=10, description="Max neighbor facts in GraphRAG-lite"
+    )
+    OCR_LANGS: str = Field(
+        default="eng+hin", description="OCR language list (e.g. 'eng+hin' or 'en+hi')"
+    )
+    OCR_PROVIDER: str = Field(
+        default="tesseract", description="OCR provider engine: 'tesseract' or 'easyocr'"
+    )
+    TRACES_DIR: str = Field(
+        default="data/traces", description="Directory path for per-question JSONL traces"
+    )
 
     # Auth & Storage (Clerk & Supabase)
     CLERK_SECRET_KEY: Optional[str] = Field(default=None, description="Clerk backend secret key")
     CLERK_PUBLISHABLE_KEY: Optional[str] = Field(default=None, description="Clerk publishable key")
-    CLERK_PEM_PUBLIC_KEY: Optional[str] = Field(default=None, description="Clerk PEM public key for local JWT verification")
+    CLERK_PEM_PUBLIC_KEY: Optional[str] = Field(
+        default=None, description="Clerk PEM public key for local JWT verification"
+    )
     CLERK_JWKS_URL: Optional[str] = Field(default=None, description="Clerk JWKS endpoint URL")
     SUPABASE_URL: Optional[str] = Field(default=None, description="Supabase project URL")
-    SUPABASE_SERVICE_ROLE_KEY: Optional[str] = Field(default=None, description="Supabase service role key")
+    SUPABASE_SERVICE_ROLE_KEY: Optional[str] = Field(
+        default=None, description="Supabase service role key"
+    )
 
     # Payments (Stripe)
     STRIPE_SECRET_KEY: Optional[str] = Field(default=None, description="Stripe test secret key")
-    STRIPE_WEBHOOK_SECRET: Optional[str] = Field(default=None, description="Stripe webhook signing secret")
-    STRIPE_PRICE_ID_PRO: str = Field(default="price_pro_test_123", description="Stripe price ID for Pro plan")
-    STRIPE_SUCCESS_URL: str = Field(default="http://localhost:3000/pricing?success=true", description="Checkout success URL")
-    STRIPE_CANCEL_URL: str = Field(default="http://localhost:3000/pricing?canceled=true", description="Checkout cancel URL")
+    STRIPE_WEBHOOK_SECRET: Optional[str] = Field(
+        default=None, description="Stripe webhook signing secret"
+    )
+    STRIPE_PRICE_ID_PRO: str = Field(
+        default="price_pro_test_123", description="Stripe price ID for Pro plan"
+    )
+    STRIPE_SUCCESS_URL: str = Field(
+        default="http://localhost:3000/pricing?success=true", description="Checkout success URL"
+    )
+    STRIPE_CANCEL_URL: str = Field(
+        default="http://localhost:3000/pricing?canceled=true", description="Checkout cancel URL"
+    )
 
     # Channels (Telegram)
     TELEGRAM_BOT_TOKEN: Optional[str] = Field(default=None, description="Telegram bot API token")
-    TELEGRAM_WEBHOOK_SECRET: Optional[str] = Field(default=None, description="Telegram webhook secret token")
+    TELEGRAM_WEBHOOK_SECRET: Optional[str] = Field(
+        default=None, description="Telegram webhook secret token"
+    )
 
     @field_validator("CORS_ORIGINS", mode="after")
     @classmethod
@@ -86,7 +129,11 @@ class Settings(BaseSettings):
                 try:
                     parsed = json.loads(s)
                     if isinstance(parsed, list):
-                        return [str(i).strip().strip("'\"") for i in parsed if str(i).strip().strip("'\"")]
+                        return [
+                            str(i).strip().strip("'\"")
+                            for i in parsed
+                            if str(i).strip().strip("'\"")
+                        ]
                 except Exception:
                     pass
             return [i.strip().strip("'\"") for i in s.split(",") if i.strip().strip("'\"")]
@@ -113,8 +160,14 @@ class Settings(BaseSettings):
             origins = [o for o in origins if o != "*"]
             if not self.ALLOW_LOCAL_ORIGINS_IN_PROD:
                 origins = [
-                    o for o in origins
-                    if not ("://localhost" in o or "://127.0.0.1" in o or o.startswith("localhost") or o.startswith("127.0.0.1"))
+                    o
+                    for o in origins
+                    if not (
+                        "://localhost" in o
+                        or "://127.0.0.1" in o
+                        or o.startswith("localhost")
+                        or o.startswith("127.0.0.1")
+                    )
                 ]
         return origins
 
@@ -122,16 +175,26 @@ class Settings(BaseSettings):
         """Validate required keys for given build phase, returning missing var names."""
         missing = []
         if self.ENVIRONMENT == "production":
-            raw_origins = self.CORS_ORIGINS if isinstance(self.CORS_ORIGINS, list) else [self.CORS_ORIGINS]
+            raw_origins = (
+                self.CORS_ORIGINS if isinstance(self.CORS_ORIGINS, list) else [self.CORS_ORIGINS]
+            )
             if "*" in raw_origins:
-                missing.append("CORS_ORIGINS (wildcard '*' disallowed in production with credentials)")
+                missing.append(
+                    "CORS_ORIGINS (wildcard '*' disallowed in production with credentials)"
+                )
             if not self.ALLOW_LOCAL_ORIGINS_IN_PROD:
                 local_found = [
-                    o for o in raw_origins
-                    if "://localhost" in o or "://127.0.0.1" in o or o.startswith("localhost") or o.startswith("127.0.0.1")
+                    o
+                    for o in raw_origins
+                    if "://localhost" in o
+                    or "://127.0.0.1" in o
+                    or o.startswith("localhost")
+                    or o.startswith("127.0.0.1")
                 ]
                 if local_found:
-                    missing.append(f"CORS_ORIGINS (local origins {local_found} disallowed in production without ALLOW_LOCAL_ORIGINS_IN_PROD)")
+                    missing.append(
+                        f"CORS_ORIGINS (local origins {local_found} disallowed in production without ALLOW_LOCAL_ORIGINS_IN_PROD)"
+                    )
 
         if phase >= 2 and self.MODE == "cloud" and not self.GROQ_API_KEY:
             missing.append("GROQ_API_KEY")

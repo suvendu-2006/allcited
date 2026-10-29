@@ -1,10 +1,14 @@
 # Environment & Secrets (NEVER COMMIT)
 .env
+.env*
 .env*.local
 .env.development
 .env.test
 .env.production
 !.env.example
+!api/.env.example
+!web/.env.example
+!deploy/hf-space-staging/.env.example
 *.pem
 *.key
 
@@ -17,7 +21,6 @@ __pycache__/
 env/
 venv/
 .venv
-.venv/
 ENV/
 build/
 develop-eggs/
@@ -64,11 +67,13 @@ yarn-error.log*
 cache/
 tmp/
 /data/
+data/traces/*.jsonl
 api/data/
 api/models/
-!web/src/data/
 *.jsonl
+!eval/fixtures/
+!web/src/data/
+!web/src/lib/
 .vercel
-.env*
 deploy/hf-space-staging/
 deploy/hf-gradio/

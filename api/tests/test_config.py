@@ -14,7 +14,13 @@ def test_settings_default():
 
 def test_settings_phase_validation():
     # In phase 1, no cloud API keys required
-    settings = Settings(MODE="cloud", GROQ_API_KEY=None, CLERK_SECRET_KEY=None, SUPABASE_URL=None, SUPABASE_SERVICE_ROLE_KEY=None)
+    settings = Settings(
+        MODE="cloud",
+        GROQ_API_KEY=None,
+        CLERK_SECRET_KEY=None,
+        SUPABASE_URL=None,
+        SUPABASE_SERVICE_ROLE_KEY=None,
+    )
     missing = settings.validate_phase_keys(phase=1)
     assert missing == []
 

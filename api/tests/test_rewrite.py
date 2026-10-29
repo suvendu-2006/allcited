@@ -43,7 +43,10 @@ def test_vague_query_expands_to_at_least_two_subqueries():
     res_heuristic = asyncio.run(rewrite_query(vague_q, allow_llm=False))
     assert res_heuristic.skipped is False
     assert len(res_heuristic.sub_queries) >= 2
-    assert any("encashment" in sq.lower() or "annual leave" in sq.lower() for sq in res_heuristic.sub_queries)
+    assert any(
+        "encashment" in sq.lower() or "annual leave" in sq.lower()
+        for sq in res_heuristic.sub_queries
+    )
 
     # 2. LLM expansion (with mocked response)
     def mock_handler(request: httpx.Request):
@@ -70,6 +73,7 @@ def test_vague_query_expands_to_at_least_two_subqueries():
         original_init(self, *a, **k)
 
     from _pytest.monkeypatch import MonkeyPatch
+
     mp = MonkeyPatch()
     mp.setattr(httpx.AsyncClient, "__init__", mock_init)
 

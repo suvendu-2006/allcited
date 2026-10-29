@@ -1,4 +1,3 @@
-
 from app.pipeline.rerank import Reranker
 from app.pipeline.retrieve import hybrid_retrieve
 
@@ -12,7 +11,9 @@ def test_reranker_flag_off_path(session_handbook):
 
     reranker = Reranker()
     # Flag off: enabled=False
-    results_off = reranker.rerank("sick leave doctor certificate", candidates, top_k=4, enabled=False)
+    results_off = reranker.rerank(
+        "sick leave doctor certificate", candidates, top_k=4, enabled=False
+    )
 
     assert len(results_off) == min(4, len(candidates))
     for i, res in enumerate(results_off):

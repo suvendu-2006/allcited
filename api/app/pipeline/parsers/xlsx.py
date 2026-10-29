@@ -10,6 +10,7 @@ ROW_WINDOW_SIZE = 25
 
 class XLSXParserError(Exception):
     """Raised when XLSX spreadsheet cannot be read or parsed."""
+
     pass
 
 
@@ -60,7 +61,9 @@ def parse_xlsx(
             data_rows = all_rows[1:]
             if not data_rows:
                 # Single row sheet (header only)
-                table_md = "| " + " | ".join(headers) + " |\n| " + " | ".join(["---"] * max_cols) + " |"
+                table_md = (
+                    "| " + " | ".join(headers) + " |\n| " + " | ".join(["---"] * max_cols) + " |"
+                )
                 blocks.append(
                     ParsedBlock(
                         text=table_md,

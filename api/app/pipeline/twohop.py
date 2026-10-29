@@ -126,8 +126,7 @@ def expand_two_hop(
     )
 
     normalized: List[TwoHopChunk] = [
-        normalize_to_twohop_chunk(c, default_rank=idx + 1)
-        for idx, c in enumerate(candidates)
+        normalize_to_twohop_chunk(c, default_rank=idx + 1) for idx, c in enumerate(candidates)
     ]
     existing_ids: Set[str] = {item.chunk.id for item in normalized}
     expansions: List[TwoHopChunk] = []

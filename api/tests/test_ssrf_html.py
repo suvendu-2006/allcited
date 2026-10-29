@@ -18,9 +18,9 @@ def parse_sse_events(text: str) -> List[dict]:
         if not line:
             continue
         if line.startswith("event:"):
-            current_event = line[len("event:"):].strip()
+            current_event = line[len("event:") :].strip()
         elif line.startswith("data:"):
-            data_str = line[len("data:"):].strip()
+            data_str = line[len("data:") :].strip()
             try:
                 data_json = json.loads(data_str)
             except json.JSONDecodeError:
@@ -51,7 +51,9 @@ def test_ssrf_blocks_private_ips_and_loopback():
         resp = client.post("/v1/ingest", data={"url": url})
         assert resp.status_code == 400, f"URL '{url}' was not blocked"
         data = resp.json()
-        assert data["detail"]["error"]["code"] == "url_blocked", f"Wrong error code for '{url}': {data}"
+        assert data["detail"]["error"]["code"] == "url_blocked", (
+            f"Wrong error code for '{url}': {data}"
+        )
 
         # Also test via JSON endpoint
         resp_json = client.post("/v1/ingest/url", json={"url": url})
@@ -64,14 +66,18 @@ def test_ssrf_blocks_redirect_to_private_ip(monkeypatch):
     Verify that an initial public URL that redirects to a private IP (e.g. 169.254.169.254)
     is caught and blocked on the redirect step.
     """
+
     def mock_get(url, *args, **kwargs):
         if "public.example.com" in url:
             # Malicious redirect to cloud metadata service
-            return httpx.Response(302, headers={"Location": "http://169.254.169.254/latest/meta-data/"})
+            return httpx.Response(
+                302, headers={"Location": "http://169.254.169.254/latest/meta-data/"}
+            )
         raise RuntimeError("Should never connect to metadata IP")
 
     # Monkeypatch AsyncClient in ssrf.py
     from app.security import ssrf
+
     orig_client = httpx.AsyncClient
 
     class MockAsyncClient(orig_client):
@@ -80,7 +86,11 @@ def test_ssrf_blocks_redirect_to_private_ip(monkeypatch):
 
     monkeypatch.setattr(ssrf.httpx, "AsyncClient", MockAsyncClient)
     # Bypass initial DNS validation for mock domain
-    monkeypatch.setattr(ssrf, "validate_url_target", lambda u: None if "public.example.com" in u else orig_validate(u))
+    monkeypatch.setattr(
+        ssrf,
+        "validate_url_target",
+        lambda u: None if "public.example.com" in u else orig_validate(u),
+    )
     orig_validate = validate_url_target
 
     resp = client.post("/v1/ingest/url", json={"url": "https://public.example.com/start"})
@@ -93,11 +103,14 @@ def test_ssrf_enforces_two_megabyte_cap(monkeypatch):
     oversized_bytes = b"A" * (2 * 1024 * 1024 + 10)
 
     from app.security import ssrf
+
     orig_client = httpx.AsyncClient
 
     class MockAsyncClient(orig_client):
         async def get(self, url, *args, **kwargs):
-            return httpx.Response(200, content=oversized_bytes, headers={"Content-Length": str(len(oversized_bytes))})
+            return httpx.Response(
+                200, content=oversized_bytes, headers={"Content-Length": str(len(oversized_bytes))}
+            )
 
     monkeypatch.setattr(ssrf.httpx, "AsyncClient", MockAsyncClient)
     monkeypatch.setattr(ssrf, "validate_url_target", lambda u: None)
@@ -130,17 +143,22 @@ def test_public_article_url_answers_questions(monkeypatch):
 </html>"""
 
     from app.security import ssrf
+
     orig_client = httpx.AsyncClient
 
     class MockAsyncClient(orig_client):
         async def get(self, url, *args, **kwargs):
-            return httpx.Response(200, content=article_html.encode("utf-8"), headers={"Content-Type": "text/html"})
+            return httpx.Response(
+                200, content=article_html.encode("utf-8"), headers={"Content-Type": "text/html"}
+            )
 
     monkeypatch.setattr(ssrf.httpx, "AsyncClient", MockAsyncClient)
     monkeypatch.setattr(ssrf, "validate_url_target", lambda u: None)
 
     # 1. Ingest public article URL
-    ingest_resp = client.post("/v1/ingest/url", json={"url": "https://security.example.com/standards"})
+    ingest_resp = client.post(
+        "/v1/ingest/url", json={"url": "https://security.example.com/standards"}
+    )
     assert ingest_resp.status_code == 200
     data = ingest_resp.json()
     assert data["filename"] == "https://security.example.com/standards"
@@ -161,7 +179,10 @@ def test_public_article_url_answers_questions(monkeypatch):
     citations = next(e["data"]["citations"] for e in events if e["event"] == "citations")
     assert len(citations) >= 1
     assert "FIDO2 hardware security keys" in citations[0]["text_preview"]
-    assert any("Hardware Token Protocol" in p or "Corporate Security Architecture" in p for p in citations[0]["section_path"])
+    assert any(
+        "Hardware Token Protocol" in p or "Corporate Security Architecture" in p
+        for p in citations[0]["section_path"]
+    )
 
 
 def test_ssrf_dns_pinning_transport():
@@ -229,6 +250,7 @@ def test_ssrf_streaming_chunked_abort():
             yield mock_resp
 
     from app.security import ssrf
+
     orig_client = ssrf.httpx.AsyncClient
 
     try:
@@ -243,4 +265,5 @@ def test_ssrf_streaming_chunked_abort():
     finally:
         ssrf.httpx.AsyncClient = orig_client
         from app.security.ssrf import validate_url_target as orig_v
+
         ssrf.validate_url_target = orig_v

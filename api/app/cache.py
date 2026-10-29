@@ -173,7 +173,11 @@ class SemanticCache:
             if session_id in self._stores:
                 count = len(self._stores[session_id])
                 del self._stores[session_id]
-                logger.info("Invalidated semantic cache for session %s (%d entries removed)", session_id, count)
+                logger.info(
+                    "Invalidated semantic cache for session %s (%d entries removed)",
+                    session_id,
+                    count,
+                )
                 return count
             return 0
 

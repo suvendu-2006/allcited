@@ -17,9 +17,15 @@ logger = logging.getLogger(__name__)
 
 
 class CheckoutRequest(BaseModel):
-    price_id: Optional[str] = Field(default=None, description="Stripe price ID for Pro subscription")
-    success_url: Optional[str] = Field(default=None, description="Redirect URL upon successful payment")
-    cancel_url: Optional[str] = Field(default=None, description="Redirect URL if checkout is canceled")
+    price_id: Optional[str] = Field(
+        default=None, description="Stripe price ID for Pro subscription"
+    )
+    success_url: Optional[str] = Field(
+        default=None, description="Redirect URL upon successful payment"
+    )
+    cancel_url: Optional[str] = Field(
+        default=None, description="Redirect URL if checkout is canceled"
+    )
 
 
 class CheckoutResponse(BaseModel):
@@ -262,13 +268,20 @@ async def handle_stripe_webhook(payload: bytes, sig_header: Optional[str]) -> Di
         else:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail={"error": {"code": "stripe_unconfigured", "message": "STRIPE_WEBHOOK_SECRET is not configured."}},
+                detail={
+                    "error": {
+                        "code": "stripe_unconfigured",
+                        "message": "STRIPE_WEBHOOK_SECRET is not configured.",
+                    }
+                },
             )
 
     if not sig_header:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"error": {"code": "missing_signature", "message": "Missing Stripe-Signature header"}},
+            detail={
+                "error": {"code": "missing_signature", "message": "Missing Stripe-Signature header"}
+            },
         )
 
     try:
@@ -281,7 +294,12 @@ async def handle_stripe_webhook(payload: bytes, sig_header: Optional[str]) -> Di
         logger.warning(f"Stripe signature verification failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"error": {"code": "invalid_signature", "message": "Invalid Stripe webhook signature"}},
+            detail={
+                "error": {
+                    "code": "invalid_signature",
+                    "message": "Invalid Stripe webhook signature",
+                }
+            },
         )
     except Exception as e:
         logger.error(f"Error parsing Stripe webhook payload: {e}")
@@ -295,7 +313,9 @@ async def handle_stripe_webhook(payload: bytes, sig_header: Optional[str]) -> Di
 
     # Replay protection: if event already processed, exit idempotently without double-applying
     if store.is_event_processed(event_id):
-        logger.info(f"Replayed Stripe event {event_id} already processed — skipping duplicate application.")
+        logger.info(
+            f"Replayed Stripe event {event_id} already processed — skipping duplicate application."
+        )
         return {
             "status": "ignored",
             "reason": "duplicate_event",
@@ -304,7 +324,11 @@ async def handle_stripe_webhook(payload: bytes, sig_header: Optional[str]) -> Di
         }
 
     # Handle subscription update events
-    if event_type in ("checkout.session.completed", "customer.subscription.created", "customer.subscription.updated"):
+    if event_type in (
+        "checkout.session.completed",
+        "customer.subscription.created",
+        "customer.subscription.updated",
+    ):
         raw_obj = event["data"]["object"]
         obj = raw_obj.to_dict() if hasattr(raw_obj, "to_dict") else dict(raw_obj)
         user_id = obj.get("client_reference_id") or obj.get("metadata", {}).get("user_id")
@@ -321,6 +345,7 @@ async def handle_stripe_webhook(payload: bytes, sig_header: Optional[str]) -> Di
             )
             logger.info(f"Upgraded user {user_id} to Pro via Stripe event {event_id}")
             from app.audit import get_audit_store
+
             get_audit_store().record_action(
                 user_id=user_id,
                 action="subscription_updated",
@@ -344,6 +369,7 @@ async def handle_stripe_webhook(payload: bytes, sig_header: Optional[str]) -> Di
             )
             logger.info(f"Downgraded user {user_id} to Free via Stripe event {event_id}")
             from app.audit import get_audit_store
+
             get_audit_store().record_action(
                 user_id=user_id,
                 action="subscription_updated",

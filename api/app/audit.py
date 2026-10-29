@@ -74,7 +74,9 @@ class AuditStore:
             try:
                 clean_user_id = validate_or_sanitize_identifier(user_id)
             except Exception:
-                clean_user_id = "".join(ch for ch in str(user_id) if ch not in DISALLOWED_IDENTIFIER_CHARS)
+                clean_user_id = "".join(
+                    ch for ch in str(user_id) if ch not in DISALLOWED_IDENTIFIER_CHARS
+                )
 
         record = {
             "id": str(uuid.uuid4()),

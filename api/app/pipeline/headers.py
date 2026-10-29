@@ -23,7 +23,9 @@ def generate_structural_headers(
     for chunk in chunks:
         sec_str = " > ".join(chunk.section_path) if chunk.section_path else "General Policy"
         page_str = f", Page {chunk.page}" if chunk.page else ""
-        chunk.contextual_header = f"[Context: Document '{clean_title}', Section '{sec_str}'{page_str}]"
+        chunk.contextual_header = (
+            f"[Context: Document '{clean_title}', Section '{sec_str}'{page_str}]"
+        )
 
     return chunks
 

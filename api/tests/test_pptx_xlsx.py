@@ -17,9 +17,9 @@ def parse_sse_events(text: str) -> List[dict]:
         if not line:
             continue
         if line.startswith("event:"):
-            current_event = line[len("event:"):].strip()
+            current_event = line[len("event:") :].strip()
         elif line.startswith("data:"):
-            data_str = line[len("data:"):].strip()
+            data_str = line[len("data:") :].strip()
             try:
                 data_json = json.loads(data_str)
             except json.JSONDecodeError:
@@ -40,7 +40,13 @@ def test_pptx_upload_index_and_answer_two_questions():
     with open(pptx_path, "rb") as f:
         resp = client.post(
             "/v1/ingest",
-            files={"file": ("presentation.pptx", f, "application/vnd.openxmlformats-officedocument.presentationml.presentation")},
+            files={
+                "file": (
+                    "presentation.pptx",
+                    f,
+                    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                )
+            },
         )
     assert resp.status_code == 200
     data = resp.json()
@@ -52,7 +58,10 @@ def test_pptx_upload_index_and_answer_two_questions():
     # Question 1: Slide 2 Security & ISO-27001
     q1_resp = client.post(
         "/v1/query",
-        json={"session_id": session_id, "query": "What are the password requirements under ISO-27001?"},
+        json={
+            "session_id": session_id,
+            "query": "What are the password requirements under ISO-27001?",
+        },
         headers={"X-Provider": "stub"},
     )
     assert q1_resp.status_code == 200
@@ -68,7 +77,10 @@ def test_pptx_upload_index_and_answer_two_questions():
     # Question 2: Slide 3 Quarterly revenue table
     q2_resp = client.post(
         "/v1/query",
-        json={"session_id": session_id, "query": "What was the revenue and growth rate in Q3 2026?"},
+        json={
+            "session_id": session_id,
+            "query": "What was the revenue and growth rate in Q3 2026?",
+        },
         headers={"X-Provider": "stub"},
     )
     assert q2_resp.status_code == 200
@@ -94,7 +106,13 @@ def test_xlsx_upload_index_and_answer_two_questions():
     with open(xlsx_path, "rb") as f:
         resp = client.post(
             "/v1/ingest",
-            files={"file": ("financials.xlsx", f, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
+            files={
+                "file": (
+                    "financials.xlsx",
+                    f,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                )
+            },
         )
     assert resp.status_code == 200
     data = resp.json()
@@ -105,7 +123,10 @@ def test_xlsx_upload_index_and_answer_two_questions():
     # Question 1: Department Approval Status
     q1_resp = client.post(
         "/v1/query",
-        json={"session_id": session_id, "query": "What is the approval status of Department Budgets?"},
+        json={
+            "session_id": session_id,
+            "query": "What is the approval status of Department Budgets?",
+        },
         headers={"X-Provider": "stub"},
     )
     assert q1_resp.status_code == 200
@@ -120,7 +141,10 @@ def test_xlsx_upload_index_and_answer_two_questions():
     # Question 2: Headcount for Engineering Div-1
     q2_resp = client.post(
         "/v1/query",
-        json={"session_id": session_id, "query": "What is the headcount and budget for Engineering Div-1?"},
+        json={
+            "session_id": session_id,
+            "query": "What is the headcount and budget for Engineering Div-1?",
+        },
         headers={"X-Provider": "stub"},
     )
     assert q2_resp.status_code == 200
@@ -140,14 +164,26 @@ def test_corrupt_pptx_and_xlsx_rejections():
 
     res_pptx = client.post(
         "/v1/ingest",
-        files={"file": ("corrupt.pptx", corrupt_bytes, "application/vnd.openxmlformats-officedocument.presentationml.presentation")},
+        files={
+            "file": (
+                "corrupt.pptx",
+                corrupt_bytes,
+                "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            )
+        },
     )
     assert res_pptx.status_code == 400
     assert res_pptx.json()["detail"]["error"]["code"] == "doc_unreadable"
 
     res_xlsx = client.post(
         "/v1/ingest",
-        files={"file": ("corrupt.xlsx", corrupt_bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
+        files={
+            "file": (
+                "corrupt.xlsx",
+                corrupt_bytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+        },
     )
     assert res_xlsx.status_code == 400
     assert res_xlsx.json()["detail"]["error"]["code"] == "doc_unreadable"

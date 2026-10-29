@@ -61,7 +61,9 @@ def heuristic_rewrite(query: str) -> List[str]:
 
     sub_queries = [clean_q]
 
-    if "leave" in lower_q and ("resignation" in lower_q or "resign" in lower_q or "quits" in lower_q or "exit" in lower_q):
+    if "leave" in lower_q and (
+        "resignation" in lower_q or "resign" in lower_q or "quits" in lower_q or "exit" in lower_q
+    ):
         sub_queries.append("leave encashment settlement upon voluntary resignation")
         sub_queries.append("accrued annual leave days during notice period")
     elif "leave" in lower_q and "sick" in lower_q:
@@ -70,7 +72,11 @@ def heuristic_rewrite(query: str) -> List[str]:
         sub_queries.append("annual paid leave entitlement carry forward")
     else:
         # Generic decomposition: extract core noun phrases
-        words = [w for w in re.findall(r"\b\w{3,}\b", clean_q) if w.lower() not in {"what", "about", "does", "have", "with", "from"}]
+        words = [
+            w
+            for w in re.findall(r"\b\w{3,}\b", clean_q)
+            if w.lower() not in {"what", "about", "does", "have", "with", "from"}
+        ]
         if len(words) >= 2:
             sub_queries.append(" ".join(words))
 

@@ -28,6 +28,7 @@ def get_jwks_client() -> Optional[jwt.PyJWKClient]:
         if not jwks_url and settings.CLERK_PUBLISHABLE_KEY:
             try:
                 import base64
+
                 raw = settings.CLERK_PUBLISHABLE_KEY
                 if "_" in raw:
                     b64 = raw.split("_", 2)[-1]

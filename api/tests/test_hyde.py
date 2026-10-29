@@ -43,7 +43,9 @@ async def test_generate_hypothetical_probe_llm_mock():
 
     with patch("app.pipeline.hyde.get_brain_client") as mock_get_brain:
         mock_brain = AsyncMock()
-        mock_brain.generate.return_value = "Hypothetical handbook section: Annual leave permits 20 days per year."
+        mock_brain.generate.return_value = (
+            "Hypothetical handbook section: Annual leave permits 20 days per year."
+        )
         mock_get_brain.return_value = mock_brain
 
         probe = await generate_hypothetical_probe("vacation allowance", provider=provider)
@@ -75,9 +77,13 @@ async def test_generate_hypothetical_probe_fallback_on_error():
 
 def test_fuse_hyde_results_3_way_rrf():
     """Tests 3-way RRF combination: BM25 + Vector Query + Vector Probe."""
-    c1 = Chunk(id="c1", doc_id="d1", text="Chunk 1 about vacation", token_count=5, content_hash="h1")
+    c1 = Chunk(
+        id="c1", doc_id="d1", text="Chunk 1 about vacation", token_count=5, content_hash="h1"
+    )
     c2 = Chunk(id="c2", doc_id="d1", text="Chunk 2 about payroll", token_count=5, content_hash="h2")
-    c3 = Chunk(id="c3", doc_id="d1", text="Chunk 3 about benefits", token_count=5, content_hash="h3")
+    c3 = Chunk(
+        id="c3", doc_id="d1", text="Chunk 3 about benefits", token_count=5, content_hash="h3"
+    )
 
     # c1 is rank 1 in BM25, rank 2 in Vector, rank 1 in Probe
     # c2 is rank 2 in BM25, rank 1 in Vector, absent in Probe
@@ -109,8 +115,20 @@ def test_fuse_hyde_results_3_way_rrf():
 async def test_hyde_retrieve_discards_probe_and_indexes():
     """Verifies hyde_retrieve returns only real document chunks and probe is discarded."""
     chunks = [
-        Chunk(id="c1", doc_id="d1", text="Employees receive 20 days paid leave per year.", token_count=8, content_hash="h1"),
-        Chunk(id="c2", doc_id="d1", text="Company hardware policy covers MacBook Pro laptops.", token_count=8, content_hash="h2"),
+        Chunk(
+            id="c1",
+            doc_id="d1",
+            text="Employees receive 20 days paid leave per year.",
+            token_count=8,
+            content_hash="h1",
+        ),
+        Chunk(
+            id="c2",
+            doc_id="d1",
+            text="Company hardware policy covers MacBook Pro laptops.",
+            token_count=8,
+            content_hash="h2",
+        ),
     ]
     doc_index = DocumentIndex()
     doc_index.build(chunks)

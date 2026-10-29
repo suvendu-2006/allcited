@@ -33,7 +33,10 @@ class TelegramClient:
     ) -> Dict[str, Any]:
         """Send a message to a chat with plain-text fallback if markdown parsing fails."""
         if not self.token:
-            return {"ok": True, "result": {"message_id": 100, "chat": {"id": chat_id}, "text": text}}
+            return {
+                "ok": True,
+                "result": {"message_id": 100, "chat": {"id": chat_id}, "text": text},
+            }
 
         async with httpx.AsyncClient() as client:
             resp = await client.post(
@@ -65,7 +68,10 @@ class TelegramClient:
     ) -> Dict[str, Any]:
         """Edit an existing message text with plain-text fallback if markdown parsing fails."""
         if not self.token:
-            return {"ok": True, "result": {"message_id": message_id, "chat": {"id": chat_id}, "text": text}}
+            return {
+                "ok": True,
+                "result": {"message_id": message_id, "chat": {"id": chat_id}, "text": text},
+            }
 
         async with httpx.AsyncClient() as client:
             resp = await client.post(
@@ -199,7 +205,9 @@ def format_telegram_answer(answer: str, citations: List[CitationItem]) -> str:
         if len(preview) > 120:
             preview = preview[:117] + "..."
         # Escape markdown symbols in raw document snippet to prevent Telegram parsing errors
-        safe_preview = preview.replace("_", "\\_").replace("*", "\\*").replace("`", "\\`").replace("[", "\\[")
+        safe_preview = (
+            preview.replace("_", "\\_").replace("*", "\\*").replace("`", "\\`").replace("[", "\\[")
+        )
         receipts.append(f"• *[{cit.label}]*{ocr_tag}{two_hop_tag}{meta_str}:\n  _{safe_preview}_")
 
     return answer + "\n" + "\n".join(receipts)
@@ -293,9 +301,9 @@ async def handle_question_query(
             for line in sse_chunk.splitlines():
                 line = line.strip()
                 if line.startswith("event:"):
-                    event_name = line[len("event:"):].strip()
+                    event_name = line[len("event:") :].strip()
                 elif line.startswith("data:"):
-                    data_str = line[len("data:"):].strip()
+                    data_str = line[len("data:") :].strip()
                     import json
 
                     try:
@@ -332,7 +340,9 @@ async def handle_question_query(
                         if err_detail:
                             error_text += f"\n\n_{err_detail}_"
                         if msg_id:
-                            await tg.edit_message_text(chat_id=chat_id, message_id=msg_id, text=error_text)
+                            await tg.edit_message_text(
+                                chat_id=chat_id, message_id=msg_id, text=error_text
+                            )
                         else:
                             await tg.send_message(chat_id=chat_id, text=error_text)
                         answer_completed = True
@@ -448,7 +458,9 @@ async def process_telegram_update(body: Dict[str, Any]) -> None:
         if text.startswith("/doc"):
             session_id = chat_sessions.get(chat_id)
             if not session_id:
-                await tg.send_message(chat_id=chat_id, text="No active document. Send a document to index.")
+                await tg.send_message(
+                    chat_id=chat_id, text="No active document. Send a document to index."
+                )
             else:
                 store = get_session_store()
                 sess = store.get_session(session_id)
@@ -479,7 +491,9 @@ async def run_telegram_polling() -> None:
     settings = get_settings()
     token = settings.TELEGRAM_BOT_TOKEN
     if not token or settings.TELEGRAM_WEBHOOK_SECRET or settings.ENVIRONMENT == "production":
-        logger.info("No TELEGRAM_BOT_TOKEN configured or webhook mode active; telegram poller is idle.")
+        logger.info(
+            "No TELEGRAM_BOT_TOKEN configured or webhook mode active; telegram poller is idle."
+        )
         return
 
     logger.info("Starting Allcited Telegram long-polling worker...")
@@ -538,7 +552,9 @@ async def telegram_webhook(
         ):
             raise HTTPException(
                 status_code=401,
-                detail={"error": {"code": "invalid_secret_token", "message": "Invalid secret token"}},
+                detail={
+                    "error": {"code": "invalid_secret_token", "message": "Invalid secret token"}
+                },
             )
 
     body = await request.json()

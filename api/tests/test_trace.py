@@ -18,9 +18,9 @@ def parse_sse_events(text: str) -> List[dict]:
         if not line:
             continue
         if line.startswith("event:"):
-            current_event = line[len("event:"):].strip()
+            current_event = line[len("event:") :].strip()
         elif line.startswith("data:"):
-            data_str = line[len("data:"):].strip()
+            data_str = line[len("data:") :].strip()
             try:
                 data_json = json.loads(data_str)
             except json.JSONDecodeError:
@@ -170,6 +170,7 @@ def test_trace_write_failure_resilience(tmp_path: Path):
 
 def test_trace_manager_bounded_memory_lru(tmp_path: Path):
     from app.trace import TraceManager, TraceRecord
+
     mgr = TraceManager(trace_dir=tmp_path, max_memory_traces=3)
     for i in range(5):
         mgr.record_trace(TraceRecord(question_id=f"q_{i}", query=f"query {i}", route="direct"))

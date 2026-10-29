@@ -25,7 +25,9 @@ class VectorIndex:
     def build(self, chunks: List[Chunk], embeddings: np.ndarray):
         """Add chunks and precomputed float32 normalized embeddings to the index."""
         if len(chunks) != len(embeddings):
-            raise ValueError(f"Mismatched chunks ({len(chunks)}) and embeddings ({len(embeddings)})")
+            raise ValueError(
+                f"Mismatched chunks ({len(chunks)}) and embeddings ({len(embeddings)})"
+            )
 
         if len(chunks) == 0:
             return
@@ -116,7 +118,9 @@ class DocumentIndex:
         self.vector_index.build(self.chunks, embeddings)
         return stats
 
-    def search_vector(self, query: str, top_k: int = 10, embedding_manager=None) -> List[Tuple[Chunk, float]]:
+    def search_vector(
+        self, query: str, top_k: int = 10, embedding_manager=None
+    ) -> List[Tuple[Chunk, float]]:
         if embedding_manager is None:
             embedding_manager = get_embedding_manager()
         query_emb = embedding_manager.embed_query(query)

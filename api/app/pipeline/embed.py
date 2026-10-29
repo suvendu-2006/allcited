@@ -39,7 +39,9 @@ def resolve_local_model_path(model_name: str, model_type: str = "embedding") -> 
     for b in base_dirs:
         for nc in name_candidates:
             cand = b / nc
-            if cand.exists() and ((cand / "model.safetensors").exists() or (cand / "config.json").exists()):
+            if cand.exists() and (
+                (cand / "model.safetensors").exists() or (cand / "config.json").exists()
+            ):
                 return str(cand.resolve())
 
     return model_name
@@ -66,7 +68,11 @@ class EmbeddingManager:
                 try:
                     self._model = SentenceTransformer(resolved, local_files_only=True)
                 except Exception as e:
-                    logger.warning("Local embedding model load failed from %s: %s; falling back to hub", resolved, e)
+                    logger.warning(
+                        "Local embedding model load failed from %s: %s; falling back to hub",
+                        resolved,
+                        e,
+                    )
                     self._model = SentenceTransformer(self.model_name)
             else:
                 logger.info("Loading embedding model from Hugging Face Hub: %s", self.model_name)
@@ -129,7 +135,11 @@ class EmbeddingManager:
         {"total": int, "reused": int, "new": int}.
         """
         if not chunks:
-            return np.empty((0, EMBEDDING_DIM), dtype=np.float32), {"total": 0, "reused": 0, "new": 0}
+            return np.empty((0, EMBEDDING_DIM), dtype=np.float32), {
+                "total": 0,
+                "reused": 0,
+                "new": 0,
+            }
 
         results: List[np.ndarray | None] = [None] * len(chunks)
         missing_indices: List[int] = []

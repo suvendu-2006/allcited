@@ -123,7 +123,9 @@ class FeedbackStore:
                 async with httpx.AsyncClient(timeout=5.0) as client:
                     resp = await client.post(url, headers=headers, json=payload)
                     if resp.status_code not in (200, 201):
-                        logger.warning("Supabase feedback insert error [%d]: %s", resp.status_code, resp.text)
+                        logger.warning(
+                            "Supabase feedback insert error [%d]: %s", resp.status_code, resp.text
+                        )
             except Exception as e:
                 # Supabase outage does not break the user feedback experience
                 logger.warning("Supabase feedback remote post error: %s", e)
@@ -162,14 +164,16 @@ class FeedbackStore:
         candidates = []
         for fb in all_fb:
             if fb.score == -1:
-                candidates.append({
-                    "id": f"eval_cand_{fb.question_id[:12]}",
-                    "type": "user_downvoted",
-                    "question": fb.query,
-                    "generated_answer": fb.answer,
-                    "user_note": fb.note,
-                    "created_at": fb.created_at,
-                })
+                candidates.append(
+                    {
+                        "id": f"eval_cand_{fb.question_id[:12]}",
+                        "type": "user_downvoted",
+                        "question": fb.query,
+                        "generated_answer": fb.answer,
+                        "user_note": fb.note,
+                        "created_at": fb.created_at,
+                    }
+                )
         return candidates
 
     def clear(self):

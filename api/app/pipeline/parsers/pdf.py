@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 class PDFParserError(Exception):
     """Raised when PDF cannot be read or parsed."""
+
     pass
 
 
@@ -100,27 +101,36 @@ def parse_pdf(
                 # Scanned / rasterized page with no text layer -> trigger OCR fallback
                 ocr_text = _ocr_page(page, pno)
                 for raw_para in ocr_text.split("\n\n"):
-                    clean_para = "".join(ch for ch in raw_para if ch == "\n" or ch == "\t" or ch >= " ").strip()
+                    clean_para = "".join(
+                        ch for ch in raw_para if ch == "\n" or ch == "\t" or ch >= " "
+                    ).strip()
                     if not clean_para:
                         continue
-                    lines = [line_str.strip() for line_str in clean_para.splitlines() if line_str.strip()]
+                    lines = [
+                        line_str.strip() for line_str in clean_para.splitlines() if line_str.strip()
+                    ]
                     if not lines:
                         continue
                     first_line = lines[0]
-                    is_heading_candidate = (
-                        len(first_line) < 100
-                        and (
-                            re.match(r"^(\d+(\.\d+)*\b|rule\b|clause\b|section\b|schedule\b)", first_line, re.IGNORECASE)
-                            or first_line.isupper()
-                            or (first_line.istitle() and len(first_line) < 60)
+                    is_heading_candidate = len(first_line) < 100 and (
+                        re.match(
+                            r"^(\d+(\.\d+)*\b|rule\b|clause\b|section\b|schedule\b)",
+                            first_line,
+                            re.IGNORECASE,
                         )
+                        or first_line.isupper()
+                        or (first_line.istitle() and len(first_line) < 60)
                     )
                     if is_heading_candidate:
                         heading_title = " ".join(first_line.split())
                         if re.match(r"^\d+\.\s+", heading_title) or not section_path:
                             section_path = [heading_title]
                         elif re.match(r"^\d+\.\d+\s+", heading_title):
-                            section_path = [section_path[0], heading_title] if section_path else [heading_title]
+                            section_path = (
+                                [section_path[0], heading_title]
+                                if section_path
+                                else [heading_title]
+                            )
                         else:
                             if len(section_path) >= 2:
                                 section_path = [section_path[0], section_path[1], heading_title]
@@ -187,7 +197,9 @@ def parse_pdf(
 
                 full_block_text = "\n".join(block_text_parts).strip()
                 # Clean garbage/control characters while preserving regular newlines
-                clean_text = "".join(ch for ch in full_block_text if ch == "\n" or ch == "\t" or ch >= " ")
+                clean_text = "".join(
+                    ch for ch in full_block_text if ch == "\n" or ch == "\t" or ch >= " "
+                )
                 if not clean_text:
                     continue
 
@@ -238,7 +250,12 @@ def parse_pdf(
                     )
 
         page_count = doc.page_count
-        logger.info("OCR engaged: %s (source=%s, pages=%d)", "yes" if ocr_engaged else "no", source_name, page_count)
+        logger.info(
+            "OCR engaged: %s (source=%s, pages=%d)",
+            "yes" if ocr_engaged else "no",
+            source_name,
+            page_count,
+        )
         return blocks
     finally:
         doc.close()

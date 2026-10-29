@@ -4,17 +4,13 @@ from typing import Any
 
 # PII regex patterns
 # 1. Email: capture first character and domain
-EMAIL_RE = re.compile(
-    r"\b([a-zA-Z0-9_.+-])[a-zA-Z0-9_.+-]*@([a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+)\b"
-)
+EMAIL_RE = re.compile(r"\b([a-zA-Z0-9_.+-])[a-zA-Z0-9_.+-]*@([a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+)\b")
 
 # 2. SSN / Government ID: 123-45-6789
 SSN_RE = re.compile(r"\b\d{3}-\d{2}-\d{4}\b")
 
 # 3. North American & International phone numbers
-PHONE_RE = re.compile(
-    r"(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b"
-)
+PHONE_RE = re.compile(r"(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b")
 
 
 def mask_email(match: re.Match) -> str:
@@ -74,14 +70,10 @@ class PIIMaskingFilter(logging.Filter):
         if record.args:
             if isinstance(record.args, dict):
                 record.args = {
-                    k: mask_pii(v) if isinstance(v, str) else v
-                    for k, v in record.args.items()
+                    k: mask_pii(v) if isinstance(v, str) else v for k, v in record.args.items()
                 }
             elif isinstance(record.args, (tuple, list)):
-                record.args = tuple(
-                    mask_pii(v) if isinstance(v, str) else v
-                    for v in record.args
-                )
+                record.args = tuple(mask_pii(v) if isinstance(v, str) else v for v in record.args)
         return True
 
 

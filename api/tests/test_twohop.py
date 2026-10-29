@@ -1,4 +1,3 @@
-
 from app.pipeline.chunker import Chunk
 from app.pipeline.refmap import ReferenceMap
 from app.pipeline.rerank import Reranker
@@ -73,10 +72,38 @@ def test_twohop_synthetic_p3_expansion():
 
 def test_twohop_expansion_cap_and_deduplication():
     """Verify that two-hop adheres strictly to max_expansions cap and rejects duplicates."""
-    c1 = Chunk(id="c1", doc_id="d1", content_hash="h1", text="See rule 1.1 and rule 1.2 and rule 1.3.", section_path=[], token_count=10)
-    c_def1 = Chunk(id="c_def1", doc_id="d1", content_hash="h2", text="Rule 1.1 defines Alpha.", section_path=[], token_count=10)
-    c_def2 = Chunk(id="c_def2", doc_id="d1", content_hash="h3", text="Rule 1.2 defines Beta.", section_path=[], token_count=10)
-    c_def3 = Chunk(id="c_def3", doc_id="d1", content_hash="h4", text="Rule 1.3 defines Gamma.", section_path=[], token_count=10)
+    c1 = Chunk(
+        id="c1",
+        doc_id="d1",
+        content_hash="h1",
+        text="See rule 1.1 and rule 1.2 and rule 1.3.",
+        section_path=[],
+        token_count=10,
+    )
+    c_def1 = Chunk(
+        id="c_def1",
+        doc_id="d1",
+        content_hash="h2",
+        text="Rule 1.1 defines Alpha.",
+        section_path=[],
+        token_count=10,
+    )
+    c_def2 = Chunk(
+        id="c_def2",
+        doc_id="d1",
+        content_hash="h3",
+        text="Rule 1.2 defines Beta.",
+        section_path=[],
+        token_count=10,
+    )
+    c_def3 = Chunk(
+        id="c_def3",
+        doc_id="d1",
+        content_hash="h4",
+        text="Rule 1.3 defines Gamma.",
+        section_path=[],
+        token_count=10,
+    )
 
     ref_map = ReferenceMap()
     ref_map.add_mention("rule:1.1", "c1")
@@ -144,13 +171,20 @@ def test_twohop_gate_scenario_on_handbook_pdf(session_handbook):
 
     # Verify BOTH mentioning chunk and definition chunk are returned
     has_mention = any("as per rule 63.7.4" in t for t in expanded_texts)
-    has_definition = any("Rule 63.7.4 Leave Encashment on Resignation" in t or "divided by 22" in t for t in expanded_texts)
+    has_definition = any(
+        "Rule 63.7.4 Leave Encashment on Resignation" in t or "divided by 22" in t
+        for t in expanded_texts
+    )
 
     assert has_mention, "Mentioning chunk ('as per rule 63.7.4') was not returned"
-    assert has_definition, "Definition chunk ('Rule 63.7.4 Leave Encashment', 'divided by 22') was not returned"
+    assert has_definition, (
+        "Definition chunk ('Rule 63.7.4 Leave Encashment', 'divided by 22') was not returned"
+    )
 
     # Verify at least one chunk has is_two_hop metadata if it was expanded
     chunk_ids = [c.id for c in expanded]
     print(f"\nFinal chunks returned for query: {chunk_ids}")
     for c in expanded:
-        print(f" - [{c.id}] is_two_hop={c.is_two_hop}, reason={c.added_reason}, preview={c.text[:60]}...")
+        print(
+            f" - [{c.id}] is_two_hop={c.is_two_hop}, reason={c.added_reason}, preview={c.text[:60]}..."
+        )

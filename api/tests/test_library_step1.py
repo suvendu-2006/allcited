@@ -174,9 +174,15 @@ def test_twohopchunk_fields_and_scores():
     c2 = create_sample_chunk("c2", doc_id, "Second chunk text")
     c3 = create_sample_chunk("c3", doc_id, "Third chunk text")
 
-    sc1 = LibraryStoredChunk(id="sc1", document_id=doc_id, user_id=user_id, doc_name="doc.pdf", chunk=c1, embedding=vec1)
-    sc2 = LibraryStoredChunk(id="sc2", document_id=doc_id, user_id=user_id, doc_name="doc.pdf", chunk=c2, embedding=vec2)
-    sc3 = LibraryStoredChunk(id="sc3", document_id=doc_id, user_id=user_id, doc_name="doc.pdf", chunk=c3, embedding=vec3)
+    sc1 = LibraryStoredChunk(
+        id="sc1", document_id=doc_id, user_id=user_id, doc_name="doc.pdf", chunk=c1, embedding=vec1
+    )
+    sc2 = LibraryStoredChunk(
+        id="sc2", document_id=doc_id, user_id=user_id, doc_name="doc.pdf", chunk=c2, embedding=vec2
+    )
+    sc3 = LibraryStoredChunk(
+        id="sc3", document_id=doc_id, user_id=user_id, doc_name="doc.pdf", chunk=c3, embedding=vec3
+    )
 
     with store._lock:
         store._chunks[user_id] = [sc1, sc2, sc3]
@@ -255,6 +261,7 @@ async def test_supabase_rehydration_documents_and_chunks():
     # 1. Test async list_documents rehydration
     with patch("app.library.get_settings", return_value=mock_settings):
         with patch("httpx.AsyncClient.get") as mock_get:
+
             def side_effect(url, headers):
                 if "saved_documents" in url:
                     return mock_docs_response
@@ -282,6 +289,7 @@ async def test_supabase_rehydration_documents_and_chunks():
 
     with patch("app.library.get_settings", return_value=mock_settings):
         with patch("httpx.Client.get") as mock_sync_get:
+
             def sync_side_effect(url, headers):
                 if "saved_documents" in url:
                     return mock_docs_response
@@ -318,19 +326,36 @@ def test_api_delete_and_list_no_resurrection():
     from app.main import app
 
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048, backend=default_backend())
-    priv_pem = key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()).decode()
-    pub_pem = key.public_key().public_bytes(serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo).decode()
+    priv_pem = key.private_bytes(
+        serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()
+    ).decode()
+    pub_pem = (
+        key.public_key()
+        .public_bytes(serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo)
+        .decode()
+    )
     set_test_verification_key(pub_pem)
 
     get_library_store().reset_for_tests()
     user_id = f"user_e2e_{uuid.uuid4().hex[:8]}"
-    token = jwt.encode({"sub": user_id, "iat": int(time.time()), "exp": int(time.time()) + 3600, "iss": "https://clerk.example.com"}, priv_pem, algorithm="RS256")
+    token = jwt.encode(
+        {
+            "sub": user_id,
+            "iat": int(time.time()),
+            "exp": int(time.time()) + 3600,
+            "iss": "https://clerk.example.com",
+        },
+        priv_pem,
+        algorithm="RS256",
+    )
     headers = {"Authorization": f"Bearer {token}"}
     client = TestClient(app)
 
     # 1. Ingest document
     doc_text = "Internal guideline for system administration and password expiration policies."
-    ingest_res = client.post("/v1/ingest", files={"file": ("sysadmin.txt", io.BytesIO(doc_text.encode()), "text/plain")})
+    ingest_res = client.post(
+        "/v1/ingest", files={"file": ("sysadmin.txt", io.BytesIO(doc_text.encode()), "text/plain")}
+    )
     assert ingest_res.status_code == 200
     session_id = ingest_res.json()["session_id"]
 
@@ -405,6 +430,7 @@ async def test_search_chunks_async_non_blocking_rehydration():
     with patch("app.library.get_settings", return_value=mock_settings):
         with patch("httpx.AsyncClient.get") as mock_async_get:
             with patch("httpx.Client.get") as mock_sync_get:
+
                 def async_side_effect(url, headers):
                     if "saved_documents" in url:
                         return mock_docs_response

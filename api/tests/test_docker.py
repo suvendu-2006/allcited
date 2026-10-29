@@ -79,8 +79,12 @@ def test_docker_compose_configurations():
                 env_dict[k] = v
 
         assert env_dict.get("MODE") == "private", "MODE must be private in docker-compose"
-        assert "ollama" in env_dict.get("OLLAMA_BASE_URL", ""), "OLLAMA_BASE_URL must target ollama service"
-        assert "qwen2.5:3b" in env_dict.get("DEFAULT_LLM_MODEL", ""), "Default model must be qwen2.5:3b"
+        assert "ollama" in env_dict.get("OLLAMA_BASE_URL", ""), (
+            "OLLAMA_BASE_URL must target ollama service"
+        )
+        assert "qwen2.5:3b" in env_dict.get("DEFAULT_LLM_MODEL", ""), (
+            "Default model must be qwen2.5:3b"
+        )
 
         # Check ollama model pull command
         pull_cmd = str(services["ollama-pull"].get("command", ""))

@@ -48,7 +48,11 @@ class Reranker:
                 try:
                     self._model = CrossEncoder(resolved, local_files_only=True)
                 except Exception as e:
-                    logger.warning("Local reranker model load failed from %s: %s; falling back to hub", resolved, e)
+                    logger.warning(
+                        "Local reranker model load failed from %s: %s; falling back to hub",
+                        resolved,
+                        e,
+                    )
                     self._model = CrossEncoder(self.model_name)
             else:
                 logger.info("Loading reranker model from Hugging Face Hub: %s", self.model_name)

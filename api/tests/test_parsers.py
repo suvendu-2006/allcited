@@ -9,7 +9,9 @@ from app.pipeline.parsers.pdf import PDFParserError, parse_pdf
 
 
 def test_parse_pdf_handbook():
-    fixture_path = Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "handbook.pdf"
+    fixture_path = (
+        Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "handbook.pdf"
+    )
     assert fixture_path.exists(), f"Fixture missing at {fixture_path}"
 
     blocks = parse_pdf(str(fixture_path), source_name="handbook.pdf")
@@ -23,10 +25,14 @@ def test_parse_pdf_handbook():
         assert b.source == "handbook.pdf"
         # Zero non-printable / garbage characters
         for ch in b.text:
-            assert ch == "\n" or ch == "\t" or ch >= " ", f"Garbage character found in block {i}: {repr(ch)}"
+            assert ch == "\n" or ch == "\t" or ch >= " ", (
+                f"Garbage character found in block {i}: {repr(ch)}"
+            )
 
     # Verify major headings and section paths detected
-    headings_found = [b.text for b in blocks if "Handbook" in b.text or "Leave" in b.text or "Rule" in b.text]
+    headings_found = [
+        b.text for b in blocks if "Handbook" in b.text or "Leave" in b.text or "Rule" in b.text
+    ]
     assert any("Handbook" in h for h in headings_found)
     assert any("2. Leave and Time-Off Entitlements" in h or "Leave" in h for h in headings_found)
 
@@ -75,7 +81,9 @@ Overtime requires prior manager approval.
 
 
 def test_parse_docx_handbook():
-    fixture_path = Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "handbook.docx"
+    fixture_path = (
+        Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "handbook.docx"
+    )
     assert fixture_path.exists(), f"Fixture missing at {fixture_path}"
 
     blocks = parse_docx(str(fixture_path), source_name="handbook.docx")
@@ -93,7 +101,9 @@ def test_parse_docx_handbook():
     assert "| Annual Paid Leave | 24 working days |" in table_block.text
 
     # Verify rule 63.7.4 definition block captured
-    rule_def_block = next((b for b in blocks if "encashed at the employee base salary" in b.text), None)
+    rule_def_block = next(
+        (b for b in blocks if "encashed at the employee base salary" in b.text), None
+    )
     assert rule_def_block is not None
     assert "Rule 63.7.4 Leave Encashment on Resignation" in rule_def_block.section_path
 

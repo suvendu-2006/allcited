@@ -31,4 +31,6 @@ def test_six_queries_labeled_correctly():
 
         # Test full async router pipeline
         async_decision = asyncio.run(route_query(q))
-        assert async_decision.route == expected, f"Async route for '{q}' expected {expected}, got {async_decision.route}"
+        assert async_decision.route == expected, (
+            f"Async route for '{q}' expected {expected}, got {async_decision.route}"
+        )

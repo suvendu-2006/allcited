@@ -27,11 +27,36 @@ def test_knowledge_graph_neighbor_lookup_and_cap():
     kg.add_node("Company Laptop", entity_type="EQUIPMENT")
     kg.add_node("Security Clearance", entity_type="SECURITY")
 
-    kg.add_edge("Resignation Policy", "Notice Period", "requires", "Voluntary resignation requires 60 days advance written notice.")
-    kg.add_edge("Resignation Policy", "Severance Pay", "provides", "Standard resignation does not provide severance pay.")
-    kg.add_edge("Resignation Policy", "Exit Interview", "mandates", "All departing personnel must attend an Exit Interview.")
-    kg.add_edge("Resignation Policy", "Company Laptop", "requires", "Departing personnel must return Company Laptop within 48 hours.")
-    kg.add_edge("Resignation Policy", "Security Clearance", "governs", "Security Clearance is revoked on the final working day.")
+    kg.add_edge(
+        "Resignation Policy",
+        "Notice Period",
+        "requires",
+        "Voluntary resignation requires 60 days advance written notice.",
+    )
+    kg.add_edge(
+        "Resignation Policy",
+        "Severance Pay",
+        "provides",
+        "Standard resignation does not provide severance pay.",
+    )
+    kg.add_edge(
+        "Resignation Policy",
+        "Exit Interview",
+        "mandates",
+        "All departing personnel must attend an Exit Interview.",
+    )
+    kg.add_edge(
+        "Resignation Policy",
+        "Company Laptop",
+        "requires",
+        "Departing personnel must return Company Laptop within 48 hours.",
+    )
+    kg.add_edge(
+        "Resignation Policy",
+        "Security Clearance",
+        "governs",
+        "Security Clearance is revoked on the final working day.",
+    )
 
     # There are 5 connected edges, but cap must strictly enforce max 4
     neighbors = kg.get_neighbor_facts(["Resignation Policy"], max_facts=4)
@@ -137,7 +162,9 @@ def test_expand_graph_knowledge_cap_and_labels():
     related_chunk = expanded[1]
     assert related_chunk.is_two_hop is True
     assert "related:" in (related_chunk.added_reason or "")
-    assert "(related: Employees resigning must submit a Handover Document" in related_chunk.chunk.text
+    assert (
+        "(related: Employees resigning must submit a Handover Document" in related_chunk.chunk.text
+    )
 
 
 @pytest.mark.anyio

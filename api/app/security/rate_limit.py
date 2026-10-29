@@ -13,19 +13,19 @@ from app.auth import get_optional_user
 # - Pro: 60 requests per hour, burst limit 10 per minute
 # - Free / Anonymous: 10 requests per hour, burst limit 5 per minute
 QUERY_LIMITS_PRO: List[Tuple[int, int]] = [
-    (10, 60),    # 10 req / 60 sec (burst)
+    (10, 60),  # 10 req / 60 sec (burst)
     (60, 3600),  # 60 req / 3600 sec (hourly)
 ]
 
 QUERY_LIMITS_FREE: List[Tuple[int, int]] = [
-    (5, 60),     # 5 req / 60 sec (burst)
+    (5, 60),  # 5 req / 60 sec (burst)
     (10, 3600),  # 10 req / 3600 sec (hourly)
 ]
 
 # Route Category: "ingest" (/v1/ingest, /v1/ingest/url)
 # - 20 requests per hour, burst limit 5 per minute
 INGEST_LIMITS: List[Tuple[int, int]] = [
-    (5, 60),     # 5 req / 60 sec (burst)
+    (5, 60),  # 5 req / 60 sec (burst)
     (20, 3600),  # 20 req / 3600 sec (hourly)
 ]
 
@@ -57,6 +57,7 @@ def get_user_plan(user_id: Optional[str]) -> str:
         return "free"
     try:
         from app.payments import get_subscription_store
+
         return get_subscription_store().get_plan(user_id)
     except Exception:
         return "free"
@@ -85,6 +86,7 @@ class SlidingWindowRateLimiter:
 
         try:
             from app.config import get_settings
+
             settings = get_settings()
             if getattr(settings, "TESTING", False):
                 return False
@@ -130,7 +132,8 @@ class SlidingWindowRateLimiter:
             if len(self._history) > 10000:
                 stale_cutoff = current_time - max_window
                 keys_to_remove = [
-                    k for k, timestamps in self._history.items()
+                    k
+                    for k, timestamps in self._history.items()
                     if not timestamps or timestamps[-1] < stale_cutoff
                 ]
                 for k in keys_to_remove:
@@ -186,7 +189,9 @@ async def check_rate_limit(
 ) -> None:
     """Enforce rate limit, raising HTTP 429 if limit is exceeded."""
     limiter = get_rate_limiter()
-    allowed, retry_after = limiter.check_rate_limit(request=request, user_id=user_id, category=category)
+    allowed, retry_after = limiter.check_rate_limit(
+        request=request, user_id=user_id, category=category
+    )
     if not allowed:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,

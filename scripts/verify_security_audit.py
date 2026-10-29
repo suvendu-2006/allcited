@@ -1,9 +1,19 @@
 import asyncio
 import io
+import sys
 import time
+from pathlib import Path
 from urllib.parse import quote
 import uuid
 from unittest.mock import MagicMock, AsyncMock, patch
+
+# Add api directory to sys.path
+repo_root = Path(__file__).resolve().parent.parent
+api_dir = repo_root / "api"
+if not api_dir.exists():
+    api_dir = Path(__file__).resolve().parent.parent
+if str(api_dir) not in sys.path:
+    sys.path.insert(0, str(api_dir))
 
 import jwt
 import pytest

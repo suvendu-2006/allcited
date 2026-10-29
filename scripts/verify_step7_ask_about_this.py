@@ -27,7 +27,10 @@ import uuid
 from pathlib import Path
 
 # Add api directory to sys.path
-api_dir = Path(__file__).resolve().parent.parent
+repo_root = Path(__file__).resolve().parent.parent
+api_dir = repo_root / "api"
+if not api_dir.exists():
+    api_dir = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(api_dir))
 
 import jwt

@@ -9,6 +9,7 @@ from app.pipeline.parsers.base import ParsedBlock
 
 class HTMLParserError(Exception):
     """Raised when HTML content cannot be parsed."""
+
     pass
 
 
@@ -81,7 +82,9 @@ def parse_html(
     section_path: List[str] = [title] if title else []
 
     # Iterate through top-level block elements
-    for el in soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6", "p", "table", "ul", "ol", "blockquote", "pre"]):
+    for el in soup.find_all(
+        ["h1", "h2", "h3", "h4", "h5", "h6", "p", "table", "ul", "ol", "blockquote", "pre"]
+    ):
         tag_name = el.name.lower()
         text = el.get_text().strip()
         if not text:

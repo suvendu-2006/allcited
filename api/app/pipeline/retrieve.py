@@ -11,11 +11,17 @@ class ScoredChunk(BaseModel):
 
     chunk: Chunk
     rrf_score: float = Field(..., description="Reciprocal Rank Fusion score")
-    bm25_score: Optional[float] = Field(default=None, description="Raw BM25 score if retrieved by BM25")
-    vector_score: Optional[float] = Field(default=None, description="Cosine similarity score if retrieved by vector")
+    bm25_score: Optional[float] = Field(
+        default=None, description="Raw BM25 score if retrieved by BM25"
+    )
+    vector_score: Optional[float] = Field(
+        default=None, description="Cosine similarity score if retrieved by vector"
+    )
     bm25_rank: Optional[int] = Field(default=None, description="1-based rank in BM25 results")
     vector_rank: Optional[int] = Field(default=None, description="1-based rank in vector results")
-    expanded_from: Optional[str] = Field(default=None, description="Source chunk ID if added via parent expansion")
+    expanded_from: Optional[str] = Field(
+        default=None, description="Source chunk ID if added via parent expansion"
+    )
 
 
 def reciprocal_rank_fusion(

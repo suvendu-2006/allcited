@@ -14,13 +14,19 @@ class Chunk(BaseModel):
     doc_id: str = Field(..., description="Parent document identifier")
     text: str = Field(..., description="Full text content of the chunk")
     token_count: int = Field(..., description="Estimated token count")
-    content_hash: str = Field(..., description="SHA-256 hash of the chunk text for delta deduplication")
-    parent_section_id: str = Field(default="", description="Hierarchical breadcrumb of parent headings")
+    content_hash: str = Field(
+        ..., description="SHA-256 hash of the chunk text for delta deduplication"
+    )
+    parent_section_id: str = Field(
+        default="", description="Hierarchical breadcrumb of parent headings"
+    )
     section_path: List[str] = Field(default_factory=list, description="Section path hierarchy")
     page: Optional[int] = Field(default=None, description="1-based page number")
     source: str = Field(default="", description="Source filename or origin")
     metadata: dict = Field(default_factory=dict, description="Custom metadata tags and filters")
-    contextual_header: Optional[str] = Field(default=None, description="LLM-generated context header")
+    contextual_header: Optional[str] = Field(
+        default=None, description="LLM-generated context header"
+    )
     is_ocr: bool = Field(default=False, description="True if chunk was extracted via OCR fallback")
 
     @property

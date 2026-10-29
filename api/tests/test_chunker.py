@@ -23,9 +23,7 @@ def test_chunker_p1_boundary_straddle():
     filler_sentence = "This is a detailed operational clause describing corporate compliance procedures for all employees."
 
     # The critical boundary sentence
-    straddle_sentence = (
-        "Crucially, under clause 4.2.1, any failure to report within 48 hours incurs an immediate disciplinary review."
-    )
+    straddle_sentence = "Crucially, under clause 4.2.1, any failure to report within 48 hours incurs an immediate disciplinary review."
 
     # 15 filler sentences + the straddle sentence at the end of block 1 reaching ~400 tokens
     block1_text = " ".join([filler_sentence for _ in range(15)]) + " " + straddle_sentence
@@ -45,7 +43,9 @@ def test_chunker_p1_boundary_straddle():
         source="test.pdf",
     )
 
-    chunks = chunk_blocks([block1, block2], doc_id="test_doc", target_tokens=400, overlap_ratio=0.15)
+    chunks = chunk_blocks(
+        [block1, block2], doc_id="test_doc", target_tokens=400, overlap_ratio=0.15
+    )
 
     assert len(chunks) >= 2, f"Expected at least 2 chunks, got {len(chunks)}"
 
@@ -54,7 +54,9 @@ def test_chunker_p1_boundary_straddle():
 
     # The straddle sentence must appear COMPLETE and INTACT in BOTH chunk 1 and chunk 2
     assert straddle_sentence in chunk1.text, "Straddle sentence missing from chunk 1"
-    assert straddle_sentence in chunk2.text, "Straddle sentence missing from chunk 2 due to lack of overlap"
+    assert straddle_sentence in chunk2.text, (
+        "Straddle sentence missing from chunk 2 due to lack of overlap"
+    )
 
     # Verify content hash and parent_section_id
     assert len(chunk1.content_hash) == 64

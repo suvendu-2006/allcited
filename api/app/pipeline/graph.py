@@ -20,7 +20,9 @@ class GraphNode(BaseModel):
 
     id: str = Field(default_factory=lambda: f"node_{uuid.uuid4().hex[:10]}")
     name: str = Field(..., description="Entity name")
-    entity_type: str = Field(default="ENTITY", description="Entity category: POLICY, ORGANIZATION, ROLE, etc.")
+    entity_type: str = Field(
+        default="ENTITY", description="Entity category: POLICY, ORGANIZATION, ROLE, etc."
+    )
     description: Optional[str] = Field(default=None, description="Brief description")
     chunk_id: Optional[str] = Field(default=None, description="Source chunk ID")
 
@@ -31,7 +33,9 @@ class GraphEdge(BaseModel):
     id: str = Field(default_factory=lambda: f"edge_{uuid.uuid4().hex[:10]}")
     source_node: str = Field(..., description="Source entity name")
     target_node: str = Field(..., description="Target entity name")
-    relation: str = Field(..., description="Relationship predicate: governs, requires, provides, etc.")
+    relation: str = Field(
+        ..., description="Relationship predicate: governs, requires, provides, etc."
+    )
     fact: str = Field(..., description="Human-readable standalone factual statement")
     chunk_id: Optional[str] = Field(default=None, description="Source chunk ID")
 
@@ -161,10 +165,26 @@ def extract_heuristic_entities(chunks: List[Chunk]) -> KnowledgeGraph:
     entity_pattern = re.compile(r"\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)\b")
     # Common policy relations
     relation_patterns = [
-        (re.compile(r"([A-Z][a-zA-Z\s]+?)\s+(?:requires|mandates)\s+(.+?\.)", re.IGNORECASE), "requires"),
-        (re.compile(r"([A-Z][a-zA-Z\s]+?)\s+(?:covers|provides)\s+(.+?\.)", re.IGNORECASE), "provides"),
-        (re.compile(r"([A-Z][a-zA-Z\s]+?)\s+(?:is governed by|governed by)\s+(.+?\.)", re.IGNORECASE), "governed_by"),
-        (re.compile(r"([A-Z][a-zA-Z\s]+?)\s+(?:caps at|is capped at|limits to)\s+(.+?\.)", re.IGNORECASE), "caps_at"),
+        (
+            re.compile(r"([A-Z][a-zA-Z\s]+?)\s+(?:requires|mandates)\s+(.+?\.)", re.IGNORECASE),
+            "requires",
+        ),
+        (
+            re.compile(r"([A-Z][a-zA-Z\s]+?)\s+(?:covers|provides)\s+(.+?\.)", re.IGNORECASE),
+            "provides",
+        ),
+        (
+            re.compile(
+                r"([A-Z][a-zA-Z\s]+?)\s+(?:is governed by|governed by)\s+(.+?\.)", re.IGNORECASE
+            ),
+            "governed_by",
+        ),
+        (
+            re.compile(
+                r"([A-Z][a-zA-Z\s]+?)\s+(?:caps at|is capped at|limits to)\s+(.+?\.)", re.IGNORECASE
+            ),
+            "caps_at",
+        ),
     ]
 
     for chunk in chunks:
@@ -219,7 +239,10 @@ async def extract_entities_and_graph(
 
     messages = [
         {"role": "system", "content": system_prompt},
-        {"role": "user", "content": f"Extract entities and relationship facts from this document:\n\n{joined_text}"},
+        {
+            "role": "user",
+            "content": f"Extract entities and relationship facts from this document:\n\n{joined_text}",
+        },
     ]
 
     try:
@@ -231,9 +254,9 @@ async def extract_entities_and_graph(
         )
         cleaned = raw_response.strip()
         if cleaned.startswith("```json"):
-            cleaned = cleaned[len("```json"):].strip()
+            cleaned = cleaned[len("```json") :].strip()
         if cleaned.startswith("```"):
-            cleaned = cleaned[len("```"):].strip()
+            cleaned = cleaned[len("```") :].strip()
         if cleaned.endswith("```"):
             cleaned = cleaned[:-3].strip()
 
@@ -262,12 +285,16 @@ async def extract_entities_and_graph(
                 )
 
         if not graph.edges:
-            logger.info("LLM graph extraction returned 0 edges; supplementing with heuristic patterns")
+            logger.info(
+                "LLM graph extraction returned 0 edges; supplementing with heuristic patterns"
+            )
             h_graph = extract_heuristic_entities(chunks)
             for node in h_graph.nodes.values():
                 graph.add_node(node.name, node.entity_type, node.description, node.chunk_id)
             for edge in h_graph.edges:
-                graph.add_edge(edge.source_node, edge.target_node, edge.relation, edge.fact, edge.chunk_id)
+                graph.add_edge(
+                    edge.source_node, edge.target_node, edge.relation, edge.fact, edge.chunk_id
+                )
 
         return graph
 
@@ -339,5 +366,7 @@ def expand_graph_knowledge(
         if added_count >= cap:
             break
 
-    logger.info("GraphRAG-lite expanded %d neighbor facts (cap=%d) for query: '%s'", added_count, cap, query)
+    logger.info(
+        "GraphRAG-lite expanded %d neighbor facts (cap=%d) for query: '%s'", added_count, cap, query
+    )
     return expanded_list, added_count

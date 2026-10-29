@@ -21,7 +21,9 @@ def test_docker_publish_workflow():
 
     job = data["jobs"]["build-and-push"]
     permissions = job.get("permissions", {})
-    assert permissions.get("packages") == "write", "Workflow requires packages: write permission for GHCR"
+    assert permissions.get("packages") == "write", (
+        "Workflow requires packages: write permission for GHCR"
+    )
 
     # Must target ghcr.io
     assert "ghcr.io" in str(data.get("env", {})) or "ghcr.io" in str(job)

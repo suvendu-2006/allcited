@@ -23,9 +23,9 @@ def parse_sse_events(text: str) -> List[dict]:
         if not line:
             continue
         if line.startswith("event:"):
-            current_event = line[len("event:"):].strip()
+            current_event = line[len("event:") :].strip()
         elif line.startswith("data:"):
-            data_str = line[len("data:"):].strip()
+            data_str = line[len("data:") :].strip()
             try:
                 data_json = json.loads(data_str)
             except json.JSONDecodeError:
@@ -91,7 +91,9 @@ def test_post_pass_refusal_returns_zero_citations():
     """Verify that absent or friendly refusal responses yield zero citations."""
     sources = [
         TwoHopChunk(
-            chunk=Chunk(id="c1", doc_id="d1", content_hash="h1", text="Text", section_path=[], token_count=5),
+            chunk=Chunk(
+                id="c1", doc_id="d1", content_hash="h1", text="Text", section_path=[], token_count=5
+            ),
             is_two_hop=False,
         )
     ]
@@ -119,7 +121,10 @@ def test_sse_endpoint_three_live_gate_checks(session_handbook):
     # -------------------------------------------------------------
     resp1 = client.post(
         "/v1/query",
-        json={"session_id": session_id, "query": "What is the notice period for voluntary resignation?"},
+        json={
+            "session_id": session_id,
+            "query": "What is the notice period for voluntary resignation?",
+        },
     )
     assert resp1.status_code == 200
     assert "text/event-stream" in resp1.headers["content-type"]
@@ -167,7 +172,10 @@ def test_sse_endpoint_three_live_gate_checks(session_handbook):
     # -------------------------------------------------------------
     resp3 = client.post(
         "/v1/query",
-        json={"session_id": session_id, "query": "What is the corporate pet policy for bringing dogs to the office?"},
+        json={
+            "session_id": session_id,
+            "query": "What is the corporate pet policy for bringing dogs to the office?",
+        },
     )
     assert resp3.status_code == 200
     events3 = parse_sse_events(resp3.text)
@@ -186,9 +194,13 @@ def test_byok_switches_provider_midsession_without_leaks(monkeypatch):
     """
     client = TestClient(app)
 
-    fixture_path = Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "handbook.pdf"
+    fixture_path = (
+        Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "handbook.pdf"
+    )
     with open(fixture_path, "rb") as f:
-        ingest_resp = client.post("/v1/ingest", files={"file": ("handbook.pdf", f, "application/pdf")})
+        ingest_resp = client.post(
+            "/v1/ingest", files={"file": ("handbook.pdf", f, "application/pdf")}
+        )
     assert ingest_resp.status_code == 200
     session_id = ingest_resp.json()["session_id"]
 
@@ -212,7 +224,10 @@ def test_byok_switches_provider_midsession_without_leaks(monkeypatch):
     # 1. Query with stub provider
     resp1 = client.post(
         "/v1/query",
-        json={"session_id": session_id, "query": "What is the notice period for voluntary resignation?"},
+        json={
+            "session_id": session_id,
+            "query": "What is the notice period for voluntary resignation?",
+        },
         headers={"X-Provider": "stub"},
     )
     assert resp1.status_code == 200
@@ -225,7 +240,10 @@ def test_byok_switches_provider_midsession_without_leaks(monkeypatch):
     secret_key = "sk-browser-user-secret-abc123xyz"
     resp2 = client.post(
         "/v1/query",
-        json={"session_id": session_id, "query": "What is the notice period for voluntary resignation?"},
+        json={
+            "session_id": session_id,
+            "query": "What is the notice period for voluntary resignation?",
+        },
         headers={
             "X-BYOK-Key": secret_key,
             "X-BYOK-Model": "custom-gpt-4o-byok",
@@ -246,7 +264,10 @@ def test_byok_switches_provider_midsession_without_leaks(monkeypatch):
     # 3. Mid-session switch to local Ollama provider via headers
     resp3 = client.post(
         "/v1/query",
-        json={"session_id": session_id, "query": "What is the notice period for voluntary resignation?"},
+        json={
+            "session_id": session_id,
+            "query": "What is the notice period for voluntary resignation?",
+        },
         headers={
             "X-Provider": "ollama",
             "X-BYOK-Model": "llama3.2",

@@ -18,9 +18,13 @@ logger = logging.getLogger(__name__)
 class SufficiencyJudgeResult(BaseModel):
     """Result of the LLM sufficiency judgment pass."""
 
-    is_sufficient: bool = Field(default=True, description="Whether current sources sufficiently answer the question")
+    is_sufficient: bool = Field(
+        default=True, description="Whether current sources sufficiently answer the question"
+    )
     reason: str = Field(default="", description="Explanation of sufficiency judgment")
-    missing_aspects: List[str] = Field(default_factory=list, description="List of missing aspects if insufficient")
+    missing_aspects: List[str] = Field(
+        default_factory=list, description="List of missing aspects if insufficient"
+    )
     refined_query: str = Field(default="", description="Refined query targeting missing aspects")
 
 
@@ -84,9 +88,9 @@ async def judge_sufficiency(
         )
         cleaned = raw_response.strip()
         if cleaned.startswith("```json"):
-            cleaned = cleaned[len("```json"):].strip()
+            cleaned = cleaned[len("```json") :].strip()
         if cleaned.startswith("```"):
-            cleaned = cleaned[len("```"):].strip()
+            cleaned = cleaned[len("```") :].strip()
         if cleaned.endswith("```"):
             cleaned = cleaned[:-3].strip()
 
@@ -98,7 +102,9 @@ async def judge_sufficiency(
             refined_query=str(data.get("refined_query", "")),
         )
     except Exception as e:
-        logger.warning("Sufficiency judge failed or returned non-JSON (%s); defaulting to sufficient", e)
+        logger.warning(
+            "Sufficiency judge failed or returned non-JSON (%s); defaulting to sufficient", e
+        )
         return SufficiencyJudgeResult(
             is_sufficient=True,
             reason=f"Judge fallback on error: {e}",

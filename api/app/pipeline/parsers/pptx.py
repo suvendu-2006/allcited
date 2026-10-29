@@ -8,6 +8,7 @@ from app.pipeline.parsers.base import ParsedBlock
 
 class PPTXParserError(Exception):
     """Raised when PPTX document cannot be read or parsed."""
+
     pass
 
 
@@ -61,7 +62,9 @@ def parse_pptx(
                 table = shape.table
                 table_lines = []
                 for r_idx, row in enumerate(table.rows):
-                    cells = [c.text.strip().replace("\n", " ").replace("|", "\\|") for c in row.cells]
+                    cells = [
+                        c.text.strip().replace("\n", " ").replace("|", "\\|") for c in row.cells
+                    ]
                     if any(cells):
                         table_lines.append("| " + " | ".join(cells) + " |")
                         if r_idx == 0:

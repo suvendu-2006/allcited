@@ -94,7 +94,11 @@ def _generate_stub_response(messages: List[Dict[str, str]]) -> str:
         or "summarize the whole document" in q_lower
         or "whole document in 800 words" in q_lower
     ):
-        if "intermediate section summaries" in q_lower or "synthesize" in system_content or "summarize" in q_lower:
+        if (
+            "intermediate section summaries" in q_lower
+            or "synthesize" in system_content
+            or "summarize" in q_lower
+        ):
             return (
                 "## 1. General Employment Framework & Conduct [Chunks 1-3]\n"
                 "This corporate employee handbook outlines official terms, duties, and statutory conditions across all personnel divisions. "
@@ -136,7 +140,12 @@ def _generate_stub_response(messages: List[Dict[str, str]]) -> str:
             "Voluntary resignation notice requires an approved written Transition Plan [S1]."
         )
 
-    if "notice period" in q_lower or "voluntary resignation" in q_lower or "quit" in q_lower or "advance heads-up" in q_lower:
+    if (
+        "notice period" in q_lower
+        or "voluntary resignation" in q_lower
+        or "quit" in q_lower
+        or "advance heads-up" in q_lower
+    ):
         if "leave encashment" in q_lower or "badges" in q_lower or "handover" in q_lower:
             return (
                 "Permanent employees must provide 60 calendar days advance written notice. "
@@ -163,7 +172,11 @@ def _generate_stub_response(messages: List[Dict[str, str]]) -> str:
             "and non-transferable under company policy [S1]."
         )
 
-    if "form hr-702" in q_lower or "medical certificate" in q_lower or "consecutive working days" in q_lower:
+    if (
+        "form hr-702" in q_lower
+        or "medical certificate" in q_lower
+        or "consecutive working days" in q_lower
+    ):
         return (
             "Absences exceeding two consecutive working days require a medical practitioner certificate "
             "submitted via Form HR-702 [S1]."
@@ -183,9 +196,7 @@ def _generate_stub_response(messages: List[Dict[str, str]]) -> str:
         )
 
     if "carry forward" in q_lower or "carry-forward" in q_lower:
-        return (
-            "A maximum of 8 unused annual leave days may be carried forward into the subsequent calendar year [S1]."
-        )
+        return "A maximum of 8 unused annual leave days may be carried forward into the subsequent calendar year [S1]."
 
     if "accrual" in q_lower or "annual paid leave" in q_lower or "annual leave" in q_lower:
         return (
@@ -201,9 +212,7 @@ def _generate_stub_response(messages: List[Dict[str, str]]) -> str:
         )
 
     if "mfa" in q_lower or "multi-factor" in q_lower:
-        return (
-            "Multi-factor authentication (MFA) is strictly mandatory on all internal systems under Clause 4.2 [S1]."
-        )
+        return "Multi-factor authentication (MFA) is strictly mandatory on all internal systems under Clause 4.2 [S1]."
 
     # 7. Remote work, Clause 5.1, VPN
     if "remote work" in q_lower or "wifi" in q_lower or "wi-fi" in q_lower or "vpn" in q_lower:
@@ -214,9 +223,7 @@ def _generate_stub_response(messages: List[Dict[str, str]]) -> str:
 
     # 8. Ethics, Conflicts of interest, EC-101
     if "conflict" in q_lower or "ec-101" in q_lower or "ethics" in q_lower:
-        return (
-            "Conflicts of interest must be formally declared to the ethics committee under procedure EC-101 [S1]."
-        )
+        return "Conflicts of interest must be formally declared to the ethics committee under procedure EC-101 [S1]."
 
     # 9. Extended disability, MS-4, hospitalization
     if "ms-4" in q_lower or "hospitalization" in q_lower or "disability pay" in q_lower:
@@ -248,9 +255,7 @@ def _generate_stub_response(messages: List[Dict[str, str]]) -> str:
 
     # 13. HR contact / email / correspondence
     if "contact" in q_lower or "email" in q_lower or "correspondence" in q_lower:
-        return (
-            "Employees must contact john.doe@example.com for all formal employment inquiries and HR correspondence [S1]."
-        )
+        return "Employees must contact john.doe@example.com for all formal employment inquiries and HR correspondence [S1]."
 
     return "The document stipulates the governing policy and terms in accordance with company standards [S1]."
 
@@ -341,8 +346,15 @@ class BrainClient:
                     return ""
 
                 # Shift to next key immediately on 429 if multiple keys exist in pool
-                if response.status_code == 429 and is_groq and self.groq_pool.pool_size() > 1 and attempt < max_attempts:
-                    last_error = LLMClientError(response.status_code, response.text[:200], provider.provider_type)
+                if (
+                    response.status_code == 429
+                    and is_groq
+                    and self.groq_pool.pool_size() > 1
+                    and attempt < max_attempts
+                ):
+                    last_error = LLMClientError(
+                        response.status_code, response.text[:200], provider.provider_type
+                    )
                     active_key = self.groq_pool.shift_to_next_key(failed_key=active_key)
                     headers["Authorization"] = f"Bearer {active_key}"
                     await asyncio.sleep(0.1)
@@ -351,7 +363,9 @@ class BrainClient:
                 # Retry on 429 (single key / all keys tried) or 5xx (server error)
                 if response.status_code in (429, 500, 502, 503, 504):
                     err_text = response.text[:200]
-                    last_error = LLMClientError(response.status_code, err_text, provider.provider_type)
+                    last_error = LLMClientError(
+                        response.status_code, err_text, provider.provider_type
+                    )
                     if attempt < max_attempts:
                         backoff = 1.0 * attempt
                         await asyncio.sleep(backoff)
@@ -360,11 +374,15 @@ class BrainClient:
 
                 # Model not found on provider (404) or retired/end of life (410): fall through to fallback models immediately
                 if response.status_code in (404, 410):
-                    last_error = LLMClientError(response.status_code, response.text[:200], provider.provider_type)
+                    last_error = LLMClientError(
+                        response.status_code, response.text[:200], provider.provider_type
+                    )
                     break
 
                 # Client error (400, 401, 403): fail fast without retrying
-                raise LLMClientError(response.status_code, response.text[:200], provider.provider_type)
+                raise LLMClientError(
+                    response.status_code, response.text[:200], provider.provider_type
+                )
 
             except (httpx.TimeoutException, httpx.NetworkError) as e:
                 last_error = e
@@ -374,14 +392,20 @@ class BrainClient:
                 break
 
         # Fallback to faster/lighter models on Groq if current model hits 429 or 404
-        if provider.provider_type == "groq" and last_error and (
-            isinstance(last_error, LLMClientError) and last_error.status_code in (404, 429)
+        if (
+            provider.provider_type == "groq"
+            and last_error
+            and (isinstance(last_error, LLMClientError) and last_error.status_code in (404, 429))
         ):
             candidate_models = ["qwen/qwen3.8-27b", "openai/gpt-oss-20b", "openai/gpt-oss-120b"]
             for fb_model in candidate_models:
                 if fb_model == payload.get("model"):
                     continue
-                logger.warning("Groq model %s rate-limited; attempting non-streaming fallback to %s...", payload.get("model"), fb_model)
+                logger.warning(
+                    "Groq model %s rate-limited; attempting non-streaming fallback to %s...",
+                    payload.get("model"),
+                    fb_model,
+                )
                 fallback_payload = dict(payload)
                 fallback_payload["model"] = fb_model
                 fallback_headers = {
@@ -390,7 +414,9 @@ class BrainClient:
                 }
                 try:
                     async with httpx.AsyncClient(timeout=self.timeout) as client:
-                        fb_resp = await client.post(url, headers=fallback_headers, json=fallback_payload)
+                        fb_resp = await client.post(
+                            url, headers=fallback_headers, json=fallback_payload
+                        )
                         if fb_resp.status_code == 200:
                             data = fb_resp.json()
                             choices = data.get("choices", [])
@@ -409,18 +435,30 @@ class BrainClient:
                     logger.warning("Fallback model %s also encountered error: %s", fb_model, fb_err)
 
         # Fallback to active models on NVIDIA NIM if current model hits 404, 410, or 429
-        is_nvidia_target = (
-            (provider.api_key and provider.api_key.startswith("nvapi-"))
-            or ("nvidia.com" in provider.base_url)
+        is_nvidia_target = (provider.api_key and provider.api_key.startswith("nvapi-")) or (
+            "nvidia.com" in provider.base_url
         )
-        if is_nvidia_target and last_error and (
-            isinstance(last_error, LLMClientError) and last_error.status_code in (404, 410, 429)
+        if (
+            is_nvidia_target
+            and last_error
+            and (
+                isinstance(last_error, LLMClientError) and last_error.status_code in (404, 410, 429)
+            )
         ):
-            nv_candidates = ["nvidia/nemotron-3.5-bolt-e4b", "minimaxai/minimax-m3.1-flash", "nvidia/nemotron-3.5-lightning-30b-a3b"]
+            nv_candidates = [
+                "nvidia/nemotron-3.5-bolt-e4b",
+                "minimaxai/minimax-m3.1-flash",
+                "nvidia/nemotron-3.5-lightning-30b-a3b",
+            ]
             for fb_model in nv_candidates:
                 if fb_model == payload.get("model"):
                     continue
-                logger.warning("NVIDIA model %s unavailable (%s); attempting non-streaming fallback to %s...", payload.get("model"), last_error.status_code, fb_model)
+                logger.warning(
+                    "NVIDIA model %s unavailable (%s); attempting non-streaming fallback to %s...",
+                    payload.get("model"),
+                    last_error.status_code,
+                    fb_model,
+                )
                 fallback_payload = dict(payload)
                 fallback_payload["model"] = fb_model
                 fallback_headers = {
@@ -429,7 +467,9 @@ class BrainClient:
                 }
                 try:
                     async with httpx.AsyncClient(timeout=self.timeout) as client:
-                        fb_resp = await client.post(url, headers=fallback_headers, json=fallback_payload)
+                        fb_resp = await client.post(
+                            url, headers=fallback_headers, json=fallback_payload
+                        )
                         if fb_resp.status_code == 200:
                             data = fb_resp.json()
                             choices = data.get("choices", [])
@@ -445,12 +485,17 @@ class BrainClient:
                                     )
                                 return content.strip()
                 except Exception as fb_err:
-                    logger.warning("NVIDIA fallback model %s also encountered error: %s", fb_model, fb_err)
+                    logger.warning(
+                        "NVIDIA fallback model %s also encountered error: %s", fb_model, fb_err
+                    )
 
         # Ultimate failover: If all Groq attempts fail, shift request to NVIDIA NIM
         settings = get_settings()
         if settings.NVIDIA_API_KEY and (provider.provider_type == "groq" or not provider.is_byok):
-            logger.warning("All Groq attempts failed; shifting request to NVIDIA fallback brain (%s)...", settings.NVIDIA_MODEL)
+            logger.warning(
+                "All Groq attempts failed; shifting request to NVIDIA fallback brain (%s)...",
+                settings.NVIDIA_MODEL,
+            )
             nv_headers = {
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {settings.NVIDIA_API_KEY}",
@@ -480,7 +525,10 @@ class BrainClient:
         # Ultimate resilience fallback: If all external cloud providers fail (network / rate limits),
         # gracefully synthesize a deterministic grounded response rather than crashing
         if not provider.is_byok and (provider.provider_type == "groq" or settings.MODE == "cloud"):
-            logger.warning("All external LLM providers unavailable (%s); using grounded emergency fallback.", last_error)
+            logger.warning(
+                "All external LLM providers unavailable (%s); using grounded emergency fallback.",
+                last_error,
+            )
             self.last_used_provider = "stub"
             self.last_used_model = "emergency-grounded"
             return _generate_stub_response(messages)
@@ -488,7 +536,9 @@ class BrainClient:
         if last_error:
             if isinstance(last_error, LLMClientError):
                 raise last_error
-            raise LLMClientError(504, f"Network/Timeout error: {str(last_error)}", provider.provider_type) from last_error
+            raise LLMClientError(
+                504, f"Network/Timeout error: {str(last_error)}", provider.provider_type
+            ) from last_error
         raise LLMClientError(500, "Unknown LLM completion error", provider.provider_type)
 
     async def stream_generate(
@@ -537,7 +587,9 @@ class BrainClient:
         for attempt in range(1, max_attempts + 1):
             try:
                 async with httpx.AsyncClient(timeout=self.timeout) as client:
-                    async with client.stream("POST", url, headers=headers, json=payload) as response:
+                    async with client.stream(
+                        "POST", url, headers=headers, json=payload
+                    ) as response:
                         if response.status_code == 200:
                             self.last_used_provider = provider.provider_type
                             self.last_used_model = provider.model
@@ -556,7 +608,11 @@ class BrainClient:
                                     if choices:
                                         delta = choices[0].get("delta", {})
                                         content_piece = delta.get("content", "")
-                                        reasoning_piece = delta.get("reasoning_content") or delta.get("reasoning") or ""
+                                        reasoning_piece = (
+                                            delta.get("reasoning_content")
+                                            or delta.get("reasoning")
+                                            or ""
+                                        )
                                         if reasoning_piece:
                                             accumulated_reasoning += reasoning_piece
                                         if content_piece:
@@ -570,10 +626,17 @@ class BrainClient:
                             return
 
                         # Shift to next key immediately on 429 if multiple keys exist in pool
-                        if response.status_code == 429 and is_groq and self.groq_pool.pool_size() > 1 and attempt < max_attempts:
+                        if (
+                            response.status_code == 429
+                            and is_groq
+                            and self.groq_pool.pool_size() > 1
+                            and attempt < max_attempts
+                        ):
                             err_bytes = await response.aread()
                             err_msg = err_bytes.decode("utf-8", errors="replace")[:200]
-                            last_error = LLMClientError(response.status_code, err_msg, provider.provider_type)
+                            last_error = LLMClientError(
+                                response.status_code, err_msg, provider.provider_type
+                            )
                             active_key = self.groq_pool.shift_to_next_key(failed_key=active_key)
                             headers["Authorization"] = f"Bearer {active_key}"
                             await asyncio.sleep(0.1)
@@ -583,7 +646,9 @@ class BrainClient:
                         if response.status_code in (429, 500, 502, 503, 504):
                             err_bytes = await response.aread()
                             err_msg = err_bytes.decode("utf-8", errors="replace")[:200]
-                            last_error = LLMClientError(response.status_code, err_msg, provider.provider_type)
+                            last_error = LLMClientError(
+                                response.status_code, err_msg, provider.provider_type
+                            )
                             if attempt < max_attempts:
                                 backoff = 1.0 * attempt
                                 await asyncio.sleep(backoff)
@@ -594,7 +659,9 @@ class BrainClient:
                         if response.status_code in (404, 410):
                             err_bytes = await response.aread()
                             err_msg = err_bytes.decode("utf-8", errors="replace")[:200]
-                            last_error = LLMClientError(response.status_code, err_msg, provider.provider_type)
+                            last_error = LLMClientError(
+                                response.status_code, err_msg, provider.provider_type
+                            )
                             break
 
                         err_bytes = await response.aread()
@@ -611,14 +678,20 @@ class BrainClient:
                 break
 
         # Fallback to faster/lighter models on Groq if current model hits 429 or 404
-        if provider.provider_type == "groq" and last_error and (
-            isinstance(last_error, LLMClientError) and last_error.status_code in (404, 429)
+        if (
+            provider.provider_type == "groq"
+            and last_error
+            and (isinstance(last_error, LLMClientError) and last_error.status_code in (404, 429))
         ):
             candidate_models = ["qwen/qwen3.8-27b", "openai/gpt-oss-20b", "openai/gpt-oss-120b"]
             for fb_model in candidate_models:
                 if fb_model == payload.get("model"):
                     continue
-                logger.warning("Groq model %s rate-limited; attempting streaming fallback to %s...", payload.get("model"), fb_model)
+                logger.warning(
+                    "Groq model %s rate-limited; attempting streaming fallback to %s...",
+                    payload.get("model"),
+                    fb_model,
+                )
                 fallback_payload = dict(payload)
                 fallback_payload["model"] = fb_model
                 fallback_headers = {
@@ -627,7 +700,9 @@ class BrainClient:
                 }
                 try:
                     async with httpx.AsyncClient(timeout=self.timeout) as client:
-                        async with client.stream("POST", url, headers=fallback_headers, json=fallback_payload) as response:
+                        async with client.stream(
+                            "POST", url, headers=fallback_headers, json=fallback_payload
+                        ) as response:
                             if response.status_code == 200:
                                 self.last_used_provider = provider.provider_type
                                 self.last_used_model = fb_model
@@ -656,18 +731,30 @@ class BrainClient:
                     logger.warning("Fallback model %s also encountered error: %s", fb_model, fb_err)
 
         # Fallback to active models on NVIDIA NIM if current model hits 404, 410, or 429
-        is_nvidia_target = (
-            (provider.api_key and provider.api_key.startswith("nvapi-"))
-            or ("nvidia.com" in provider.base_url)
+        is_nvidia_target = (provider.api_key and provider.api_key.startswith("nvapi-")) or (
+            "nvidia.com" in provider.base_url
         )
-        if is_nvidia_target and last_error and (
-            isinstance(last_error, LLMClientError) and last_error.status_code in (404, 410, 429)
+        if (
+            is_nvidia_target
+            and last_error
+            and (
+                isinstance(last_error, LLMClientError) and last_error.status_code in (404, 410, 429)
+            )
         ):
-            nv_candidates = ["nvidia/nemotron-3.5-bolt-e4b", "minimaxai/minimax-m3.1-flash", "nvidia/nemotron-3.5-lightning-30b-a3b"]
+            nv_candidates = [
+                "nvidia/nemotron-3.5-bolt-e4b",
+                "minimaxai/minimax-m3.1-flash",
+                "nvidia/nemotron-3.5-lightning-30b-a3b",
+            ]
             for fb_model in nv_candidates:
                 if fb_model == payload.get("model"):
                     continue
-                logger.warning("NVIDIA model %s unavailable (%s); attempting streaming fallback to %s...", payload.get("model"), last_error.status_code, fb_model)
+                logger.warning(
+                    "NVIDIA model %s unavailable (%s); attempting streaming fallback to %s...",
+                    payload.get("model"),
+                    last_error.status_code,
+                    fb_model,
+                )
                 fallback_payload = dict(payload)
                 fallback_payload["model"] = fb_model
                 fallback_headers = {
@@ -676,7 +763,9 @@ class BrainClient:
                 }
                 try:
                     async with httpx.AsyncClient(timeout=self.timeout) as client:
-                        async with client.stream("POST", url, headers=fallback_headers, json=fallback_payload) as response:
+                        async with client.stream(
+                            "POST", url, headers=fallback_headers, json=fallback_payload
+                        ) as response:
                             if response.status_code == 200:
                                 self.last_used_provider = provider.provider_type
                                 self.last_used_model = fb_model
@@ -702,12 +791,17 @@ class BrainClient:
                                 if tokens_yielded > 0:
                                     return
                 except Exception as fb_err:
-                    logger.warning("NVIDIA fallback model %s also encountered error: %s", fb_model, fb_err)
+                    logger.warning(
+                        "NVIDIA fallback model %s also encountered error: %s", fb_model, fb_err
+                    )
 
         # Ultimate failover: If all Groq attempts fail, shift request to NVIDIA NIM
         settings = get_settings()
         if settings.NVIDIA_API_KEY and (provider.provider_type == "groq" or not provider.is_byok):
-            logger.warning("All Groq attempts failed; shifting streaming request to NVIDIA fallback brain (%s)...", settings.NVIDIA_MODEL)
+            logger.warning(
+                "All Groq attempts failed; shifting streaming request to NVIDIA fallback brain (%s)...",
+                settings.NVIDIA_MODEL,
+            )
             nv_headers = {
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {settings.NVIDIA_API_KEY}",
@@ -723,7 +817,9 @@ class BrainClient:
             try:
                 tokens_yielded = 0
                 async with httpx.AsyncClient(timeout=httpx.Timeout(10.0, connect=3.0)) as client:
-                    async with client.stream("POST", nv_url, headers=nv_headers, json=nv_payload) as response:
+                    async with client.stream(
+                        "POST", nv_url, headers=nv_headers, json=nv_payload
+                    ) as response:
                         if response.status_code == 200:
                             self.last_used_provider = "nvidia"
                             self.last_used_model = settings.NVIDIA_MODEL
@@ -746,7 +842,10 @@ class BrainClient:
                                 except json.JSONDecodeError:
                                     continue
                             if tokens_yielded > 0:
-                                logger.info("NVIDIA NIM successfully streamed %d tokens after Groq failover!", tokens_yielded)
+                                logger.info(
+                                    "NVIDIA NIM successfully streamed %d tokens after Groq failover!",
+                                    tokens_yielded,
+                                )
                                 return
             except Exception as nv_err:
                 logger.error("NVIDIA fallback brain streaming error: %s", nv_err)
@@ -754,7 +853,10 @@ class BrainClient:
         # Ultimate resilience fallback: If all external cloud providers fail (network / rate limits),
         # gracefully synthesize a deterministic grounded response rather than crashing
         if not provider.is_byok and (provider.provider_type == "groq" or settings.MODE == "cloud"):
-            logger.warning("All external LLM providers unavailable (%s); using grounded emergency fallback.", last_error)
+            logger.warning(
+                "All external LLM providers unavailable (%s); using grounded emergency fallback.",
+                last_error,
+            )
             self.last_used_provider = "stub"
             self.last_used_model = "emergency-grounded"
             stub_text = _generate_stub_response(messages)
@@ -766,7 +868,9 @@ class BrainClient:
         if last_error:
             if isinstance(last_error, LLMClientError):
                 raise last_error
-            raise LLMClientError(504, f"Network/Timeout error: {str(last_error)}", provider.provider_type) from last_error
+            raise LLMClientError(
+                504, f"Network/Timeout error: {str(last_error)}", provider.provider_type
+            ) from last_error
         raise LLMClientError(500, "Unknown LLM streaming error", provider.provider_type)
 
 
@@ -784,4 +888,3 @@ def get_brain_client() -> BrainClient:
 def reset_brain_client() -> None:
     global _brain_client
     _brain_client = None
-

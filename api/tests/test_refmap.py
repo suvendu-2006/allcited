@@ -1,4 +1,3 @@
-
 from app.pipeline.refmap import (
     extract_references,
     is_false_positive_reference,
@@ -44,7 +43,9 @@ def test_handbook_fixture_reference_mapping(session_handbook):
 
     # Check mapped references across definitions and mentions
     all_mapped_keys = set(ref_map.definitions.keys()).union(set(ref_map.mentions.keys()))
-    assert len(all_mapped_keys) >= 4, f"Expected >= 4 mapped refs, got {len(all_mapped_keys)}: {all_mapped_keys}"
+    assert len(all_mapped_keys) >= 4, (
+        f"Expected >= 4 mapped refs, got {len(all_mapped_keys)}: {all_mapped_keys}"
+    )
 
     # Specifically check critical rule:63.7.4
     assert "rule:63.7.4" in ref_map.definitions or "rule:63.7.4" in ref_map.mentions

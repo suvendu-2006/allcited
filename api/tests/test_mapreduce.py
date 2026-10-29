@@ -17,9 +17,9 @@ def parse_sse_events(text: str) -> List[dict]:
         if not line:
             continue
         if line.startswith("event:"):
-            current_event = line[len("event:"):].strip()
+            current_event = line[len("event:") :].strip()
         elif line.startswith("data:"):
-            data_str = line[len("data:"):].strip()
+            data_str = line[len("data:") :].strip()
             try:
                 data_json = json.loads(data_str)
             except json.JSONDecodeError:
@@ -31,7 +31,14 @@ def parse_sse_events(text: str) -> List[dict]:
 def test_bundle_chunks_grouping():
     """Verify sequential bundling of document chunks and chunk_range labeling."""
     chunks = [
-        Chunk(id=f"c_{i}", doc_id="d1", content_hash=f"h_{i}", text=f"Chunk content {i}", section_path=[f"Sec {i}"], token_count=10)
+        Chunk(
+            id=f"c_{i}",
+            doc_id="d1",
+            content_hash=f"h_{i}",
+            text=f"Chunk content {i}",
+            section_path=[f"Sec {i}"],
+            token_count=10,
+        )
         for i in range(25)
     ]
     bundles = bundle_chunks(chunks, bundle_size=10)

@@ -68,7 +68,9 @@ def test_telegram_secret_token_verification():
 
     with patch.object(settings, "TELEGRAM_WEBHOOK_SECRET", "super_secret_webhook_key"):
         # Missing header -> 401
-        res1 = client.post("/v1/telegram/webhook", json={"message": {"chat": {"id": 123}, "text": "/start"}})
+        res1 = client.post(
+            "/v1/telegram/webhook", json={"message": {"chat": {"id": 123}, "text": "/start"}}
+        )
         assert res1.status_code == 401
 
         # Invalid header -> 401
@@ -94,7 +96,11 @@ def test_telegram_start_and_clear_commands():
     mock_tg = MockTelegramClient()
     set_telegram_client(mock_tg)
     settings = get_settings()
-    headers = {"X-Telegram-Bot-Api-Secret-Token": settings.TELEGRAM_WEBHOOK_SECRET} if settings.TELEGRAM_WEBHOOK_SECRET else {}
+    headers = (
+        {"X-Telegram-Bot-Api-Secret-Token": settings.TELEGRAM_WEBHOOK_SECRET}
+        if settings.TELEGRAM_WEBHOOK_SECRET
+        else {}
+    )
 
     chat_id = 778899
 
@@ -138,9 +144,15 @@ def test_telegram_document_ingest_and_qa_flow():
     """
     client = TestClient(app)
     settings = get_settings()
-    headers = {"X-Telegram-Bot-Api-Secret-Token": settings.TELEGRAM_WEBHOOK_SECRET} if settings.TELEGRAM_WEBHOOK_SECRET else {}
+    headers = (
+        {"X-Telegram-Bot-Api-Secret-Token": settings.TELEGRAM_WEBHOOK_SECRET}
+        if settings.TELEGRAM_WEBHOOK_SECRET
+        else {}
+    )
 
-    fixture_path = Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "handbook.pdf"
+    fixture_path = (
+        Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "handbook.pdf"
+    )
     assert fixture_path.exists()
     pdf_bytes = fixture_path.read_bytes()
 
@@ -252,7 +264,11 @@ def test_telegram_error_event_handling():
     """Verify that when stream_answer_pipeline emits an error event, Telegram message is updated."""
     client = TestClient(app)
     settings = get_settings()
-    headers = {"X-Telegram-Bot-Api-Secret-Token": settings.TELEGRAM_WEBHOOK_SECRET} if settings.TELEGRAM_WEBHOOK_SECRET else {}
+    headers = (
+        {"X-Telegram-Bot-Api-Secret-Token": settings.TELEGRAM_WEBHOOK_SECRET}
+        if settings.TELEGRAM_WEBHOOK_SECRET
+        else {}
+    )
 
     mock_tg = MockTelegramClient()
     set_telegram_client(mock_tg)
@@ -262,6 +278,7 @@ def test_telegram_error_event_handling():
 
     # Seed active session in store
     from app.sessions import get_session_store
+
     store = get_session_store()
     store.create_session_from_bytes("dummy.txt", b"Dummy session content")
     # Point chat_sessions to the real session ID
@@ -311,11 +328,23 @@ def test_telegram_markdown_fallback_on_parse_error():
         call_count += 1
         json_body = kwargs.get("json", {})
         if json_body.get("parse_mode") == "Markdown":
-            return MockResponse({"ok": False, "error_code": 400, "description": "Bad Request: can't parse entities"})
-        return MockResponse({"ok": True, "result": {"message_id": 101, "text": json_body.get("text")}})
+            return MockResponse(
+                {"ok": False, "error_code": 400, "description": "Bad Request: can't parse entities"}
+            )
+        return MockResponse(
+            {"ok": True, "result": {"message_id": 101, "text": json_body.get("text")}}
+        )
 
     with patch.object(httpx.AsyncClient, "post", side_effect=mock_post):
         import asyncio
-        res = asyncio.run(tg.edit_message_text(chat_id=123, message_id=101, text="Code_with_unmatched_underscores", parse_mode="Markdown"))
+
+        res = asyncio.run(
+            tg.edit_message_text(
+                chat_id=123,
+                message_id=101,
+                text="Code_with_unmatched_underscores",
+                parse_mode="Markdown",
+            )
+        )
         assert res["ok"] is True
         assert call_count == 2

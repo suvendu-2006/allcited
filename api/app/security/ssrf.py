@@ -7,6 +7,7 @@ import httpx
 
 class SSRFBlockedError(Exception):
     """Raised when a URL is blocked due to private IP targeting, redirect abuse, or size limits."""
+
     pass
 
 
@@ -19,7 +20,9 @@ def validate_url_target(url: str) -> None:
 
     # 1. Scheme guard
     if parsed.scheme.lower() not in ("http", "https"):
-        raise SSRFBlockedError(f"Invalid URL scheme '{parsed.scheme}'. Only http and https are permitted.")
+        raise SSRFBlockedError(
+            f"Invalid URL scheme '{parsed.scheme}'. Only http and https are permitted."
+        )
 
     hostname = parsed.hostname
     if not hostname:
@@ -54,7 +57,9 @@ def validate_url_target(url: str) -> None:
             or ip.is_multicast
             or ip.is_unspecified
         ):
-            raise SSRFBlockedError(f"Target address '{ip}' is in a private, link-local, or restricted network range.")
+            raise SSRFBlockedError(
+                f"Target address '{ip}' is in a private, link-local, or restricted network range."
+            )
 
         # Explicit safeguard for AWS / GCP / Azure link-local metadata IP
         if ip_str == "169.254.169.254":
@@ -111,7 +116,9 @@ async def safe_fetch_url(
 
     transport = PinningAsyncHTTPTransport(resolver=lambda h: pinned_ips.get(h.lower(), ""))
 
-    async with httpx.AsyncClient(transport=transport, timeout=timeout_seconds, follow_redirects=False) as client:
+    async with httpx.AsyncClient(
+        transport=transport, timeout=timeout_seconds, follow_redirects=False
+    ) as client:
         for _ in range(max_redirects + 1):
             validated_ip = validate_url_target(current_url)
             parsed = urlparse(current_url)
@@ -124,7 +131,10 @@ async def safe_fetch_url(
 
             try:
                 # Support get-only test mocks while using streaming for actual client
-                if hasattr(type(client), "get") and getattr(type(client).get, "__qualname__", "") != "AsyncClient.get":
+                if (
+                    hasattr(type(client), "get")
+                    and getattr(type(client).get, "__qualname__", "") != "AsyncClient.get"
+                ):
                     response = await client.get(current_url, headers=req_headers)
                     if response.status_code in (301, 302, 303, 307, 308):
                         location = response.headers.get("location")
@@ -136,18 +146,24 @@ async def safe_fetch_url(
                         continue
 
                     if response.status_code != 200:
-                        raise SSRFBlockedError(f"HTTP fetch returned non-200 status code: {response.status_code}")
+                        raise SSRFBlockedError(
+                            f"HTTP fetch returned non-200 status code: {response.status_code}"
+                        )
 
                     cl_header = response.headers.get("content-length")
                     if cl_header and cl_header.isdigit() and int(cl_header) > max_size_bytes:
-                        raise SSRFBlockedError(f"Resource size ({cl_header} bytes) exceeds {limit_mb} MB cap.")
+                        raise SSRFBlockedError(
+                            f"Resource size ({cl_header} bytes) exceeds {limit_mb} MB cap."
+                        )
 
                     content_chunks = []
                     downloaded_bytes = 0
                     async for chunk in response.aiter_bytes(chunk_size=16384):
                         downloaded_bytes += len(chunk)
                         if downloaded_bytes > max_size_bytes:
-                            raise SSRFBlockedError(f"Downloaded content ({downloaded_bytes} bytes) exceeds {limit_mb} MB cap.")
+                            raise SSRFBlockedError(
+                                f"Downloaded content ({downloaded_bytes} bytes) exceeds {limit_mb} MB cap."
+                            )
                         content_chunks.append(chunk)
 
                     return b"".join(content_chunks)
@@ -164,18 +180,24 @@ async def safe_fetch_url(
                             continue
 
                         if response.status_code != 200:
-                            raise SSRFBlockedError(f"HTTP fetch returned non-200 status code: {response.status_code}")
+                            raise SSRFBlockedError(
+                                f"HTTP fetch returned non-200 status code: {response.status_code}"
+                            )
 
                         cl_header = response.headers.get("content-length")
                         if cl_header and cl_header.isdigit() and int(cl_header) > max_size_bytes:
-                            raise SSRFBlockedError(f"Resource size ({cl_header} bytes) exceeds {limit_mb} MB cap.")
+                            raise SSRFBlockedError(
+                                f"Resource size ({cl_header} bytes) exceeds {limit_mb} MB cap."
+                            )
 
                         content_chunks = []
                         downloaded_bytes = 0
                         async for chunk in response.aiter_bytes(chunk_size=16384):
                             downloaded_bytes += len(chunk)
                             if downloaded_bytes > max_size_bytes:
-                                raise SSRFBlockedError(f"Downloaded content ({downloaded_bytes} bytes) exceeds {limit_mb} MB cap.")
+                                raise SSRFBlockedError(
+                                    f"Downloaded content ({downloaded_bytes} bytes) exceeds {limit_mb} MB cap."
+                                )
                             content_chunks.append(chunk)
 
                         return b"".join(content_chunks)

@@ -41,12 +41,16 @@ class LibraryQueryRequest(BaseModel):
     query: str = Field(..., description="Question to ask across the library")
     doc_ids: Optional[List[str]] = Field(default=None, description="Optional document ID filters")
     top_k: int = Field(default=5, description="Number of candidate chunks to retrieve")
-    provider: Optional[str] = Field(default=None, description="Preferred provider: stub, groq, ollama, byok")
+    provider: Optional[str] = Field(
+        default=None, description="Preferred provider: stub, groq, ollama, byok"
+    )
 
 
 class LibraryQueryResponse(BaseModel):
     answer: str = Field(..., description="Grounded answer text")
-    citations: List[CitationItem] = Field(default_factory=list, description="List of source citations")
+    citations: List[CitationItem] = Field(
+        default_factory=list, description="List of source citations"
+    )
     sources_count: int = Field(default=0, description="Number of sources used")
 
 
@@ -114,9 +118,13 @@ def _sync_supabase_save(doc_payload: dict, chunks_to_persist: list):
             "Prefer": "return=minimal",
         }
         with httpx.Client(timeout=5.0) as client:
-            resp = client.post(f"{base_url}/rest/v1/saved_documents", headers=headers, json=doc_payload)
+            resp = client.post(
+                f"{base_url}/rest/v1/saved_documents", headers=headers, json=doc_payload
+            )
             if resp.status_code in (200, 201) and chunks_to_persist:
-                client.post(f"{base_url}/rest/v1/saved_chunks", headers=headers, json=chunks_to_persist)
+                client.post(
+                    f"{base_url}/rest/v1/saved_chunks", headers=headers, json=chunks_to_persist
+                )
     except Exception as e:
         logger.warning("Supabase save_document sync failed: %s", e)
 
@@ -137,8 +145,12 @@ def _sync_supabase_delete(user_id: str, doc_id: str):
         params_chunks = {"document_id": f"eq.{clean_doc_id}", "user_id": f"eq.{clean_user_id}"}
         with httpx.Client(timeout=5.0) as client:
             if _check_accepts_params(client.delete):
-                client.delete(f"{base_url}/rest/v1/saved_documents", headers=headers, params=params_doc)
-                client.delete(f"{base_url}/rest/v1/saved_chunks", headers=headers, params=params_chunks)
+                client.delete(
+                    f"{base_url}/rest/v1/saved_documents", headers=headers, params=params_doc
+                )
+                client.delete(
+                    f"{base_url}/rest/v1/saved_chunks", headers=headers, params=params_chunks
+                )
             else:
                 client.delete(
                     f"{base_url}/rest/v1/saved_documents?id=eq.{clean_doc_id}&user_id=eq.{clean_user_id}",
@@ -280,12 +292,17 @@ class InMemoryLibraryStore:
                                 file_size_bytes=int(r.get("file_size_bytes", 0)),
                                 page_count=int(r.get("page_count", 1)),
                                 chunk_count=int(r.get("chunk_count", 0)),
-                                created_at=r.get("created_at", datetime.datetime.now(datetime.timezone.utc).isoformat()),
+                                created_at=r.get(
+                                    "created_at",
+                                    datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                                ),
                             )
                             if doc_item.id not in self._docs[user_id]:
                                 self._docs[user_id][doc_item.id] = doc_item
 
-                        doc_filenames = {doc_id: d.filename for doc_id, d in self._docs[user_id].items()}
+                        doc_filenames = {
+                            doc_id: d.filename for doc_id, d in self._docs[user_id].items()
+                        }
                         existing_chunk_ids = {c.id for c in self._chunks[user_id]}
                         rehydrated_chunks = []
                         for cr in chunk_rows:
@@ -354,18 +371,20 @@ class InMemoryLibraryStore:
                     embedding=emb,
                 )
                 self._chunks.setdefault(user_id, []).append(stored)
-                chunks_to_persist.append({
-                    "id": stored.id,
-                    "document_id": doc_id,
-                    "user_id": user_id,
-                    "chunk_id": c.id,
-                    "content_hash": getattr(c, "content_hash", "") or f"ch_{stored.id[:8]}",
-                    "text": c.text,
-                    "section_path": c.section_path or [],
-                    "page": c.page,
-                    "token_count": getattr(c, "token_count", 0) or len(c.text.split()),
-                    "embedding": emb,
-                })
+                chunks_to_persist.append(
+                    {
+                        "id": stored.id,
+                        "document_id": doc_id,
+                        "user_id": user_id,
+                        "chunk_id": c.id,
+                        "content_hash": getattr(c, "content_hash", "") or f"ch_{stored.id[:8]}",
+                        "text": c.text,
+                        "section_path": c.section_path or [],
+                        "page": c.page,
+                        "token_count": getattr(c, "token_count", 0) or len(c.text.split()),
+                        "embedding": emb,
+                    }
+                )
 
             doc_payload = {
                 "id": doc_id,
@@ -459,12 +478,17 @@ class InMemoryLibraryStore:
                                 file_size_bytes=int(r.get("file_size_bytes", 0)),
                                 page_count=int(r.get("page_count", 1)),
                                 chunk_count=int(r.get("chunk_count", 0)),
-                                created_at=r.get("created_at", datetime.datetime.now(datetime.timezone.utc).isoformat()),
+                                created_at=r.get(
+                                    "created_at",
+                                    datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                                ),
                             )
                             if doc_item.id not in self._docs[user_id]:
                                 self._docs[user_id][doc_item.id] = doc_item
 
-                        doc_filenames = {doc_id: d.filename for doc_id, d in self._docs[user_id].items()}
+                        doc_filenames = {
+                            doc_id: d.filename for doc_id, d in self._docs[user_id].items()
+                        }
                         existing_chunk_ids = {c.id for c in self._chunks[user_id]}
                         rehydrated_chunks = []
                         for cr in chunk_rows:
@@ -521,7 +545,9 @@ class InMemoryLibraryStore:
                 self._docs[user_id] = {}
             deleted = self._docs[user_id].pop(doc_id, None) is not None
             if user_id in self._chunks:
-                self._chunks[user_id] = [c for c in self._chunks[user_id] if c.document_id != doc_id]
+                self._chunks[user_id] = [
+                    c for c in self._chunks[user_id] if c.document_id != doc_id
+                ]
             self._loaded_users.add(user_id)
 
         # Remote Supabase delete asynchronously outside lock
@@ -546,7 +572,9 @@ class InMemoryLibraryStore:
         if needs_rehydrate:
             await self.rehydrate_user_async(user_id)
 
-        return self.search_chunks(user_id=user_id, query_vector=query_vector, top_k=top_k, doc_ids=doc_ids)
+        return self.search_chunks(
+            user_id=user_id, query_vector=query_vector, top_k=top_k, doc_ids=doc_ids
+        )
 
     def search_chunks(
         self,
@@ -589,7 +617,8 @@ class InMemoryLibraryStore:
 
                 # Validate embeddings and filter out chunks with mismatched dimensions or None embeddings
                 valid_chunks = [
-                    c for c in filtered_chunks
+                    c
+                    for c in filtered_chunks
                     if c.embedding is not None and len(c.embedding) == q_dim
                 ]
                 if not valid_chunks:
@@ -650,7 +679,9 @@ async def ask_my_library(
     embedder = get_embedding_manager()
     q_vec = embedder.embed_query(query)[0]
 
-    sources = await store.search_chunks_async(user_id=user_id, query_vector=q_vec, top_k=top_k, doc_ids=doc_ids)
+    sources = await store.search_chunks_async(
+        user_id=user_id, query_vector=q_vec, top_k=top_k, doc_ids=doc_ids
+    )
     if not sources:
         return "No relevant documents found in your library.", []
 

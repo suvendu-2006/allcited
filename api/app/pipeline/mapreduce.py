@@ -44,7 +44,9 @@ def bundle_chunks(chunks: List[Chunk], bundle_size: int = DEFAULT_BUNDLE_SIZE) -
         slice_chunks = chunks[i : i + effective_size]
         start_num = i + 1
         end_num = i + len(slice_chunks)
-        range_str = f"Chunks {start_num}-{end_num}" if start_num != end_num else f"Chunk {start_num}"
+        range_str = (
+            f"Chunks {start_num}-{end_num}" if start_num != end_num else f"Chunk {start_num}"
+        )
         bundles.append(
             ChunkBundle(
                 bundle_idx=bundle_idx,
@@ -103,7 +105,9 @@ async def summarize_bundle(
             )
             return summary.strip()
         except Exception as e:
-            logger.warning("Map summarization LLM call failed (%s); using deterministic section extraction", e)
+            logger.warning(
+                "Map summarization LLM call failed (%s); using deterministic section extraction", e
+            )
             titles = [c.section_path[-1] for c in bundle.chunks if c.section_path]
             main_title = titles[0] if titles else f"Section {bundle.bundle_idx + 1}"
             return (
@@ -226,9 +230,8 @@ async def stream_mapreduce_summary(
                 yield format_sse("token", {"delta": token_piece})
         except Exception as e:
             logger.warning("Reduce summarization LLM call failed (%s); using fallback synthesis", e)
-            fallback_text = (
-                f"# Executive Summary: {session.filename}\n\n"
-                + "\n\n".join(bundle_summaries)
+            fallback_text = f"# Executive Summary: {session.filename}\n\n" + "\n\n".join(
+                bundle_summaries
             )
             for word in fallback_text.split(" "):
                 piece = word + " "

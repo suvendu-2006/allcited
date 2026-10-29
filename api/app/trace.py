@@ -51,7 +51,9 @@ class TraceManager:
     Guarantees failure resilience: disk write errors are logged only and never disrupt answers.
     """
 
-    def __init__(self, trace_dir: Optional[Path] = None, max_memory_traces: int = MAX_MEMORY_TRACES):
+    def __init__(
+        self, trace_dir: Optional[Path] = None, max_memory_traces: int = MAX_MEMORY_TRACES
+    ):
         settings = get_settings()
         self.trace_dir = trace_dir or Path(getattr(settings, "TRACES_DIR", "data/traces"))
         self.max_memory_traces = max_memory_traces

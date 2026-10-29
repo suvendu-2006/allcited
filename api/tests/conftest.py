@@ -21,7 +21,6 @@ def reset_brain_client_fixture():
     reset_brain_client()
 
 
-
 @pytest.fixture(scope="session")
 def session_handbook() -> DocumentSession:
     """Session-scoped ingested index fixture for handbook.pdf per FIX 14."""
@@ -29,7 +28,9 @@ def session_handbook() -> DocumentSession:
     sid = "sess_shared_handbook"
     session = store.get_session(sid)
     if not session:
-        fixture_path = Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "handbook.pdf"
+        fixture_path = (
+            Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "handbook.pdf"
+        )
         with open(fixture_path, "rb") as f:
             session = store.create_session_from_bytes("handbook.pdf", f.read())
             session.session_id = sid
@@ -44,7 +45,12 @@ def session_scanned_handbook() -> DocumentSession:
     sid = "sess_scanned_handbook"
     session = store.get_session(sid)
     if not session:
-        fixture_path = Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "scanned_handbook.pdf"
+        fixture_path = (
+            Path(__file__).resolve().parent.parent.parent
+            / "eval"
+            / "fixtures"
+            / "scanned_handbook.pdf"
+        )
         with open(fixture_path, "rb") as f:
             session = store.create_session_from_bytes("scanned_handbook.pdf", f.read())
             session.session_id = sid

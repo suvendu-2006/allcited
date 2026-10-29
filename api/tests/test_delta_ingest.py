@@ -17,9 +17,17 @@ def test_delta_reingest_skips_unchanged_chunks_and_logs(caplog):
     emb_manager = get_embedding_manager()
     emb_manager.clear_cache()
 
-    sec1 = "This is the corporate intro section describing our mission and company principles. " * 35
-    sec2 = "This policy governs employee leave entitlements, sick days, and vacation accrual rules. " * 35
-    sec3 = "Security credential protocols mandate multi-factor authentication and 16-character keys. " * 35
+    sec1 = (
+        "This is the corporate intro section describing our mission and company principles. " * 35
+    )
+    sec2 = (
+        "This policy governs employee leave entitlements, sick days, and vacation accrual rules. "
+        * 35
+    )
+    sec3 = (
+        "Security credential protocols mandate multi-factor authentication and 16-character keys. "
+        * 35
+    )
 
     doc_v1 = f"# 1. Mission and Overview\n{sec1}\n\n# 2. Leave Policy\n{sec2}\n\n# 3. Security Protocols\n{sec3}"
 
@@ -66,7 +74,9 @@ def test_delta_reingest_skips_unchanged_chunks_and_logs(caplog):
 
     # 3. Re-upload EDITED document: Section 1 & 2 unchanged, Section 3 modified, Section 4 added
     sec3_edited = "Updated security rules require 24-character passwords and YubiKey tokens. " * 35
-    sec4_new = "New statutory schedules define severance pay formulas and travel expense stipends. " * 35
+    sec4_new = (
+        "New statutory schedules define severance pay formulas and travel expense stipends. " * 35
+    )
     doc_v2 = f"# 1. Mission and Overview\n{sec1}\n\n# 2. Leave Policy\n{sec2}\n\n# 3. Security Protocols\n{sec3_edited}\n\n# 4. Statutory Schedules\n{sec4_new}"
 
     with caplog.at_level(logging.INFO):
@@ -84,6 +94,7 @@ def test_delta_reingest_skips_unchanged_chunks_and_logs(caplog):
 
     # Verify log output shows delta skip counts
     assert any(
-        f"{data3['reused_chunks']} reused/skipped, {data3['new_chunks']} newly embedded" in record.message
+        f"{data3['reused_chunks']} reused/skipped, {data3['new_chunks']} newly embedded"
+        in record.message
         for record in caplog.records
     )

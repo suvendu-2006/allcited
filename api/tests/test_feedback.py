@@ -124,4 +124,6 @@ def test_submit_positive_and_negative_feedback(tmp_path: Path):
     with open(export_out, "r", encoding="utf-8") as f:
         data = json.load(f)
     assert data["total"] == 1
-    assert data["candidates"][0]["user_note"] == "Missed the executive waiver exception in Rule 2.1.4."
+    assert (
+        data["candidates"][0]["user_note"] == "Missed the executive waiver exception in Rule 2.1.4."
+    )

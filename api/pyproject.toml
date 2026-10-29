@@ -38,7 +38,6 @@ dev = [
 [tool.ruff]
 target-version = "py312"
 line-length = 100
-extend-exclude = ["tests/verify_*.py"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "W"]
@@ -46,7 +45,7 @@ ignore = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = [".", ".."]
+pythonpath = ["."]
 timeout = 60
 markers = [
     "ocr: marks tests as involving OCR models (deselect with '-m \"not ocr\"')",

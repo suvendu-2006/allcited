@@ -25,10 +25,14 @@ _private_pem = _private_key.private_bytes(
     format=serialization.PrivateFormat.PKCS8,
     encryption_algorithm=serialization.NoEncryption(),
 ).decode("utf-8")
-_public_pem = _private_key.public_key().public_bytes(
-    encoding=serialization.Encoding.PEM,
-    format=serialization.PublicFormat.SubjectPublicKeyInfo,
-).decode("utf-8")
+_public_pem = (
+    _private_key.public_key()
+    .public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo,
+    )
+    .decode("utf-8")
+)
 
 
 def make_test_token(user_id: str) -> str:
@@ -69,7 +73,10 @@ def test_stripe_checkout_and_idempotent_webhook(monkeypatch):
     # 1. Test checkout completes
     checkout_res = client.post(
         "/v1/stripe/checkout",
-        json={"price_id": "price_pro_test_99", "success_url": "http://localhost:3000/pricing?success=true"},
+        json={
+            "price_id": "price_pro_test_99",
+            "success_url": "http://localhost:3000/pricing?success=true",
+        },
         headers=headers,
     )
     assert checkout_res.status_code == 200, checkout_res.text
@@ -161,7 +168,10 @@ def test_subscription_store_get_plan_sanitization(monkeypatch):
     store.reset_for_tests()
 
     unique_user_id = f"test_user_{uuid.uuid4().hex[:8]}"
-    with patch("app.payments._sync_subscription_to_supabase"), patch.object(get_settings(), "SUPABASE_URL", None):
+    with (
+        patch("app.payments._sync_subscription_to_supabase"),
+        patch.object(get_settings(), "SUPABASE_URL", None),
+    ):
         # 1. Normal call with unique test user
         assert store.get_plan(unique_user_id) == "free"
 
@@ -174,7 +184,10 @@ def test_subscription_store_get_plan_sanitization(monkeypatch):
         assert store.get_plan(injection_id) == "free"
 
     # 3. Verify get_plan parameterized query passing
-    with patch("app.payments.get_settings") as mock_settings, patch("httpx.Client") as mock_client_cls:
+    with (
+        patch("app.payments.get_settings") as mock_settings,
+        patch("httpx.Client") as mock_client_cls,
+    ):
         mock_settings.return_value.SUPABASE_URL = "https://example.supabase.co"
         mock_settings.return_value.SUPABASE_SERVICE_ROLE_KEY = "dummy_key"
         mock_client = MagicMock()
@@ -193,7 +206,10 @@ def test_subscription_store_get_plan_sanitization(monkeypatch):
         assert "?" not in args[0]
 
     # 4. Verify _sync_subscription_to_supabase parameterized call
-    with patch("app.payments.get_settings") as mock_settings, patch("httpx.Client") as mock_client_cls:
+    with (
+        patch("app.payments.get_settings") as mock_settings,
+        patch("httpx.Client") as mock_client_cls,
+    ):
         mock_settings.return_value.SUPABASE_URL = "https://example.supabase.co"
         mock_settings.return_value.SUPABASE_SERVICE_ROLE_KEY = "dummy_key"
         mock_client = MagicMock()
@@ -211,4 +227,3 @@ def test_subscription_store_get_plan_sanitization(monkeypatch):
         assert p_kwargs.get("params") == {"on_conflict": "user_id"}
         assert "?" not in p_args[0]
         assert p_kwargs.get("json")["user_id"] == "user_789"
-

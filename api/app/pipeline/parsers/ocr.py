@@ -2,6 +2,7 @@
 OCR provider interface supporting Tesseract and EasyOCR.
 Configured via OCR_PROVIDER ('tesseract' or 'easyocr') and OCR_LANGS ('eng+hin').
 """
+
 import logging
 import re
 import threading
@@ -120,7 +121,9 @@ def run_ocr(
         pass
 
     if provider is None:
-        provider = getattr(settings, "OCR_PROVIDER", "tesseract").lower() if settings else "tesseract"
+        provider = (
+            getattr(settings, "OCR_PROVIDER", "tesseract").lower() if settings else "tesseract"
+        )
     else:
         provider = provider.lower()
 

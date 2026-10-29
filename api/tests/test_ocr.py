@@ -20,9 +20,9 @@ def parse_sse_events(text: str) -> List[dict]:
         if not line:
             continue
         if line.startswith("event:"):
-            current_event = line[len("event:"):].strip()
+            current_event = line[len("event:") :].strip()
         elif line.startswith("data:"):
-            data_str = line[len("data:"):].strip()
+            data_str = line[len("data:") :].strip()
             try:
                 data_json = json.loads(data_str)
             except json.JSONDecodeError:
@@ -105,7 +105,9 @@ def test_scanned_pdf_answers_3_questions_with_ocr_citations(session_scanned_hand
 
         events = parse_sse_events(query_res.text)
         error_events = [e for e in events if e["event"] == "error"]
-        if error_events and any("Rate limit" in str(e["data"]) or "LLM Error" in str(e["data"]) for e in error_events):
+        if error_events and any(
+            "Rate limit" in str(e["data"]) or "LLM Error" in str(e["data"]) for e in error_events
+        ):
             pytest.skip(f"Live Groq cloud rate limit (429) encountered for {q_text}")
 
         citations_events = [e for e in events if e["event"] == "citations"]
@@ -113,7 +115,9 @@ def test_scanned_pdf_answers_3_questions_with_ocr_citations(session_scanned_hand
 
         assert len(done_events) == 1, f"Missing done event for {q_text}"
         answer_text = done_events[0]["data"]["answer"]
-        assert expected_keyword in answer_text, f"Expected '{expected_keyword}' in answer: {answer_text}"
+        assert expected_keyword in answer_text, (
+            f"Expected '{expected_keyword}' in answer: {answer_text}"
+        )
 
         assert len(citations_events) == 1, f"Missing citations event for {q_text}"
         citations_data = citations_events[0]["data"].get("citations", [])
@@ -122,7 +126,9 @@ def test_scanned_pdf_answers_3_questions_with_ocr_citations(session_scanned_hand
         # Check OCR flag on citations
         for cit in citations_data:
             assert cit.get("is_ocr") is True, f"Citation {cit} must have is_ocr=True"
-            assert "(OCR)" in cit.get("label", ""), f"Citation label {cit.get('label')} must contain (OCR)"
+            assert "(OCR)" in cit.get("label", ""), (
+                f"Citation label {cit.get('label')} must contain (OCR)"
+            )
 
         # Answer text must also contain (OCR) citation flag
         assert "(OCR)" in answer_text, f"Answer text must contain '(OCR)': {answer_text}"
@@ -189,4 +195,3 @@ def test_local_model_path_resolution(tmp_path: Path, monkeypatch):
     rerank_path = resolve_local_model_path("cross-encoder/ms-marco-MiniLM-L-6-v2", "reranker")
     assert "models/ms-marco-MiniLM-L-6-v2" in rerank_path
     assert Path(rerank_path).exists()
-

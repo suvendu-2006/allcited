@@ -29,10 +29,14 @@ _private_pem = _private_key.private_bytes(
     format=serialization.PrivateFormat.PKCS8,
     encryption_algorithm=serialization.NoEncryption(),
 ).decode("utf-8")
-_public_pem = _private_key.public_key().public_bytes(
-    encoding=serialization.Encoding.PEM,
-    format=serialization.PublicFormat.SubjectPublicKeyInfo,
-).decode("utf-8")
+_public_pem = (
+    _private_key.public_key()
+    .public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo,
+    )
+    .decode("utf-8")
+)
 
 
 def make_test_token(user_id: str) -> str:
@@ -61,10 +65,14 @@ def test_stats_counters_and_format_mix():
     sess_id = res1.json()["session_id"]
 
     # Ingest PDF doc
-    fixture_path = Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "handbook.pdf"
+    fixture_path = (
+        Path(__file__).resolve().parent.parent.parent / "eval" / "fixtures" / "handbook.pdf"
+    )
     assert fixture_path.exists()
     with open(fixture_path, "rb") as f:
-        res2 = client.post("/v1/ingest", files={"file": ("handbook.pdf", f.read(), "application/pdf")})
+        res2 = client.post(
+            "/v1/ingest", files={"file": ("handbook.pdf", f.read(), "application/pdf")}
+        )
     assert res2.status_code == 200
 
     # Query doc
@@ -114,6 +122,7 @@ def test_audit_log_writes_for_saves_deletes_and_payments():
     sub_store.reset_for_tests()
 
     import uuid
+
     user_id = f"user_audit_tester_{uuid.uuid4().hex[:8]}"
     token = make_test_token(user_id)
     headers = {"Authorization": f"Bearer {token}"}
@@ -153,7 +162,9 @@ def test_audit_log_writes_for_saves_deletes_and_payments():
 
     ts = str(int(time.time()))
     payload = f'{{"id": "evt_audit_01", "type": "checkout.session.completed", "data": {{"object": {{"client_reference_id": "{user_id}", "customer": "cus_audit_1", "subscription": "sub_audit_1"}}}}}}'
-    sig = hmac.new(secret.encode("utf-8"), f"{ts}.{payload}".encode("utf-8"), hashlib.sha256).hexdigest()
+    sig = hmac.new(
+        secret.encode("utf-8"), f"{ts}.{payload}".encode("utf-8"), hashlib.sha256
+    ).hexdigest()
     sig_header = f"t={ts},v1={sig}"
 
     wh_res = client.post(

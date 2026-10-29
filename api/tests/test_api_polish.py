@@ -30,7 +30,9 @@ def test_v1_prefix_on_all_routes():
                 continue
             assert route.path.startswith("/v1/"), f"Route '{route.path}' missing /v1 prefix"
         elif hasattr(route, "prefix") and route.prefix:
-            assert route.prefix.startswith("/v1/"), f"Sub-router prefix '{route.prefix}' missing /v1 prefix"
+            assert route.prefix.startswith("/v1/"), (
+                f"Sub-router prefix '{route.prefix}' missing /v1 prefix"
+            )
 
 
 def test_openapi_spec_completeness():
@@ -39,7 +41,16 @@ def test_openapi_spec_completeness():
     assert spec["info"]["title"] == "Allcited API"
     assert spec["info"]["version"] == "1.0.0"
 
-    expected_tags = {"System", "Ingestion", "Q&A", "Library", "Payments", "Telegram", "Audit & Stats", "Feedback & Trace"}
+    expected_tags = {
+        "System",
+        "Ingestion",
+        "Q&A",
+        "Library",
+        "Payments",
+        "Telegram",
+        "Audit & Stats",
+        "Feedback & Trace",
+    }
     actual_tags = {t["name"] for t in spec.get("tags", [])}
     assert expected_tags.issubset(actual_tags), f"Missing tags: {expected_tags - actual_tags}"
 
@@ -57,7 +68,9 @@ def test_openapi_spec_completeness():
         "PlatformStatsResponse",
         "TraceRecord",
     }
-    assert required_schemas.issubset(set(schemas.keys())), f"Missing schemas: {required_schemas - set(schemas.keys())}"
+    assert required_schemas.issubset(set(schemas.keys())), (
+        f"Missing schemas: {required_schemas - set(schemas.keys())}"
+    )
 
     # Verify every route has an operationId
     for path, methods in paths.items():

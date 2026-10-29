@@ -23,7 +23,9 @@ def test_migration_file_structure_and_tables():
         "graph_edges",
     ]
     for table in expected_tables:
-        assert f"CREATE TABLE IF NOT EXISTS {table}" in content, f"Table {table} missing from schema"
+        assert f"CREATE TABLE IF NOT EXISTS {table}" in content, (
+            f"Table {table} missing from schema"
+        )
 
     # Required vector extension and dimension
     assert "CREATE EXTENSION IF NOT EXISTS vector;" in content
@@ -31,7 +33,14 @@ def test_migration_file_structure_and_tables():
     assert "USING hnsw (embedding vector_cosine_ops)" in content
 
     # Required RLS policies keyed to Clerk user_id
-    for table in ["saved_documents", "saved_chunks", "subscriptions", "graph_nodes", "graph_edges", "audit_log"]:
+    for table in [
+        "saved_documents",
+        "saved_chunks",
+        "subscriptions",
+        "graph_nodes",
+        "graph_edges",
+        "audit_log",
+    ]:
         assert f"ALTER TABLE {table} ENABLE ROW LEVEL SECURITY;" in content
         assert f"ON {table}" in content
 

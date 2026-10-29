@@ -40,7 +40,9 @@ def test_editing_prompt_file_changes_hash_in_logs(tmp_path: Path, caplog):
     with caplog.at_level(logging.INFO):
         text1, hash1 = registry.get_prompt("custom_test")
     assert text1 == "Version 1: You are a helpful assistant."
-    assert any(f"Prompt 'custom_test' active hash: {hash1}" in rec.message for rec in caplog.records)
+    assert any(
+        f"Prompt 'custom_test' active hash: {hash1}" in rec.message for rec in caplog.records
+    )
 
     caplog.clear()
 
@@ -50,7 +52,9 @@ def test_editing_prompt_file_changes_hash_in_logs(tmp_path: Path, caplog):
         text2, hash2 = registry.get_prompt("custom_test")
     assert text2 == "Version 2: You are an enterprise auditor."
     assert hash2 != hash1
-    assert any(f"Prompt 'custom_test' active hash: {hash2}" in rec.message for rec in caplog.records)
+    assert any(
+        f"Prompt 'custom_test' active hash: {hash2}" in rec.message for rec in caplog.records
+    )
 
 
 def test_no_hardcoded_prompt_strings_remain_in_pipeline_code():
@@ -114,6 +118,7 @@ def test_pipeline_run_logs_and_records_prompt_hash(caplog):
         if e.startswith("data:"):
             try:
                 import json
+
                 d = json.loads(e[5:].strip())
                 if "question_id" in d:
                     trace = trace_mgr.get_trace(d["question_id"])

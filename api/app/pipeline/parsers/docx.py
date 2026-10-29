@@ -13,6 +13,7 @@ from app.pipeline.parsers.base import ParsedBlock
 
 class DOCXParserError(Exception):
     """Raised when DOCX document cannot be read or parsed."""
+
     pass
 
 

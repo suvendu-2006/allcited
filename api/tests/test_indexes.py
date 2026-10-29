@@ -1,4 +1,3 @@
-
 from app.pipeline.embed import EmbeddingManager
 
 
@@ -48,6 +47,7 @@ def test_indexes_fixture_top1_both_engines(session_handbook):
 def test_tokenize_for_bm25_unicode_multilingual():
     """QUAL-01: Verify that BM25 tokenizer preserves Hindi and accented multilingual tokens."""
     from app.pipeline.indexes import tokenize_for_bm25
+
     hindi_text = "कंपनी के नियम और नीतियां (Corporate compliance 2026)"
     tokens = tokenize_for_bm25(hindi_text)
     assert "कंपनी" in tokens

@@ -23,14 +23,32 @@ class RouteDecision(BaseModel):
 
 # Keywords suggesting whole document aggregation or map-reduce
 DOC_WIDE_PATTERNS = [
-    re.compile(r"\b(summarize|summary of)\s+(the\s+)?(whole|entire|full|all|complete)\b", re.IGNORECASE),
-    re.compile(r"\b(summarize|summary of)\s+(this|the)\s+(document|handbook|pdf|file|paper)\b", re.IGNORECASE),
-    re.compile(r"\bwhat\s+(is|are)\s+(this|the)\s+(document|handbook|pdf|file|paper)\s+(all\s+)?(about|is\s+about)\b", re.IGNORECASE),
-    re.compile(r"\bwhat\s+does\s+this\s+(document|handbook|pdf|file|paper)\s+(cover|contain|discuss|talk\s+about)\b", re.IGNORECASE),
-    re.compile(r"\b(tell\s+me\s+about|overview\s+of)\s+(this|the)\s+(document|handbook|pdf|file|paper)\b", re.IGNORECASE),
-    re.compile(r"\b(give\s+me\s+an\s+overview\s+of\s+(the\s+)?(whole|entire|document))\b", re.IGNORECASE),
+    re.compile(
+        r"\b(summarize|summary of)\s+(the\s+)?(whole|entire|full|all|complete)\b", re.IGNORECASE
+    ),
+    re.compile(
+        r"\b(summarize|summary of)\s+(this|the)\s+(document|handbook|pdf|file|paper)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\bwhat\s+(is|are)\s+(this|the)\s+(document|handbook|pdf|file|paper)\s+(all\s+)?(about|is\s+about)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\bwhat\s+does\s+this\s+(document|handbook|pdf|file|paper)\s+(cover|contain|discuss|talk\s+about)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(tell\s+me\s+about|overview\s+of)\s+(this|the)\s+(document|handbook|pdf|file|paper)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(give\s+me\s+an\s+overview\s+of\s+(the\s+)?(whole|entire|document))\b", re.IGNORECASE
+    ),
     re.compile(r"\b(table\s+of\s+contents|outline\s+of\s+the\s+document)\b", re.IGNORECASE),
-    re.compile(r"\b(executive\s+summary|high-level\s+summary)\s+of\s+the\s+document\b", re.IGNORECASE),
+    re.compile(
+        r"\b(executive\s+summary|high-level\s+summary)\s+of\s+the\s+document\b", re.IGNORECASE
+    ),
 ]
 
 # Targeted entity indicators that override generic words like 'compare' or 'list'
@@ -70,8 +88,20 @@ def classify_route_rule_based(query: str) -> Optional[RouteDecision]:
 
     # Standard informational / targeted questions
     lookup_starters = [
-        "what is", "what are", "how do", "how many", "how much", "can i", "is there",
-        "who is", "when does", "where can", "why", "does the", "explain", "describe",
+        "what is",
+        "what are",
+        "how do",
+        "how many",
+        "how much",
+        "can i",
+        "is there",
+        "who is",
+        "when does",
+        "where can",
+        "why",
+        "does the",
+        "explain",
+        "describe",
     ]
     lower_q = clean_q.lower()
     if any(lower_q.startswith(starter) for starter in lookup_starters):

@@ -1,4 +1,3 @@
-
 from app.pipeline.retrieve import hybrid_retrieve, reciprocal_rank_fusion
 
 
@@ -39,7 +38,9 @@ def test_hybrid_retrieval_p2_and_p4_scenarios(session_handbook):
     assert "HR-702" in bm25_hits[0][0].text, "BM25 failed to rank HR-702 chunk #1"
 
     keyword_merged = hybrid_retrieve(doc_index, keyword_query, top_k=4)
-    assert any("HR-702" in sc.chunk.text for sc in keyword_merged), "Merged top-4 missing HR-702 chunk"
+    assert any("HR-702" in sc.chunk.text for sc in keyword_merged), (
+        "Merged top-4 missing HR-702 chunk"
+    )
 
     # 2. Paraphrase query (P2 scenario: semantic query with no exact keywords like 'encashment' or '63.7.4')
     paraphrase_query = "What happens to remaining vacation days if an employee quits?"

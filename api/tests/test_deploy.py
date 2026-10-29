@@ -9,17 +9,21 @@ Validates:
 """
 
 import json
+import sys
 from pathlib import Path
 
 import httpx
 import yaml
 from fastapi.testclient import TestClient
-from scripts.keep_alive import ping_health
-from scripts.setup_telegram_webhook import configure_telegram_webhook
-
-from app.main import app
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from scripts.keep_alive import ping_health  # noqa: E402
+from scripts.setup_telegram_webhook import configure_telegram_webhook  # noqa: E402
+
+from app.main import app  # noqa: E402
 
 
 def test_vercel_json_configuration():
