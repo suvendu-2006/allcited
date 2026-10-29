@@ -46,7 +46,9 @@ class CitationItem(BaseModel):
     text_preview: str = Field(..., description="Short text preview of cited chunk")
     is_two_hop: bool = Field(default=False, description="True if added via two-hop expansion")
     added_reason: Optional[str] = Field(default=None, description="Reason if added via two-hop")
-    doc_name: Optional[str] = Field(default=None, description="Document filename for library citations")
+    doc_name: Optional[str] = Field(
+        default=None, description="Document filename for library citations"
+    )
     is_ocr: bool = Field(default=False, description="True if extracted via OCR fallback")
 
 
@@ -209,13 +211,20 @@ def post_pass_citations(
                         text_preview=src.chunk.text[:200],
                         is_two_hop=src.is_two_hop,
                         added_reason=src.added_reason,
-                        doc_name=getattr(src.chunk, "doc_name", None) or getattr(src.chunk, "source", None) or None,
+                        doc_name=getattr(src.chunk, "doc_name", None)
+                        or getattr(src.chunk, "source", None)
+                        or None,
                         is_ocr=is_ocr,
                     )
                 )
 
     # If the answer is grounded but the LLM omitted citation tags, fallback to primary source [S1]
-    if not citations and sources and ABSENT_REFUSAL_TEXT not in cleaned and FRIENDLY_REFUSAL_TEXT not in cleaned:
+    if (
+        not citations
+        and sources
+        and ABSENT_REFUSAL_TEXT not in cleaned
+        and FRIENDLY_REFUSAL_TEXT not in cleaned
+    ):
         src = sources[0]
         is_ocr = bool(getattr(src, "is_ocr", False) or getattr(src.chunk, "is_ocr", False))
         label = "S1 (OCR)" if is_ocr else "S1"
@@ -228,7 +237,9 @@ def post_pass_citations(
                 text_preview=src.chunk.text[:200],
                 is_two_hop=src.is_two_hop,
                 added_reason=src.added_reason,
-                doc_name=getattr(src.chunk, "doc_name", None) or getattr(src.chunk, "source", None) or None,
+                doc_name=getattr(src.chunk, "doc_name", None)
+                or getattr(src.chunk, "source", None)
+                or None,
                 is_ocr=is_ocr,
             )
         )
@@ -257,6 +268,7 @@ async def stream_answer_pipeline(
     byok_model: Optional[str] = None,
     preferred_provider: Optional[str] = None,
     question_id: Optional[str] = None,
+    mode: Optional[str] = None,
 ) -> AsyncIterator[str]:
     """
     Execute the full end-to-end question answering pipeline and stream Server-Sent Events.
@@ -281,8 +293,10 @@ async def stream_answer_pipeline(
 
     # If document-wide summarization/overview requested, delegate to map-reduce pipeline
     from app.pipeline.router import QueryRoute
+
     if route_res.route == QueryRoute.DOC_WIDE:
         from app.pipeline.mapreduce import stream_mapreduce_summary
+
         async for sse_piece in stream_mapreduce_summary(
             session=session,
             target_words=800,
@@ -310,9 +324,23 @@ async def stream_answer_pipeline(
     clean_q = effective_query.strip().lower()
     clean_no_punct = re.sub(r"[^\w\s]", "", clean_q).strip()
     GREETINGS = {
-        "hello", "hi", "hey", "heya", "howdy", "hola", "greetings",
-        "good morning", "good afternoon", "good evening", "good day",
-        "hi there", "hello there", "hey there", "who are you", "what can you do", "help"
+        "hello",
+        "hi",
+        "hey",
+        "heya",
+        "howdy",
+        "hola",
+        "greetings",
+        "good morning",
+        "good afternoon",
+        "good evening",
+        "good day",
+        "hi there",
+        "hello there",
+        "hey there",
+        "who are you",
+        "what can you do",
+        "help",
     }
     is_greeting = (
         clean_q in GREETINGS
@@ -320,7 +348,21 @@ async def stream_answer_pipeline(
         or (
             len(clean_no_punct.split()) <= 4
             and clean_no_punct.startswith(("hello ", "hi ", "hey "))
-            and not any(w in clean_no_punct for w in ["clause", "rule", "section", "page", "policy", "what", "why", "how", "summarize", "find"])
+            and not any(
+                w in clean_no_punct
+                for w in [
+                    "clause",
+                    "rule",
+                    "section",
+                    "page",
+                    "policy",
+                    "what",
+                    "why",
+                    "how",
+                    "summarize",
+                    "find",
+                ]
+            )
         )
     )
     if is_greeting:
@@ -348,7 +390,10 @@ async def stream_answer_pipeline(
     t_cache = time.perf_counter()
     cache_lookup_model = (
         provider.model
-        if (getattr(provider, "is_byok", False) or provider.provider_type in ("ollama", "byok", "stub"))
+        if (
+            getattr(provider, "is_byok", False)
+            or provider.provider_type in ("ollama", "byok", "stub")
+        )
         else None
     )
     cached_hit = cache.get(session.session_id, effective_query, model=cache_lookup_model)
@@ -382,6 +427,7 @@ async def stream_answer_pipeline(
             )
         )
         from app.stats import get_platform_stats
+
         p_stats = get_platform_stats()
         p_stats.record_query()
         p_stats.record_cache_avoided()
@@ -417,13 +463,16 @@ async def stream_answer_pipeline(
     from app.pipeline.hyde import hyde_retrieve
     from app.pipeline.retrieve import hybrid_retrieve
 
+    is_precision = mode == "precision"
+    retrieve_k = 50 if is_precision else 25
+
     for sq in sub_queries:
         if settings.HYDE_ENABLED:
             sq_candidates, _probe = await hyde_retrieve(
-                session.doc_index, sq, provider=provider, top_k=25
+                session.doc_index, sq, provider=provider, top_k=retrieve_k
             )
         else:
-            sq_candidates = hybrid_retrieve(session.doc_index, sq, top_k=25)
+            sq_candidates = hybrid_retrieve(session.doc_index, sq, top_k=retrieve_k)
 
         for sc in sq_candidates:
             cid = sc.chunk.id
@@ -432,21 +481,29 @@ async def stream_answer_pipeline(
 
     candidates = sorted(retrieved_map.values(), key=lambda c: c.rrf_score, reverse=True)
     latencies["retrieve_ms"] = round((time.perf_counter() - t0) * 1000, 2)
-    yield format_sse("retrieve", {"candidate_count": len(candidates), "hyde_enabled": settings.HYDE_ENABLED})
+    yield format_sse(
+        "retrieve",
+        {
+            "candidate_count": len(candidates),
+            "hyde_enabled": settings.HYDE_ENABLED,
+            "precision_mode": is_precision,
+        },
+    )
 
-    # 5b. Agentic iterative sufficiency loop (<=3 iterations)
+    # 5b. Agentic iterative sufficiency loop (<=3 iterations in precision, <=2 standard)
     agentic_iterations = 1
     best_available_sources = False
     if getattr(settings, "AGENTIC_ENABLED", True) and candidates:
         t_agentic = time.perf_counter()
         from app.pipeline.agentic import run_agentic_retrieval_loop
 
+        max_agentic_iters = 3 if is_precision else 2
         candidates, agentic_iterations, best_available_sources = await run_agentic_retrieval_loop(
             session=session,
             query=effective_query,
             initial_candidates=candidates,
             provider=provider,
-            max_iterations=3,
+            max_iterations=max_agentic_iters,
         )
         latencies["agentic_ms"] = round((time.perf_counter() - t_agentic) * 1000, 2)
         yield format_sse(
@@ -455,16 +512,18 @@ async def stream_answer_pipeline(
                 "iterations": agentic_iterations,
                 "best_available_sources": best_available_sources,
                 "candidate_count": len(candidates),
+                "precision_mode": is_precision,
             },
         )
 
-    # 6. Re-ranker
+    # 6. Re-ranker (cross-encoder evaluates all candidates, selects top 6 for precision, top 4 standard)
     t0 = time.perf_counter()
     reranker = get_reranker()
+    rerank_k = 6 if is_precision else 4
     reranked = reranker.rerank(
         query=effective_query,
         candidates=candidates,
-        top_k=4,
+        top_k=rerank_k,
         enabled=settings.RERANKER_ENABLED,
     )
     latencies["rerank_ms"] = round((time.perf_counter() - t0) * 1000, 2)
@@ -589,7 +648,9 @@ async def stream_answer_pipeline(
     latencies["llm_ms"] = round((time.perf_counter() - t0) * 1000, 2)
 
     if not raw_accumulated.strip():
-        logger.warning("LLM stream yielded no content for question %s; falling back to absent refusal.", qid)
+        logger.warning(
+            "LLM stream yielded no content for question %s; falling back to absent refusal.", qid
+        )
         raw_accumulated = ABSENT_REFUSAL_TEXT
         yield format_sse("token", {"delta": raw_accumulated})
 
@@ -598,9 +659,7 @@ async def stream_answer_pipeline(
     logger.info("Answer generated for question %s: %s", qid, cleaned_answer)
     yield format_sse("citations", {"citations": [c.model_dump() for c in citations]})
 
-    is_refusal = (
-        ABSENT_REFUSAL_TEXT in cleaned_answer or FRIENDLY_REFUSAL_TEXT in cleaned_answer
-    )
+    is_refusal = ABSENT_REFUSAL_TEXT in cleaned_answer or FRIENDLY_REFUSAL_TEXT in cleaned_answer
 
     latencies["total_ms"] = round((time.perf_counter() - t_start) * 1000, 2)
 
@@ -637,13 +696,20 @@ async def stream_answer_pipeline(
         )
     )
 
-    if best_available_sources and not is_refusal and "(Note: answered using best available sources)" not in cleaned_answer:
+    if (
+        best_available_sources
+        and not is_refusal
+        and "(Note: answered using best available sources)" not in cleaned_answer
+    ):
         cleaned_answer += " (Note: answered using best available sources)"
 
     # Store in semantic cache
     stored_model = (
         actual_model
-        if (getattr(provider, "is_byok", False) or provider.provider_type in ("ollama", "byok", "stub"))
+        if (
+            getattr(provider, "is_byok", False)
+            or provider.provider_type in ("ollama", "byok", "stub")
+        )
         else None
     )
     cache.set(
@@ -657,6 +723,7 @@ async def stream_answer_pipeline(
     )
 
     from app.stats import get_platform_stats
+
     p_stats = get_platform_stats()
     p_stats.record_query()
     p_stats.record_tokens(total_tokens)

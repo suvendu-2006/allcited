@@ -85,13 +85,19 @@ async def lifespan(app: FastAPI):
         if "GROQ_API_KEY" in missing and settings.get_all_groq_keys():
             missing.remove("GROQ_API_KEY")
         if missing:
-            logger.critical("FATAL: Missing mandatory production environment variables: %s", ", ".join(missing))
+            logger.critical(
+                "FATAL: Missing mandatory production environment variables: %s", ", ".join(missing)
+            )
             raise RuntimeError(
                 f"Cannot start in production mode. Missing mandatory environment variables: {', '.join(missing)}"
             )
 
     polling_task = None
-    if settings.TELEGRAM_BOT_TOKEN and not settings.TELEGRAM_WEBHOOK_SECRET and settings.ENVIRONMENT != "production":
+    if (
+        settings.TELEGRAM_BOT_TOKEN
+        and not settings.TELEGRAM_WEBHOOK_SECRET
+        and settings.ENVIRONMENT != "production"
+    ):
         logger.info("Initializing background Telegram long-polling worker...")
         polling_task = asyncio.create_task(run_telegram_polling())
 
@@ -115,17 +121,41 @@ app = FastAPI(
     redoc_url="/redoc",
     openapi_url="/openapi.json",
     openapi_tags=[
-        {"name": "System", "description": "Health checks, provider availability, and authentication status"},
-        {"name": "Ingestion", "description": "Document parsing, chunking, reference resolution, and session indexing"},
-        {"name": "Q&A", "description": "Server-Sent Events streaming question answering and document summarization"},
-        {"name": "Library", "description": "User document persistence, retrieval, and multi-document synthesis"},
-        {"name": "Payments", "description": "Stripe test-mode checkout sessions, subscriptions, and webhooks"},
+        {
+            "name": "System",
+            "description": "Health checks, provider availability, and authentication status",
+        },
+        {
+            "name": "Ingestion",
+            "description": "Document parsing, chunking, reference resolution, and session indexing",
+        },
+        {
+            "name": "Q&A",
+            "description": "Server-Sent Events streaming question answering and document summarization",
+        },
+        {
+            "name": "Library",
+            "description": "User document persistence, retrieval, and multi-document synthesis",
+        },
+        {
+            "name": "Payments",
+            "description": "Stripe test-mode checkout sessions, subscriptions, and webhooks",
+        },
         {"name": "Telegram", "description": "Telegram bot webhook integration for messaging Q&A"},
-        {"name": "Audit & Stats", "description": "User audit trail and system-wide platform usage counters"},
-        {"name": "Feedback & Trace", "description": "Per-question pipeline execution traces and user feedback collection"},
+        {
+            "name": "Audit & Stats",
+            "description": "User audit trail and system-wide platform usage counters",
+        },
+        {
+            "name": "Feedback & Trace",
+            "description": "Per-question pipeline execution traces and user feedback collection",
+        },
     ],
     responses={
-        400: {"model": ErrorResponse, "description": "Bad Request / Unreadable Document / SSRF Blocked"},
+        400: {
+            "model": ErrorResponse,
+            "description": "Bad Request / Unreadable Document / SSRF Blocked",
+        },
         401: {"model": ErrorResponse, "description": "Unauthorized / Invalid Token"},
         402: {"model": ErrorResponse, "description": "Plan Limit Reached"},
         404: {"model": ErrorResponse, "description": "Resource Not Found"},
@@ -379,7 +409,12 @@ async def save_session_to_library(
     except ValueError:
         raise HTTPException(
             status_code=400,
-            detail={"error": {"code": "invalid_parameter", "message": f"Invalid session ID: '{request.session_id}'"}},
+            detail={
+                "error": {
+                    "code": "invalid_parameter",
+                    "message": f"Invalid session ID: '{request.session_id}'",
+                }
+            },
         )
 
     session_store = get_session_store()
@@ -387,14 +422,24 @@ async def save_session_to_library(
     if not session:
         raise HTTPException(
             status_code=404,
-            detail={"error": {"code": "session_not_found", "message": f"Session '{clean_session_id}' not found"}},
+            detail={
+                "error": {
+                    "code": "session_not_found",
+                    "message": f"Session '{clean_session_id}' not found",
+                }
+            },
         )
 
     session_owner = getattr(session, "user_id", None)
     if session_owner and session_owner != user_id:
         raise HTTPException(
             status_code=403,
-            detail={"error": {"code": "forbidden", "message": "Cannot save another user's document session"}},
+            detail={
+                "error": {
+                    "code": "forbidden",
+                    "message": "Cannot save another user's document session",
+                }
+            },
         )
     session.user_id = user_id
 
@@ -436,7 +481,12 @@ async def delete_library_document(
     except ValueError:
         raise HTTPException(
             status_code=400,
-            detail={"error": {"code": "invalid_parameter", "message": f"Invalid document ID: '{doc_id}'"}},
+            detail={
+                "error": {
+                    "code": "invalid_parameter",
+                    "message": f"Invalid document ID: '{doc_id}'",
+                }
+            },
         )
 
     store = get_library_store()
@@ -444,7 +494,12 @@ async def delete_library_document(
     if not deleted:
         raise HTTPException(
             status_code=404,
-            detail={"error": {"code": "doc_not_found", "message": f"Document '{clean_doc_id}' not found"}},
+            detail={
+                "error": {
+                    "code": "doc_not_found",
+                    "message": f"Document '{clean_doc_id}' not found",
+                }
+            },
         )
 
     audit = get_audit_store()
@@ -704,7 +759,9 @@ async def ingest_document(
         except Exception as e:
             raise HTTPException(
                 status_code=400,
-                detail={"error": {"code": "doc_unreadable", "message": f"Could not fetch URL: {str(e)}"}},
+                detail={
+                    "error": {"code": "doc_unreadable", "message": f"Could not fetch URL: {str(e)}"}
+                },
             ) from e
 
     elif file and file.filename:
@@ -740,12 +797,22 @@ async def ingest_document(
         except Exception as e:
             raise HTTPException(
                 status_code=400,
-                detail={"error": {"code": "doc_unreadable", "message": f"Could not read upload: {str(e)}"}},
+                detail={
+                    "error": {
+                        "code": "doc_unreadable",
+                        "message": f"Could not read upload: {str(e)}",
+                    }
+                },
             ) from e
     else:
         raise HTTPException(
             status_code=400,
-            detail={"error": {"code": "doc_unreadable", "message": "Must provide either a file upload or a url parameter"}},
+            detail={
+                "error": {
+                    "code": "doc_unreadable",
+                    "message": "Must provide either a file upload or a url parameter",
+                }
+            },
         )
 
     # Double check plan file size limit
@@ -805,7 +872,9 @@ async def ingest_url_endpoint(
     except Exception as e:
         raise HTTPException(
             status_code=400,
-            detail={"error": {"code": "doc_unreadable", "message": f"Could not fetch URL: {str(e)}"}},
+            detail={
+                "error": {"code": "doc_unreadable", "message": f"Could not fetch URL: {str(e)}"}
+            },
         ) from e
 
     # Double check plan file size limit
@@ -835,7 +904,9 @@ async def ingest_url_endpoint(
     )
 
 
-def hydrate_session_from_library(session_id: str, user_id: Optional[str] = None) -> Optional[DocumentSession]:
+def hydrate_session_from_library(
+    session_id: str, user_id: Optional[str] = None
+) -> Optional[DocumentSession]:
     """
     Hydrate a DocumentSession from library_store if session_id corresponds
     to a stored document in the user's shelf (resolving 'Ask about this' card action).
@@ -888,7 +959,12 @@ def hydrate_session_from_library(session_id: str, user_id: Optional[str] = None)
                         library_store._sync_rehydrate_user(clean_user_id)
                         doc_item = library_store.get_document(clean_user_id, clean_session_id)
             except Exception as e:
-                logger.warning("Supabase lookup for doc %s user %s failed: %s", clean_session_id, clean_user_id, e)
+                logger.warning(
+                    "Supabase lookup for doc %s user %s failed: %s",
+                    clean_session_id,
+                    clean_user_id,
+                    e,
+                )
 
     if doc_item:
         chunks = library_store.get_document_chunks(clean_user_id, clean_session_id)
@@ -944,14 +1020,24 @@ async def get_session_info(session_id: str, user_id: Optional[str] = Depends(get
     if not session:
         raise HTTPException(
             status_code=404,
-            detail={"error": {"code": "session_not_found", "message": f"Session '{session_id}' not found or expired"}},
+            detail={
+                "error": {
+                    "code": "session_not_found",
+                    "message": f"Session '{session_id}' not found or expired",
+                }
+            },
         )
 
     session_owner = getattr(session, "user_id", None)
     if session_owner and session_owner != user_id:
         raise HTTPException(
             status_code=403,
-            detail={"error": {"code": "forbidden", "message": "Access to another user's document session is prohibited"}},
+            detail={
+                "error": {
+                    "code": "forbidden",
+                    "message": "Access to another user's document session is prohibited",
+                }
+            },
         )
 
     return SessionInfoResponse(
@@ -977,7 +1063,12 @@ async def get_question_trace(question_id: str):
     if not trace:
         raise HTTPException(
             status_code=404,
-            detail={"error": {"code": "trace_not_found", "message": f"Trace for question '{question_id}' not found"}},
+            detail={
+                "error": {
+                    "code": "trace_not_found",
+                    "message": f"Trace for question '{question_id}' not found",
+                }
+            },
         )
     return trace
 
@@ -1071,14 +1162,24 @@ async def query_document(
     if not session:
         raise HTTPException(
             status_code=404,
-            detail={"error": {"code": "session_not_found", "message": f"Session '{request.session_id}' not found or expired"}},
+            detail={
+                "error": {
+                    "code": "session_not_found",
+                    "message": f"Session '{request.session_id}' not found or expired",
+                }
+            },
         )
 
     session_owner = getattr(session, "user_id", None)
     if session_owner and session_owner != user_id:
         raise HTTPException(
             status_code=403,
-            detail={"error": {"code": "forbidden", "message": "Access to another user's document session is prohibited"}},
+            detail={
+                "error": {
+                    "code": "forbidden",
+                    "message": "Access to another user's document session is prohibited",
+                }
+            },
         )
 
     return StreamingResponse(
@@ -1089,6 +1190,7 @@ async def query_document(
             byok_base_url=byok_base_url,
             byok_model=byok_model,
             preferred_provider=preferred_provider,
+            mode=request.mode,
         ),
         media_type="text/event-stream",
         headers={
@@ -1131,14 +1233,24 @@ async def summarize_document(
     if not session:
         raise HTTPException(
             status_code=404,
-            detail={"error": {"code": "session_not_found", "message": f"Session '{request.session_id}' not found or expired"}},
+            detail={
+                "error": {
+                    "code": "session_not_found",
+                    "message": f"Session '{request.session_id}' not found or expired",
+                }
+            },
         )
 
     session_owner = getattr(session, "user_id", None)
     if session_owner and session_owner != user_id:
         raise HTTPException(
             status_code=403,
-            detail={"error": {"code": "forbidden", "message": "Access to another user's document session is prohibited"}},
+            detail={
+                "error": {
+                    "code": "forbidden",
+                    "message": "Access to another user's document session is prohibited",
+                }
+            },
         )
 
     byok_key = request.byok_key or x_byok_key
