@@ -16,9 +16,11 @@ interface UploadProps {
     pageCount: number;
   }) => void;
   className?: string;
+  isPro?: boolean;
 }
 
-const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB max allowed (server enforces Free/Pro tier limits)
+const FREE_MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB strict limit for standard/free tier
+const PRO_MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB limit for Pro tier
 const ALLOWED_EXTENSIONS = [".pdf", ".md", ".txt", ".docx", ".pptx", ".xlsx", ".xlsm", ".html", ".htm"];
 
 const PROGRESS_STEPS = [
@@ -29,6 +31,7 @@ const PROGRESS_STEPS = [
 
 export function Upload({
   apiUrl = getApiUrl(),
+  isPro = false,
   onUploadSuccess,
   className = "",
 }: UploadProps) {
@@ -85,7 +88,8 @@ export function Upload({
   }, [successInfo]);
 
   const validateFile = (file: File): string | null => {
-    if (file.size > MAX_FILE_SIZE_BYTES) {
+    const maxAllowed = isPro ? PRO_MAX_FILE_SIZE_BYTES : FREE_MAX_FILE_SIZE_BYTES;
+    if (file.size > maxAllowed) {
       return "That's a big one. Free takes up to 10 MB — Pro takes 100.";
     }
     const ext = "." + file.name.split(".").pop()?.toLowerCase();
@@ -102,6 +106,9 @@ export function Upload({
     const validationError = validateFile(file);
     if (validationError) {
       setErrorMessage(validationError);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
       return;
     }
 

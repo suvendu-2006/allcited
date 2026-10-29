@@ -443,13 +443,6 @@ export function Chat({
   };
 
   const handleTogglePrecision = (enabled: boolean) => {
-    if (enabled && !isProUser && !byokKey) {
-      setStreamError({
-        code: "plan_limit_reached",
-        message: "Precision mode is a Pro feature providing deep iterative agentic retrieval and cross-encoder re-ranking. Upgrade to Pro to enable, or bring your own API key.",
-      });
-      return;
-    }
     setStreamError(null);
     setIsPrecisionMode(enabled);
   };
@@ -480,7 +473,7 @@ export function Chat({
             >
               {!sessionId && !isShelfMode && onUploadSuccess && (
                 <div className="max-w-[640px] w-full mx-auto mb-6">
-                  <Upload apiUrl={effectiveApiUrl} onUploadSuccess={onUploadSuccess} />
+                  <Upload apiUrl={effectiveApiUrl} isPro={isProUser} onUploadSuccess={onUploadSuccess} />
                 </div>
               )}
               <EmptyState

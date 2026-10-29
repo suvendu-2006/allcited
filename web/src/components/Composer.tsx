@@ -99,9 +99,11 @@ export function Composer({
               onClick={() => onTogglePrecision(!isPrecisionMode)}
               aria-label="Toggle Precision Mode"
               title={
-                isPro
-                  ? "Precision Mode: reranks 50 passages before answering"
-                  : "Precision Mode (Pro feature: reranks 50 passages)"
+                isPrecisionMode
+                  ? "Precision Mode ON: deep neural re-ranking across candidate passages"
+                  : isPro
+                  ? "Precision Mode: deep neural re-ranking (Pro enabled)"
+                  : "Precision Mode: deep neural re-ranking"
               }
               whileHover={{ scale: shouldReduceMotion ? 1 : 1.04 }}
               whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
