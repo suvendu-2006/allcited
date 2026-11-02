@@ -1,0 +1,79 @@
+name: Feature Request
+description: Suggest an idea or capability enhancement for Allcited
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping make Allcited more powerful!
+        Please provide as much context and rationale as possible to help the community prioritize and design this feature.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement / User Need
+      description: Is your feature request related to a specific limitation or workflow challenge?
+      placeholder: A clear and concise description of what the current problem or missing capability is...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the desired feature or functionality you would like to see implemented.
+      placeholder: Describe how you envision this feature working in practice...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative Approaches Considered
+      description: Have you considered any alternative designs or workarounds?
+      placeholder: What other solutions or libraries were considered, and why did you favor this approach?
+    validations:
+      required: false
+
+  - type: dropdown
+    id: target-component
+    attributes:
+      label: Target Component
+      description: Which part of Allcited would this enhancement primarily touch?
+      options:
+        - Backend API & Retrieval Engine
+        - Frontend UI & Visual Hierarchy
+        - Document OCR & Ingestion Pipeline
+        - Statutory Verification & Citation Parsing
+        - Security, Auth & Tenant Scoping
+        - CLI Tools & Developer Experience
+        - Deployment & Infrastructure
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: user-impact
+    attributes:
+      label: User Impact & Enterprise Value
+      description: How does this improve legal research efficiency, precision, or security for enterprise teams?
+      placeholder: Describe the practical value or performance boost this provides...
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context & Mockups
+      description: Attach UI mockups, architectural diagrams, API schema proposals, or reference specifications here.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Proposal Checklist
+      options:
+        - label: I have searched existing issues and discussions to confirm this hasn't already been proposed.
+          required: true
+        - label: I am willing to contribute or help review a pull request for this feature if accepted.
+          required: false

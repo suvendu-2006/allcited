@@ -364,3 +364,9 @@ def test_target2_async_supabase_rehydrate_uses_params():
             assert c2_args[0] == "https://mockproject.supabase.co/rest/v1/saved_chunks"
             assert c2_kwargs["params"] == {"user_id": f"eq.{user_uuid}"}
             assert "?" not in c2_args[0]
+
+
+if __name__ == "__main__":
+    import pytest
+    sys.exit(pytest.main([__file__]))
+

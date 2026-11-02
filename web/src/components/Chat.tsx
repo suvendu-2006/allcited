@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { Citation, PipelineStage, streamQuery } from "@/lib/sse";
@@ -152,15 +152,15 @@ export function Chat({
   };
 
   // Auto-scroll to bottom on incoming message updates: smooth only when user is already at bottom
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     if (isNearBottomRef.current) {
       scrollEndRef.current?.scrollIntoView({ behavior: shouldReduceMotion ? "auto" : "smooth" });
     }
-  };
+  }, [shouldReduceMotion]);
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, scrollToBottom]);
 
   const getStageHumanCopy = (stage: PipelineStage, originalMsg?: string): string => {
     if (stage === "rewriting" || stage === "retrieving") {

@@ -8,7 +8,6 @@
 !.env.example
 !api/.env.example
 !web/.env.example
-!deploy/hf-space-staging/.env.example
 *.pem
 *.key
 
@@ -30,7 +29,6 @@ eggs/
 .eggs/
 /lib/
 /lib64/
-!web/src/lib/
 parts/
 sdist/
 var/
@@ -71,9 +69,9 @@ data/traces/*.jsonl
 api/data/
 api/models/
 *.jsonl
-!eval/fixtures/
-!web/src/data/
-!web/src/lib/
+!eval/fixtures/**
+!web/src/data/**
+!web/src/lib/**
 .vercel
 deploy/hf-space-staging/
 deploy/hf-gradio/

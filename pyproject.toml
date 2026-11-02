@@ -5,6 +5,7 @@ exclude = [
     ".venv",
     "node_modules",
     ".next",
+    "scripts",
 ]
 
 [tool.ruff.lint]

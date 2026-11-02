@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security Vulnerability Reporting
+    url: https://github.com/suvendu-2006/allcited/security/policy
+    about: Please report security vulnerabilities privately according to our SECURITY.md policy.
+  - name: Documentation & Technical Specifications
+    url: https://github.com/suvendu-2006/allcited/tree/main/docs
+    about: Explore technical architecture specs, API guides, and benchmark methodologies.
+  - name: Community Discussions & Questions
+    url: https://github.com/suvendu-2006/allcited/discussions
+    about: Ask questions, share feedback, and discuss statutory citations with the community.
