@@ -242,12 +242,7 @@ def post_pass_citations(
                 )
 
     # If the answer is grounded but the LLM omitted citation tags, fallback to primary source [S1]
-    if (
-        not citations
-        and sources
-        and not is_refusal
-        and not is_refusal_answer(cleaned)
-    ):
+    if not citations and sources and not is_refusal and not is_refusal_answer(cleaned):
         src = sources[0]
         is_ocr = bool(getattr(src, "is_ocr", False) or getattr(src.chunk, "is_ocr", False))
         label = "S1 (OCR)" if is_ocr else "S1"

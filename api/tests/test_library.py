@@ -318,6 +318,7 @@ def test_delete_document_purges_hydrated_session_and_cache():
     """
     set_test_verification_key(_public_pem)
     import uuid
+
     from app.cache import get_semantic_cache
     from app.library import get_library_store
     from app.sessions import get_session_store
@@ -348,7 +349,9 @@ def test_delete_document_purges_hydrated_session_and_cache():
     assert session_store.get_session(doc_id) is not None
 
     # Populate cache
-    cache.set(session_id=doc_id, query="What is Operation Nightfall?", answer="Confidential", citations=[])
+    cache.set(
+        session_id=doc_id, query="What is Operation Nightfall?", answer="Confidential", citations=[]
+    )
     assert cache.get(doc_id, "What is Operation Nightfall?") is not None
 
     # 3. Delete document from library
@@ -378,7 +381,9 @@ async def test_cold_boot_rehydration_transient_failure_does_not_poison_cache():
     does NOT add user to _loaded_users, allowing recovery on subsequent request.
     """
     from unittest.mock import MagicMock, patch
+
     import httpx
+
     from app.library import InMemoryLibraryStore
 
     store = InMemoryLibraryStore()
@@ -390,7 +395,10 @@ async def test_cold_boot_rehydration_transient_failure_does_not_poison_cache():
 
     # 1. Simulate network failure on first attempt
     with patch("app.library.get_settings", return_value=mock_settings):
-        with patch("httpx.AsyncClient.get", side_effect=httpx.ConnectTimeout("Timeout connecting to Supabase")):
+        with patch(
+            "httpx.AsyncClient.get",
+            side_effect=httpx.ConnectTimeout("Timeout connecting to Supabase"),
+        ):
             await store.rehydrate_user_async(user_id)
 
             # MUST NOT be marked as loaded
@@ -398,25 +406,46 @@ async def test_cold_boot_rehydration_transient_failure_does_not_poison_cache():
             assert store._docs.get(user_id) is None or len(store._docs.get(user_id, {})) == 0
 
     # 2. Simulate recovery on second attempt
-    mock_docs_resp = MagicMock(status_code=200, json=lambda: [{
-        "id": "doc_rec_1", "user_id": user_id, "filename": "rec.pdf",
-        "format": "pdf", "file_size_bytes": 100, "page_count": 1, "chunk_count": 1,
-    }])
-    mock_chunks_resp = MagicMock(status_code=200, json=lambda: [{
-        "id": "sc_rec_1", "document_id": "doc_rec_1", "user_id": user_id,
-        "chunk_id": "c_rec_1", "text": "Recovered text", "token_count": 2, "embedding": [0.1]*384,
-    }])
+    mock_docs_resp = MagicMock(
+        status_code=200,
+        json=lambda: [
+            {
+                "id": "doc_rec_1",
+                "user_id": user_id,
+                "filename": "rec.pdf",
+                "format": "pdf",
+                "file_size_bytes": 100,
+                "page_count": 1,
+                "chunk_count": 1,
+            }
+        ],
+    )
+    mock_chunks_resp = MagicMock(
+        status_code=200,
+        json=lambda: [
+            {
+                "id": "sc_rec_1",
+                "document_id": "doc_rec_1",
+                "user_id": user_id,
+                "chunk_id": "c_rec_1",
+                "text": "Recovered text",
+                "token_count": 2,
+                "embedding": [0.1] * 384,
+            }
+        ],
+    )
 
     with patch("app.library.get_settings", return_value=mock_settings):
         with patch("httpx.AsyncClient.get") as mock_get:
+
             def side_effect(url, headers=None, params=None):
                 if "saved_documents" in url:
                     return mock_docs_resp
                 return mock_chunks_resp
+
             mock_get.side_effect = side_effect
 
             docs = await store.list_documents(user_id)
             assert len(docs) == 1
             assert docs[0].id == "doc_rec_1"
             assert user_id in store._loaded_users
-
