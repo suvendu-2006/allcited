@@ -105,6 +105,7 @@ jobs:
 
       - name: Check git status for uncommitted artifacts
         run: |
+          rm -f results.sarif
           if [ -n "$(git status --porcelain)" ]; then
             echo "Working tree has uncommitted changes or untracked artifacts:"
             git status --porcelain

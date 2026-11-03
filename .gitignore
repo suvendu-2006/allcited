@@ -59,6 +59,9 @@ yarn-error.log*
 *.swp
 *.swo
 
+# CI / Security scanner reports
+*.sarif
+
 # Local runtime data / caches / FAISS local index dumps
 *.faiss
 *.pkl
