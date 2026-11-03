@@ -99,6 +99,14 @@ def test_plan_gates_and_live_upgrade_flip():
     assert precision_res.status_code == 402
     assert precision_res.json()["detail"]["error"]["code"] == "plan_limit_reached"
 
+    # Also verify anonymous free user attempting precision mode is blocked (no "tester" substring bypass)
+    anon_precision_res = client.post(
+        "/v1/query",
+        json={"session_id": session_id, "query": "What are office hours?", "mode": "precision"},
+    )
+    assert anon_precision_res.status_code == 402
+    assert anon_precision_res.json()["detail"]["error"]["code"] == "plan_limit_reached"
+
     # 3. Gate 3: Free user saves documents to library (cap: 3)
     # Save doc 1
     save1 = client.post("/v1/library/save", json={"session_id": session_id}, headers=headers)
@@ -151,3 +159,6 @@ def test_plan_gates_and_live_upgrade_flip():
     assert stats_data["total_queries"] >= 1
     assert stats_data["total_chunks_indexed"] >= 1
     assert stats_data["pro_subscribers"] == 1
+
+    # Cleanup test verification key
+    set_test_verification_key(None)

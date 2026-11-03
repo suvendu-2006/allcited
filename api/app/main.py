@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 
 from app.audit import get_audit_store
 from app.auth import ClerkAuthMiddleware, get_current_user, get_optional_user
+from app.cache import get_semantic_cache
 from app.config import get_settings
 from app.feedback import FeedbackRequest, get_feedback_store
 from app.library import (
@@ -502,6 +503,12 @@ async def delete_library_document(
             },
         )
 
+    # Invalidate any hydrated in-memory session and cached query answers
+    session_store = get_session_store()
+    session_store.delete_session(clean_doc_id)
+    cache = get_semantic_cache()
+    cache.invalidate(clean_doc_id)
+
     audit = get_audit_store()
     audit.record_action(
         user_id=user_id,
@@ -927,6 +934,8 @@ def hydrate_session_from_library(
         return None
 
     library_store = get_library_store()
+    if library_store.is_deleted(clean_session_id):
+        return None
     doc_item = library_store.get_document(clean_user_id, clean_session_id)
 
     # If not found yet and Supabase is configured, lookup strictly by document ID and user_id

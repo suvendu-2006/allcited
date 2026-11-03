@@ -8,6 +8,8 @@ from app.main import app
 from app.pipeline.answer import (
     ABSENT_REFUSAL_TEXT,
     FRIENDLY_REFUSAL_TEXT,
+    REFUSAL_CUES,
+    is_refusal_answer,
     post_pass_citations,
 )
 from app.pipeline.chunker import Chunk
@@ -104,6 +106,15 @@ def test_post_pass_refusal_returns_zero_citations():
     cleaned2, citations2 = post_pass_citations(FRIENDLY_REFUSAL_TEXT, sources)
     assert cleaned2 == FRIENDLY_REFUSAL_TEXT
     assert len(citations2) == 0
+
+    # Test all refusal cues in various casing
+    for cue in REFUSAL_CUES:
+        raw = f"This topic is {cue.upper()}."
+        cleaned, cits = post_pass_citations(raw, sources)
+        assert cleaned == raw
+        assert len(cits) == 0
+        assert "[S1]" not in cleaned
+        assert is_refusal_answer(raw)
 
 
 def test_sse_endpoint_three_live_gate_checks(session_handbook):

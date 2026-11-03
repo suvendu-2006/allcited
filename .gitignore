@@ -61,6 +61,7 @@ yarn-error.log*
 
 # CI / Security scanner reports
 *.sarif
+uv.lock
 
 # Internal markdown archive & notes (kept locally, not published to GitHub)
 allmd/

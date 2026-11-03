@@ -60,6 +60,7 @@ export default function Home() {
 
   const apiUrl = getApiUrl();
   const workspaceRef = useRef<HTMLDivElement>(null);
+  const pendingSaveAttemptedRef = useRef<string | null>(null);
 
   // Check health and load saved localStorage configs on mount (with retry to handle cold starts)
   useEffect(() => {
@@ -193,6 +194,10 @@ export default function Home() {
 
       if (res.ok) {
         setIsSaved(true);
+        if (typeof window !== "undefined") {
+          sessionStorage.removeItem("allcited_pending_save_session");
+          sessionStorage.removeItem("allcited_pending_save_doc");
+        }
         setSaveToast("Document saved to your shelf!");
         setTimeout(() => setSaveToast(null), 3500);
       } else {
@@ -208,7 +213,11 @@ export default function Home() {
 
   // Carry across active document when upgrading from guest to signed-in
   useEffect(() => {
-    if (isSignedIn && typeof window !== "undefined") {
+    if (!isSignedIn) {
+      pendingSaveAttemptedRef.current = null;
+      return;
+    }
+    if (typeof window !== "undefined") {
       const pendingSession = sessionStorage.getItem("allcited_pending_save_session");
       const pendingDoc = sessionStorage.getItem("allcited_pending_save_doc");
       if (pendingSession) {
@@ -216,9 +225,8 @@ export default function Home() {
           setSessionId(pendingSession);
           if (pendingDoc) setDocumentName(pendingDoc);
           setInWorkspace(true);
-        } else if (pendingSession === sessionId) {
-          sessionStorage.removeItem("allcited_pending_save_session");
-          sessionStorage.removeItem("allcited_pending_save_doc");
+        } else if (pendingSession === sessionId && pendingSaveAttemptedRef.current !== pendingSession) {
+          pendingSaveAttemptedRef.current = pendingSession;
           handleSaveToShelf();
         }
       }

@@ -1,3 +1,4 @@
+import ipaddress
 import math
 import os
 import threading
@@ -30,6 +31,30 @@ INGEST_LIMITS: List[Tuple[int, int]] = [
 ]
 
 
+# Trusted private / local networks for reverse proxies and ingress routers (e.g. Hugging Face, Docker, K8s)
+_TRUSTED_PROXY_NETWORKS = (
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+    ipaddress.ip_network("100.64.0.0/10"),
+    ipaddress.ip_network("127.0.0.0/8"),
+    ipaddress.ip_network("169.254.0.0/16"),
+    ipaddress.ip_network("::1/128"),
+    ipaddress.ip_network("fc00::/7"),
+    ipaddress.ip_network("fe80::/10"),
+)
+
+
+def is_trusted_proxy_host(host: str) -> bool:
+    if host in ("127.0.0.1", "::1", "localhost", "testclient", ""):
+        return True
+    try:
+        ip = ipaddress.ip_address(host)
+        return ip.is_loopback or any(ip in net for net in _TRUSTED_PROXY_NETWORKS)
+    except ValueError:
+        return False
+
+
 def get_client_identifier(request: Request, user_id: Optional[str] = None) -> str:
     """Identify request origin by user_id or client IP address."""
     if user_id and str(user_id).strip():
@@ -37,8 +62,8 @@ def get_client_identifier(request: Request, user_id: Optional[str] = None) -> st
 
     host = request.client.host if request.client and request.client.host else ""
 
-    # Only accept X-Forwarded-For if host is loopback / local reverse proxy or test runner
-    if host in ("127.0.0.1", "::1", "localhost", "testclient", ""):
+    # Only accept X-Forwarded-For if host is loopback / private reverse proxy or test runner
+    if is_trusted_proxy_host(host):
         forwarded = request.headers.get("X-Forwarded-For")
         if forwarded:
             client_ip = forwarded.split(",")[0].strip()

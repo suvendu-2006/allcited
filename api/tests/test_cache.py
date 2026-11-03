@@ -191,3 +191,44 @@ def test_cache_stats_endpoint():
     assert "misses" in data
     assert "hit_rate" in data
     assert "total_entries" in data
+
+
+def test_cache_global_oldest_eviction_prevents_starvation():
+    """Verify that eviction evicts the globally oldest entry by created_at, not simply from the first session."""
+    cache = SemanticCache(max_entries=2)
+    cache.clear()
+
+    # Session 1 added first with an entry
+    cache.set(
+        session_id="sess_1",
+        query="Query 1",
+        answer="Answer 1",
+        citations=[],
+    )
+
+    # Session 2 added second with an entry
+    cache.set(
+        session_id="sess_2",
+        query="Query 2",
+        answer="Answer 2",
+        citations=[],
+    )
+
+    # Manually adjust created_at to simulate: sess_2 has the oldest entry, while sess_1 was updated/created recently
+    cache._stores["sess_1"]["Query 1"].created_at = 2000.0
+    cache._stores["sess_2"]["Query 2"].created_at = 1000.0  # Oldest
+
+    # Now add a new entry to sess_3 (created_at current time ~ > 2000)
+    cache.set(
+        session_id="sess_3",
+        query="Query 3",
+        answer="Answer 3",
+        citations=[],
+    )
+
+    # Max entries is 2. The entry from sess_2 (t=1000.0) should be evicted.
+    # sess_1's entry (t=2000.0) should NOT be evicted even though sess_1 was the first session created.
+    assert cache.get("sess_1", "Query 1") is not None
+    assert cache.get("sess_2", "Query 2") is None
+    assert cache.get("sess_3", "Query 3") is not None
+    assert cache.get_stats()["total_entries"] == 2

@@ -213,6 +213,11 @@ class InMemoryLibraryStore:
         # user_id -> List[LibraryStoredChunk]
         self._chunks: Dict[str, List[LibraryStoredChunk]] = {}
         self._loaded_users: set[str] = set()
+        self._deleted_doc_ids: set[str] = set()
+
+    def is_deleted(self, doc_id: str) -> bool:
+        with self._lock:
+            return doc_id in self._deleted_doc_ids
 
     def reset_for_tests(self):
         """Reset internal in-memory state for clean test isolation."""
@@ -220,6 +225,7 @@ class InMemoryLibraryStore:
             self._docs.clear()
             self._chunks.clear()
             self._loaded_users.clear()
+            self._deleted_doc_ids.clear()
             settings = get_settings()
             if settings.SUPABASE_URL and settings.SUPABASE_SERVICE_ROLE_KEY:
                 try:
@@ -275,15 +281,17 @@ class InMemoryLibraryStore:
                         f"{base_url}/rest/v1/saved_chunks?user_id=eq.{clean_user_id}",
                         headers=headers,
                     )
-                if resp.status_code == 200:
+                if resp.status_code == 200 and chunks_resp.status_code == 200:
                     rows = resp.json()
-                    chunk_rows = chunks_resp.json() if chunks_resp.status_code == 200 else []
+                    chunk_rows = chunks_resp.json()
                     with self._lock:
                         if user_id not in self._docs:
                             self._docs[user_id] = {}
                         if user_id not in self._chunks:
                             self._chunks[user_id] = []
                         for r in rows:
+                            if str(r["id"]) in self._deleted_doc_ids:
+                                continue
                             doc_item = LibraryDocumentItem(
                                 id=str(r["id"]),
                                 user_id=r["user_id"],
@@ -307,6 +315,8 @@ class InMemoryLibraryStore:
                         rehydrated_chunks = []
                         for cr in chunk_rows:
                             doc_id = str(cr.get("document_id"))
+                            if doc_id in self._deleted_doc_ids:
+                                continue
                             doc_name = doc_filenames.get(doc_id, "document")
                             sc = _parse_stored_chunk(cr, doc_name=doc_name)
                             if sc and sc.id not in existing_chunk_ids:
@@ -314,15 +324,13 @@ class InMemoryLibraryStore:
                         self._chunks[user_id].extend(rehydrated_chunks)
                         self._loaded_users.add(user_id)
                 else:
-                    with self._lock:
-                        self._docs.setdefault(user_id, {})
-                        self._chunks.setdefault(user_id, [])
-                        self._loaded_users.add(user_id)
+                    logger.warning(
+                        "Supabase sync rehydration received non-200 status: docs=%s, chunks=%s",
+                        resp.status_code,
+                        chunks_resp.status_code,
+                    )
         except Exception as e:
             logger.warning("Supabase sync rehydration failed: %s", e)
-            with self._lock:
-                self._docs.setdefault(user_id, {})
-                self._chunks.setdefault(user_id, [])
 
     def save_document(self, user_id: str, session: DocumentSession) -> LibraryDocumentItem:
         with self._lock:
@@ -461,15 +469,17 @@ class InMemoryLibraryStore:
                         f"{base_url}/rest/v1/saved_chunks?user_id=eq.{clean_user_id}",
                         headers=headers,
                     )
-                if resp.status_code == 200:
+                if resp.status_code == 200 and chunks_resp.status_code == 200:
                     rows = resp.json()
-                    chunk_rows = chunks_resp.json() if chunks_resp.status_code == 200 else []
+                    chunk_rows = chunks_resp.json()
                     with self._lock:
                         if user_id not in self._docs:
                             self._docs[user_id] = {}
                         if user_id not in self._chunks:
                             self._chunks[user_id] = []
                         for r in rows:
+                            if str(r["id"]) in self._deleted_doc_ids:
+                                continue
                             doc_item = LibraryDocumentItem(
                                 id=str(r["id"]),
                                 user_id=r["user_id"],
@@ -493,6 +503,8 @@ class InMemoryLibraryStore:
                         rehydrated_chunks = []
                         for cr in chunk_rows:
                             doc_id = str(cr.get("document_id"))
+                            if doc_id in self._deleted_doc_ids:
+                                continue
                             doc_name = doc_filenames.get(doc_id, "document")
                             sc = _parse_stored_chunk(cr, doc_name=doc_name)
                             if sc and sc.id not in existing_chunk_ids:
@@ -500,16 +512,13 @@ class InMemoryLibraryStore:
                         self._chunks[user_id].extend(rehydrated_chunks)
                         self._loaded_users.add(user_id)
                 else:
-                    with self._lock:
-                        self._docs.setdefault(user_id, {})
-                        self._chunks.setdefault(user_id, [])
-                        self._loaded_users.add(user_id)
+                    logger.warning(
+                        "Supabase async rehydration received non-200 status: docs=%s, chunks=%s",
+                        resp.status_code,
+                        chunks_resp.status_code,
+                    )
         except Exception as e:
             logger.warning("Supabase async rehydration failed: %s", e)
-            with self._lock:
-                self._docs.setdefault(user_id, {})
-                self._chunks.setdefault(user_id, [])
-                self._loaded_users.add(user_id)
 
     def get_document(self, user_id: str, doc_id: str) -> Optional[LibraryDocumentItem]:
         with self._lock:
@@ -549,6 +558,7 @@ class InMemoryLibraryStore:
                     c for c in self._chunks[user_id] if c.document_id != doc_id
                 ]
             self._loaded_users.add(user_id)
+            self._deleted_doc_ids.add(doc_id)
 
         # Remote Supabase delete asynchronously outside lock
         threading.Thread(

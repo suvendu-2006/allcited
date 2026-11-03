@@ -95,7 +95,7 @@ export function LibraryGrid({
       } else if (typeof window !== "undefined") {
         token = localStorage.getItem("allcited_auth_token");
       }
-      if (!token) token = "mock_clerk_token";
+      if (!token) return;
 
       const res = await fetch(`${apiUrl}/v1/library/${doc.id}`, {
         method: "DELETE",

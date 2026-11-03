@@ -30,6 +30,28 @@ FRIENDLY_REFUSAL_TEXT = (
 )
 ABSENT_REFUSAL_TEXT = "Not covered in this document."
 
+REFUSAL_CUES = [
+    "not covered in this document",
+    "i answer only from your uploaded document",
+    "not mentioned in this document",
+    "not mentioned in the provided",
+    "cannot be found in the provided",
+    "does not contain any information",
+    "no information provided",
+    "not discussed in this document",
+    "not found in this document",
+]
+
+
+def is_refusal_answer(text: str) -> bool:
+    """Check if the answer matches any refusal cue (case-insensitive) or exact refusal text."""
+    if not text:
+        return False
+    if ABSENT_REFUSAL_TEXT in text or FRIENDLY_REFUSAL_TEXT in text:
+        return True
+    lower_text = text.lower()
+    return any(cue in lower_text for cue in REFUSAL_CUES)
+
 
 def get_grounded_system_prompt() -> Tuple[str, str]:
     """Retrieve grounded system prompt and active hash from versioned prompt registry."""
@@ -158,6 +180,11 @@ def post_pass_citations(
     if not raw_answer:
         return "", []
 
+    # If the response is a refusal, zero citations immediately
+    is_refusal = is_refusal_answer(raw_answer)
+    if is_refusal:
+        return raw_answer.strip(), []
+
     # Normalize full-width brackets from multilingual LLMs (e.g. 【S1】 -> [S1])
     raw_answer = raw_answer.replace("【", "[").replace("】", "]")
     # Normalize verbose markers like [Source: S1] or (Source: S1) to standard [S1]
@@ -165,10 +192,6 @@ def post_pass_citations(
     raw_answer = re.sub(r"\(Source:\s*S(\d+)\)", r"[S\1]", raw_answer, flags=re.IGNORECASE)
     raw_answer = re.sub(r"\[s(\d+)\]", r"[S\1]", raw_answer)
     raw_answer = re.sub(r"\(([Ss]\d+)\)", r"[\1]", raw_answer)
-
-    # If the response is a refusal, zero citations
-    if ABSENT_REFUSAL_TEXT in raw_answer or FRIENDLY_REFUSAL_TEXT in raw_answer:
-        return raw_answer.strip(), []
 
     num_sources = len(sources)
 
@@ -222,8 +245,8 @@ def post_pass_citations(
     if (
         not citations
         and sources
-        and ABSENT_REFUSAL_TEXT not in cleaned
-        and FRIENDLY_REFUSAL_TEXT not in cleaned
+        and not is_refusal
+        and not is_refusal_answer(cleaned)
     ):
         src = sources[0]
         is_ocr = bool(getattr(src, "is_ocr", False) or getattr(src.chunk, "is_ocr", False))
@@ -659,7 +682,7 @@ async def stream_answer_pipeline(
     logger.info("Answer generated for question %s: %s", qid, cleaned_answer)
     yield format_sse("citations", {"citations": [c.model_dump() for c in citations]})
 
-    is_refusal = ABSENT_REFUSAL_TEXT in cleaned_answer or FRIENDLY_REFUSAL_TEXT in cleaned_answer
+    is_refusal = is_refusal_answer(cleaned_answer) or is_refusal_answer(raw_accumulated)
 
     latencies["total_ms"] = round((time.perf_counter() - t_start) * 1000, 2)
 

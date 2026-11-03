@@ -125,6 +125,7 @@ def test_e2e_logged_answer_masks_email_while_stored_answer_unchanged(caplog):
 
     log_message = answer_log_records[0].message
     # Log must mask email to j***@***.com
-    assert "j***@***.com" in log_message or "j***@***.com" in mask_pii(log_message)
+    assert "j***@***.com" in log_message
+    assert "john.doe@example.com" not in log_message
     # Stored chunk in session remains unchanged
     assert any("john.doe@example.com" in c.text for c in session.chunks)

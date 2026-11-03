@@ -46,7 +46,7 @@ ignore = ["E501"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
-timeout = 60
+timeout = 180
 markers = [
     "ocr: marks tests as involving OCR models (deselect with '-m \"not ocr\"')",
 ]

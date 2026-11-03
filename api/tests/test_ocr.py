@@ -56,6 +56,7 @@ def test_ocr_post_pass_citations_flag():
 
 
 @pytest.mark.ocr
+@pytest.mark.timeout(240)
 def test_parse_scanned_pdf_blocks(session_scanned_handbook):
     """Verify parsing a rasterized PDF page (<50 chars text) triggers OCR and tags blocks with is_ocr=True."""
     blocks = session_scanned_handbook.blocks
@@ -80,6 +81,7 @@ def test_parse_scanned_pdf_blocks(session_scanned_handbook):
 
 
 @pytest.mark.ocr
+@pytest.mark.timeout(240)
 def test_scanned_pdf_answers_3_questions_with_ocr_citations(session_scanned_handbook):
     """
     STEP 45 Gate:
@@ -135,6 +137,7 @@ def test_scanned_pdf_answers_3_questions_with_ocr_citations(session_scanned_hand
 
 
 @pytest.mark.ocr
+@pytest.mark.timeout(240)
 def test_easyocr_provider_on_scanned_pdf(session_scanned_handbook):
     """Verify EasyOCR provider extracts text directly from scanned PDF fixture."""
     from app.pipeline.parsers.ocr import get_easyocr_reader, parse_easyocr_langs

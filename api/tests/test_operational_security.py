@@ -128,6 +128,19 @@ def test_rate_limiter_rejects_spoofed_x_forwarded_for_from_remote_client():
     assert get_client_identifier(req) == "ip:198.51.100.99"
 
 
+def test_rate_limiter_accepts_x_forwarded_for_from_private_proxy():
+    from app.security.rate_limit import get_client_identifier
+
+    # Private network ingress proxy (e.g. Hugging Face Spaces / Kubernetes / Docker network)
+    for proxy_ip in ("10.120.91.164", "172.17.0.1", "192.168.1.1"):
+        req = MagicMock()
+        req.client = MagicMock(host=proxy_ip)
+        req.headers = {"X-Forwarded-For": "203.0.113.195"}
+
+        # Identifier must resolve to the real client IP passed by trusted proxy
+        assert get_client_identifier(req) == "ip:203.0.113.195"
+
+
 def test_api_returns_429_with_standard_body_and_retry_after(client):
     limiter = get_rate_limiter()
     limiter.reset()
@@ -330,7 +343,7 @@ def test_ingest_url_free_tier_enforces_upload_limit(client, monkeypatch):
             raise ssrf.SSRFBlockedError(f"Resource size exceeds cap of {max_size_bytes}")
         return oversized
 
-    monkeypatch.setattr(ssrf, "safe_fetch_url", mock_safe_fetch)
+    monkeypatch.setattr("app.main.safe_fetch_url", mock_safe_fetch)
 
     resp = client.post("/v1/ingest/url", json={"url": "https://example.com/huge.html"})
     assert resp.status_code == 400

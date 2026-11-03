@@ -159,13 +159,25 @@ class SemanticCache:
             session_cache[query] = entry
             session_cache.move_to_end(query)
 
-            # Evict LRU if total entries exceed max_entries
+            # Evict oldest entry globally if total entries exceed max_entries
             total_entries = sum(len(c) for c in self._stores.values())
-            if total_entries > self.max_entries:
-                for sc in self._stores.values():
-                    if len(sc) > 0:
-                        sc.popitem(last=False)
-                        break
+            while total_entries > self.max_entries:
+                oldest_sid = None
+                oldest_query = None
+                oldest_time = float("inf")
+                for sid, sc in self._stores.items():
+                    for qk, ent in sc.items():
+                        if ent.created_at < oldest_time:
+                            oldest_time = ent.created_at
+                            oldest_sid = sid
+                            oldest_query = qk
+                if oldest_sid is not None and oldest_query is not None:
+                    del self._stores[oldest_sid][oldest_query]
+                    if not self._stores[oldest_sid]:
+                        del self._stores[oldest_sid]
+                    total_entries -= 1
+                else:
+                    break
 
     def invalidate(self, session_id: str) -> int:
         """Invalidate all cached entries for a session."""

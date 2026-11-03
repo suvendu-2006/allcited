@@ -2,6 +2,7 @@ import io
 import time
 
 import jwt
+import pytest
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -308,3 +309,114 @@ def test_delete_document_and_audit_trail_assertion():
     unauth_del = client.delete(f"/v1/library/{doc_b_id}", headers=headers_a)
     assert unauth_del.status_code == 404
     assert store.get_document(user_b, doc_b_id) is not None
+
+
+def test_delete_document_purges_hydrated_session_and_cache():
+    """
+    Adversarial Audit: Verify deleting a document from the shelf purges
+    both the hydrated SessionStore entry and SemanticCache to prevent resurrection.
+    """
+    set_test_verification_key(_public_pem)
+    import uuid
+    from app.cache import get_semantic_cache
+    from app.library import get_library_store
+    from app.sessions import get_session_store
+
+    get_library_store().reset_for_tests()
+    session_store = get_session_store()
+    cache = get_semantic_cache()
+
+    user_id = f"user_purge_{uuid.uuid4().hex[:8]}"
+    headers = {"Authorization": f"Bearer {make_test_token(user_id)}"}
+
+    # 1. Ingest and save document
+    doc_text = "Strict confidentiality agreement regarding Operation Nightfall."
+    res = client.post(
+        "/v1/ingest",
+        files={"file": ("nightfall.txt", io.BytesIO(doc_text.encode("utf-8")), "text/plain")},
+    )
+    assert res.status_code == 200
+    ingest_sess_id = res.json()["session_id"]
+
+    save_res = client.post("/v1/library/save", json={"session_id": ingest_sess_id}, headers=headers)
+    assert save_res.status_code == 200
+    doc_id = save_res.json()["document"]["id"]
+
+    # 2. Hydrate session via GET /v1/session/{doc_id}
+    info_res = client.get(f"/v1/session/{doc_id}", headers=headers)
+    assert info_res.status_code == 200
+    assert session_store.get_session(doc_id) is not None
+
+    # Populate cache
+    cache.set(session_id=doc_id, query="What is Operation Nightfall?", answer="Confidential", citations=[])
+    assert cache.get(doc_id, "What is Operation Nightfall?") is not None
+
+    # 3. Delete document from library
+    del_res = client.delete(f"/v1/library/{doc_id}", headers=headers)
+    assert del_res.status_code == 200
+
+    # 4. Assert session_store and cache are completely purged
+    assert session_store.get_session(doc_id) is None
+    assert cache.get(doc_id, "What is Operation Nightfall?") is None
+
+    # 5. Assert subsequent session lookup and queries return 404
+    after_info = client.get(f"/v1/session/{doc_id}", headers=headers)
+    assert after_info.status_code == 404
+
+    after_query = client.post(
+        "/v1/query",
+        json={"session_id": doc_id, "query": "What is Operation Nightfall?", "provider": "stub"},
+        headers=headers,
+    )
+    assert after_query.status_code == 404
+
+
+@pytest.mark.anyio
+async def test_cold_boot_rehydration_transient_failure_does_not_poison_cache():
+    """
+    Adversarial Audit: Verify transient failure during cold boot rehydration
+    does NOT add user to _loaded_users, allowing recovery on subsequent request.
+    """
+    from unittest.mock import MagicMock, patch
+    import httpx
+    from app.library import InMemoryLibraryStore
+
+    store = InMemoryLibraryStore()
+    user_id = "user_transient_failure_test"
+
+    mock_settings = MagicMock()
+    mock_settings.SUPABASE_URL = "https://mock.supabase.co"
+    mock_settings.SUPABASE_SERVICE_ROLE_KEY = "mock_key"
+
+    # 1. Simulate network failure on first attempt
+    with patch("app.library.get_settings", return_value=mock_settings):
+        with patch("httpx.AsyncClient.get", side_effect=httpx.ConnectTimeout("Timeout connecting to Supabase")):
+            await store.rehydrate_user_async(user_id)
+
+            # MUST NOT be marked as loaded
+            assert user_id not in store._loaded_users
+            assert store._docs.get(user_id) is None or len(store._docs.get(user_id, {})) == 0
+
+    # 2. Simulate recovery on second attempt
+    mock_docs_resp = MagicMock(status_code=200, json=lambda: [{
+        "id": "doc_rec_1", "user_id": user_id, "filename": "rec.pdf",
+        "format": "pdf", "file_size_bytes": 100, "page_count": 1, "chunk_count": 1,
+    }])
+    mock_chunks_resp = MagicMock(status_code=200, json=lambda: [{
+        "id": "sc_rec_1", "document_id": "doc_rec_1", "user_id": user_id,
+        "chunk_id": "c_rec_1", "text": "Recovered text", "token_count": 2, "embedding": [0.1]*384,
+    }])
+
+    with patch("app.library.get_settings", return_value=mock_settings):
+        with patch("httpx.AsyncClient.get") as mock_get:
+            def side_effect(url, headers=None, params=None):
+                if "saved_documents" in url:
+                    return mock_docs_resp
+                return mock_chunks_resp
+            mock_get.side_effect = side_effect
+
+            docs = await store.list_documents(user_id)
+            assert len(docs) == 1
+            assert docs[0].id == "doc_rec_1"
+            assert user_id in store._loaded_users
+
