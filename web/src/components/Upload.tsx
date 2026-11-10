@@ -258,7 +258,7 @@ export function Upload({
       const data = await res.json();
       const chunkCount = data.chunk_count || 0;
       const pageCount = data.page_count || 1;
-      const filename = data.title || urlInput.trim();
+      const filename = data.filename || data.title || urlInput.trim();
       const sessionId = data.session_id;
 
       setSuccessInfo({ count: chunkCount, filename });

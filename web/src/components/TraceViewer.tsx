@@ -82,7 +82,7 @@ export function TraceViewer({
     setLoading(true);
     setError(null);
 
-    fetch(`${apiUrl}/v1/trace/${encodeURIComponent(questionId)}`)
+    fetch(`${apiUrl.replace(/\/$/, "")}/v1/trace/${encodeURIComponent(questionId)}`)
       .then(async (res) => {
         if (!res.ok) {
           throw new Error(`Failed to fetch trace (status ${res.status})`);

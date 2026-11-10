@@ -56,6 +56,28 @@ Here is a paragraph discussing policy POL-1. It has multiple sentences. [S2]
     assert.strictEqual(table.rows[1][0], "MATH201");
   });
 
+  test("2b. Table cells containing escaped pipes (\\|) are preserved as intact cell contents", async () => {
+    const { parseMarkdownBlocks } = await import("../src/lib/markdown.ts");
+
+    const tableWithEscapedPipes = `
+| Expression | Type | Explanation |
+|---|---|---|
+| a \\| b | Logical OR | Evaluates bitwise or boolean union |
+| c & d | Logical AND | Evaluates bitwise or boolean intersection |
+`.trim();
+
+    const blocks = parseMarkdownBlocks(tableWithEscapedPipes);
+    assert.strictEqual(blocks.length, 1);
+    assert.strictEqual(blocks[0].type, "table");
+
+    const table = blocks[0];
+    assert.strictEqual(table.headers.length, 3);
+    assert.strictEqual(table.rows.length, 2);
+    assert.strictEqual(table.rows[0].length, 3);
+    assert.strictEqual(table.rows[0][0], "a | b");
+    assert.strictEqual(table.rows[0][1], "Logical OR");
+  });
+
   test("3. Streaming resilience: unclosed code block renders without throwing", async () => {
     const { parseMarkdownBlocks } = await import("../src/lib/markdown.ts");
 

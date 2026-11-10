@@ -57,7 +57,7 @@ export function LibraryGrid({
           return;
         }
 
-        const res = await fetch(`${apiUrl}/v1/library`, {
+        const res = await fetch(`${apiUrl.replace(/\/$/, "")}/v1/library`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -97,7 +97,7 @@ export function LibraryGrid({
       }
       if (!token) return;
 
-      const res = await fetch(`${apiUrl}/v1/library/${doc.id}`, {
+      const res = await fetch(`${apiUrl.replace(/\/$/, "")}/v1/library/${doc.id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

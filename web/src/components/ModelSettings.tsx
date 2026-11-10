@@ -229,7 +229,7 @@ export function ModelSettings({
 
       // 2. Fallback to checking via backend endpoint
       if (!isOnline) {
-        const res = await fetch(`${apiUrl}/v1/models`);
+        const res = await fetch(`${apiUrl.replace(/\/$/, "")}/v1/models`);
         if (res.ok) {
           const data = await res.json();
           const ollamaMode = (data.modes || []).find(

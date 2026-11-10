@@ -83,10 +83,10 @@ function parseTableCells(rowStr: string): string[] {
   if (cleaned.startsWith("|")) {
     cleaned = cleaned.slice(1);
   }
-  if (cleaned.endsWith("|")) {
+  if (cleaned.endsWith("|") && !cleaned.endsWith("\\|")) {
     cleaned = cleaned.slice(0, -1);
   }
-  return cleaned.split("|").map((cell) => cell.trim());
+  return cleaned.split(/(?<!\\)\|/).map((cell) => cell.trim().replace(/\\\|/g, "|"));
 }
 
 function isSeparatorRow(line: string): boolean {

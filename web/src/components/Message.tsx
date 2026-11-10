@@ -46,7 +46,7 @@ export function Message({ message, onCitationClick }: MessageProps) {
     }
     const apiUrl = getApiUrl();
     try {
-      await fetch(`${apiUrl}/v1/feedback`, {
+      await fetch(`${apiUrl.replace(/\/$/, "")}/v1/feedback`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

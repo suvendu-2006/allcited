@@ -384,10 +384,10 @@ export function Chat({
           );
           setIsGenerating(false);
         },
-        onError: (err: Error) => {
+        onError: (err: Error & { code?: string; requestId?: string }) => {
           // Parse potential error codes
-          let code = "generic";
-          const errStr = err.message.toLowerCase();
+          let code = err.code || "generic";
+          const errStr = (err.message || "").toLowerCase();
           if (errStr.includes("swamped") || errStr.includes("rate limit") || errStr.includes("429")) {
             code = "free_tier_busy";
           } else if (errStr.includes("expired") || errStr.includes("404")) {
@@ -404,7 +404,7 @@ export function Chat({
           setStreamError({
             code,
             message: err.message,
-            requestId: `req_${Math.random().toString(36).slice(2, 10)}`,
+            requestId: err.requestId || `req_${Math.random().toString(36).slice(2, 10)}`,
           });
 
           // Remove the empty assistant placeholder if failed early
@@ -415,8 +415,9 @@ export function Chat({
         },
       });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      let code = "generic";
+      const customErr = err as (Error & { code?: string; requestId?: string }) | undefined;
+      const msg = customErr instanceof Error ? customErr.message : String(err);
+      let code = customErr?.code || "generic";
       const errStr = msg.toLowerCase();
       if (errStr.includes("swamped") || errStr.includes("rate limit") || errStr.includes("429")) {
         code = "free_tier_busy";
@@ -433,7 +434,7 @@ export function Chat({
       setStreamError({
         code,
         message: msg || "Failed to start question stream",
-        requestId: `req_${Math.random().toString(36).slice(2, 10)}`,
+        requestId: customErr?.requestId || `req_${Math.random().toString(36).slice(2, 10)}`,
       });
       setMessages((prev) =>
         prev.filter((m) => m.id !== assistantMessageId || m.content.trim().length > 0)

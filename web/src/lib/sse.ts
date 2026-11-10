@@ -118,14 +118,38 @@ export async function streamQuery(options: StreamQueryOptions): Promise<void> {
 
     if (!response.ok) {
       const errorText = await response.text();
-      let errorJson;
+      let errorJson: Record<string, unknown> | null = null;
       try {
         errorJson = JSON.parse(errorText);
       } catch {
         errorJson = null;
       }
-      const msg = errorJson?.detail?.error?.message || errorJson?.detail || errorText || `HTTP ${response.status}`;
-      throw new Error(msg);
+      const errObj = errorJson?.error as Record<string, unknown> | undefined;
+      const detailObj = errorJson?.detail as Record<string, unknown> | undefined;
+      const detailErrObj = detailObj?.error as Record<string, unknown> | undefined;
+
+      const msg =
+        (typeof errObj?.message === "string" && errObj.message) ||
+        (typeof detailErrObj?.message === "string" && detailErrObj.message) ||
+        (typeof errorJson?.detail === "string" && errorJson.detail) ||
+        errorText ||
+        `HTTP ${response.status}`;
+
+      const code =
+        (typeof errObj?.code === "string" && errObj.code) ||
+        (typeof detailErrObj?.code === "string" && detailErrObj.code) ||
+        undefined;
+
+      const reqId =
+        (typeof errObj?.request_id === "string" && errObj.request_id) ||
+        (typeof detailErrObj?.request_id === "string" && detailErrObj.request_id) ||
+        response.headers.get("x-request-id") ||
+        undefined;
+
+      const err = new Error(msg) as Error & { code?: string; requestId?: string };
+      if (code) err.code = code;
+      if (reqId) err.requestId = reqId;
+      throw err;
     }
 
     if (!response.body) {
