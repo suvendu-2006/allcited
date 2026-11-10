@@ -187,3 +187,28 @@ def test_corrupt_pptx_and_xlsx_rejections():
     )
     assert res_xlsx.status_code == 400
     assert res_xlsx.json()["detail"]["error"]["code"] == "doc_unreadable"
+
+
+def test_xlsx_headers_with_pipes_and_newlines_escaped():
+    """Verify that XLSX sheets with headers containing pipes or newlines are escaped properly in markdown."""
+    import io
+
+    import openpyxl
+
+    from app.pipeline.parsers.xlsx import parse_xlsx
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "EscapedSheet"
+    ws.append(["Metric | Key", "Target\nValue", "Status"])
+    ws.append(["Latency | p95", "150ms", "OK"])
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    content = buf.getvalue()
+
+    blocks = parse_xlsx(content, source_name="test.xlsx")
+    assert len(blocks) == 1
+    assert "Metric \\| Key" in blocks[0].text
+    assert "Target Value" in blocks[0].text
+    assert "Latency \\| p95" in blocks[0].text

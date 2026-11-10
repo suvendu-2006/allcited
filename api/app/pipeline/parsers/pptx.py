@@ -37,8 +37,10 @@ def parse_pptx(
     for slide_idx, slide in enumerate(prs.slides, start=1):
         # 1. Extract slide title if present
         slide_title = ""
-        if slide.shapes.title and slide.shapes.title.text.strip():
-            slide_title = slide.shapes.title.text.strip()
+        title_shape = getattr(slide.shapes, "title", None)
+        title_text = getattr(title_shape, "text", "") or ""
+        if title_text.strip():
+            slide_title = title_text.strip()
         else:
             slide_title = f"Slide {slide_idx}"
 

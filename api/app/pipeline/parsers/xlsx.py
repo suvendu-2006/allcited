@@ -57,12 +57,13 @@ def parse_xlsx(
             headers = all_rows[0]
             max_cols = max(len(headers), max((len(r) for r in all_rows), default=0))
             headers = headers + [""] * (max_cols - len(headers))
+            clean_headers = [h.replace("\n", " ").replace("|", "\\|") for h in headers]
 
             data_rows = all_rows[1:]
             if not data_rows:
                 # Single row sheet (header only)
                 table_md = (
-                    "| " + " | ".join(headers) + " |\n| " + " | ".join(["---"] * max_cols) + " |"
+                    "| " + " | ".join(clean_headers) + " |\n| " + " | ".join(["---"] * max_cols) + " |"
                 )
                 blocks.append(
                     ParsedBlock(
@@ -79,7 +80,7 @@ def parse_xlsx(
                 window_slice = data_rows[win_idx : win_idx + ROW_WINDOW_SIZE]
 
                 lines = []
-                lines.append("| " + " | ".join(headers) + " |")
+                lines.append("| " + " | ".join(clean_headers) + " |")
                 lines.append("| " + " | ".join(["---"] * max_cols) + " |")
 
                 for r in window_slice:

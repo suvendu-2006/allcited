@@ -90,7 +90,7 @@ def parse_docx(
             if not text:
                 continue
 
-            style_name = item.style.name if item.style else "Normal"
+            style_name = (item.style.name if item.style and getattr(item.style, "name", None) else "") or "Normal"
 
             # Check for Heading styles
             heading_match = re.match(r"^Heading\s*(\d+)$", style_name, re.IGNORECASE)
