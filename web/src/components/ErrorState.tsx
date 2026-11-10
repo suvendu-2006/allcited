@@ -35,10 +35,17 @@ export function ErrorState({
   const displayMessage = getHumanError(code, message);
 
   const handleCopyRequestId = () => {
-    if (requestId) {
-      navigator.clipboard.writeText(requestId);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+    if (requestId && typeof navigator !== "undefined" && navigator?.clipboard?.writeText) {
+      navigator.clipboard
+        .writeText(requestId)
+        .then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        })
+        .catch(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        });
     }
   };
 

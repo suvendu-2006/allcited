@@ -119,9 +119,18 @@ export function TraceViewer({
   }, [isOpen, onClose]);
 
   const handleCopyId = () => {
-    navigator.clipboard.writeText(questionId);
-    setCopiedId(true);
-    setTimeout(() => setCopiedId(false), 2000);
+    if (questionId && typeof navigator !== "undefined" && navigator?.clipboard?.writeText) {
+      navigator.clipboard
+        .writeText(questionId)
+        .then(() => {
+          setCopiedId(true);
+          setTimeout(() => setCopiedId(false), 2000);
+        })
+        .catch(() => {
+          setCopiedId(true);
+          setTimeout(() => setCopiedId(false), 2000);
+        });
+    }
   };
 
   if (!isOpen) return null;

@@ -49,9 +49,18 @@ export function SourcePanel({
   }, [isOpen, onClose]);
 
   const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedLabel(label);
-    setTimeout(() => setCopiedLabel(null), 2000);
+    if (typeof navigator !== "undefined" && navigator?.clipboard?.writeText) {
+      navigator.clipboard
+        .writeText(text)
+        .then(() => {
+          setCopiedLabel(label);
+          setTimeout(() => setCopiedLabel(null), 2000);
+        })
+        .catch(() => {
+          setCopiedLabel(label);
+          setTimeout(() => setCopiedLabel(null), 2000);
+        });
+    }
   };
 
   const toggleExpand = (label: string) => {

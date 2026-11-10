@@ -21,10 +21,17 @@ export function Toast({ toast, onClose }: ToastProps) {
   const shouldReduceMotion = useReducedMotion();
 
   const handleCopyRequestId = () => {
-    if (toast?.requestId) {
-      navigator.clipboard.writeText(toast.requestId);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+    if (toast?.requestId && typeof navigator !== "undefined" && navigator?.clipboard?.writeText) {
+      navigator.clipboard
+        .writeText(toast.requestId)
+        .then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        })
+        .catch(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        });
     }
   };
 
