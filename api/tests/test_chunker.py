@@ -15,6 +15,15 @@ def test_split_into_sentences_preserves_rules():
     assert sentences[1] == "All approvals are mandatory."
 
 
+def test_split_into_sentences_preserves_multilevel_clauses():
+    text = "Under ISO-9001 standard 1.2.3.4 and clause 63.7.4.2, procedures must be signed. This is second sentence."
+    sentences = split_into_sentences(text)
+    assert len(sentences) == 2
+    assert "1.2.3.4" in sentences[0]
+    assert "63.7.4.2" in sentences[0]
+    assert sentences[1] == "This is second sentence."
+
+
 def test_chunker_p1_boundary_straddle():
     """
     P1 trap: A critical sentence straddling a chunk boundary must appear

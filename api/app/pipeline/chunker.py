@@ -63,8 +63,9 @@ def split_into_sentences(text: str) -> List[str]:
         text,
         flags=re.IGNORECASE,
     )
-    # Protect decimal rule/clause numbers like 63.7.4
-    protected = re.sub(r"(\d+)\.(\d+)", r"\1@@DOT@@\2", protected)
+    # Protect decimal rule/clause numbers like 63.7.4 or 1.2.3.4
+    while re.search(r"(\d+)\.(\d+)", protected):
+        protected = re.sub(r"(\d+)\.(\d+)", r"\1@@DOT@@\2", protected)
 
     raw_sentences = re.split(r"(?<=[.!?])\s+", protected)
 

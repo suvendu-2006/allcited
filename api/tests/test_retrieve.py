@@ -55,3 +55,27 @@ def test_hybrid_retrieval_p2_and_p4_scenarios(session_handbook):
     merged_texts = [sc.chunk.text for sc in paraphrase_merged]
     assert any("resignation" in t.lower() or "leave" in t.lower() for t in merged_texts)
     assert any("63.7.4" in t or "annual leave" in t.lower() for t in merged_texts)
+
+
+def test_parent_expansion_ranking():
+    """Verify expanded parent section chunks are sorted by RRF score rather than dropped at the tail."""
+    from app.pipeline.chunker import Chunk
+    from app.pipeline.retrieve import ScoredChunk, apply_parent_expansion
+
+    c1 = Chunk(id="c1", doc_id="d", text="Child 1", token_count=10, parent_section_id="sec_a", content_hash="h1")
+    c2 = Chunk(id="c2", doc_id="d", text="Other hit", token_count=10, content_hash="h2")
+    c3 = Chunk(id="c3", doc_id="d", text="Parent section intro", token_count=15, parent_section_id="sec_a", content_hash="h3")
+
+    top_scored = [
+        ScoredChunk(chunk=c1, rrf_score=0.10),
+        ScoredChunk(chunk=c2, rrf_score=0.01),
+    ]
+    all_chunks = [c1, c2, c3]
+
+    expanded = apply_parent_expansion(top_scored, all_chunks, max_additions=1)
+    assert len(expanded) == 3
+    # c3 should be scored 0.10 * 0.85 = 0.085, which is higher than c2 (0.01)
+    assert expanded[0].chunk.id == "c1"
+    assert expanded[1].chunk.id == "c3"
+    assert expanded[1].expanded_from == "c1"
+    assert expanded[2].chunk.id == "c2"

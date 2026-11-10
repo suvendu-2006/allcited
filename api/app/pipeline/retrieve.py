@@ -113,7 +113,8 @@ def apply_parent_expansion(
         if len(additions) >= max_additions:
             break
 
-    return top_scored + additions
+    combined = top_scored + additions
+    return sorted(combined, key=lambda sc: sc.rrf_score, reverse=True)
 
 
 def hybrid_retrieve(
