@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Allcited</title>
+  <style>
+    :root {
+      --bg-base: #0D0C0B;
+      --bg-surface: #171514;
+      --bg-sunken: #201D1B;
+      --ink-primary: #EFEAD9;
+      --ink-ghost: rgba(239, 234, 217, 0.48);
+      --accent-primary: #E8765A;
+      --accent-cite: #E8B04B;
+      --status-retrieve: #6E97FF;
+      --status-rerank: #FF8177;
+      --status-cache: #5AD46F;
+      --gray-warm: #A8A69A;
+      --border: rgba(239, 234, 217, 0.12);
+      --dot-color: rgba(239, 234, 217, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+    body {
+      background-color: var(--bg-base);
+      color: var(--ink-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      background-image: radial-gradient(var(--dot-color) 1.25px, transparent 1.25px);
+      background-size: 28px 28px;
+    }
+    #canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      cursor: grab;
+    }
+    #canvas:active {
+      cursor: grabbing;
+    }
+
+    /* Minimal Header: Strictly Allcited and Prominent Live Task Ticker */
+    .header-bar {
+      position: absolute;
+      top: 18px;
+      left: 24px;
+      right: 24px;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 22px;
+      background: rgba(23, 21, 20, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    }
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-title {
+      font-family: "Georgia", "Hiragino Mincho ProN", serif;
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+      color: var(--ink-primary);
+    }
+
+    /* Live Activity Indicator Ticker */
+    .live-activity-ticker {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: ui-monospace, "JetBrains Mono", monospace;
+      font-size: 12px;
+      color: var(--ink-primary);
+      letter-spacing: 0.2px;
+      background: var(--bg-sunken);
+      padding: 7px 16px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      max-width: 780px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .live-pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent-cite);
+      box-shadow: 0 0 10px var(--accent-cite);
+      animation: pulse 1.8s infinite;
+      flex-shrink: 0;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.35; transform: scale(0.85); }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+
+  <!-- Clean Header: Strictly "Allcited" + Live Task Ticker -->
+  <header class="header-bar">
+    <div class="brand-section">
+      <span class="brand-title">Allcited</span>
+    </div>
+    <div id="live-indicator" class="live-activity-ticker">
+      <span class="live-pulse-dot" id="live-dot"></span>
+      <span id="live-text">STANDBY · AWAITING INSTRUCTION</span>
+    </div>
+  </header>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+
+    let zoom = 1.0;
+    let panX = 0;
+    let panY = 0;
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+
+    function resize() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width * window.devicePixelRatio;
+      canvas.height = height * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    }
+    window.addEventListener("resize", resize);
+    resize();
+
+    window.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      const zoomFactor = e.deltaY < 0 ? 1.08 : 0.92;
+      zoom = Math.max(0.4, Math.min(2.5, zoom * zoomFactor));
+    }, { passive: false });
+
+    const nodes = [];
+    const links = [];
+    const ripples = [];
+    const lasers = [];
+
+    // Allcited Warm-Ink Palette
+    const COLORS = {
+      base: "#0D0C0B",
+      ink: "#EFEAD9",
+      inkGhost: "rgba(239, 234, 217, 0.48)",
+      border: "rgba(239, 234, 217, 0.12)",
+      lead: "#E8B04B",      // Amber Gold (Lead Orchestrator)
+      planner: "#E8765A",   // Terracotta (Planner Agent)
+      coder: "#6E97FF",     // Blue (Coder Agent)
+      reviewer: "#FF8177",  // Coral (Bug-Reviewer)
+      tester: "#5AD46F",    // Mint Green (Tester Agent)
+      file: "#71716A",      // Muted Slate
+      fileText: "#CBD5E1"
+    };
+
+    // 1. Central Lead Orchestrator
+    const orchestratorNode = {
+      id: "orchestrator",
+      name: "Lead Orchestrator",
+      type: "orchestrator",
+      x: width * 0.50,
+      y: height * 0.50,
+      vx: 0,
+      vy: 0,
+      radius: 17,
+      baseRadius: 17,
+      color: COLORS.lead,
+      glow: COLORS.lead,
+      status: "READY",
+      active: true,
+      activeUntil: 0
+    };
+    nodes.push(orchestratorNode);
+    const agentNodes = { orchestrator: orchestratorNode };
+
+    // 2. The 4 Specialist Sub-Agents in 4 Quadrants
+    // All coordinate STRICTLY with Lead Orchestrator (Star Topology)
+    const agentDefs = [
+      { id: "planner", name: "Planner", role: "Architecture & Specs", color: COLORS.planner, angle: -Math.PI * 0.75, dist: 175, radius: 13.5 },
+      { id: "coder", name: "Coder", role: "Backend & Parsers", color: COLORS.coder, angle: -Math.PI * 0.25, dist: 175, radius: 13.5 },
+      { id: "reviewer", name: "Bug-Reviewer", role: "UI & Security Audit", color: COLORS.reviewer, angle: Math.PI * 0.25, dist: 175, radius: 13.5 },
+      { id: "tester", name: "Tester", role: "Pytest & Benchmarks", color: COLORS.tester, angle: Math.PI * 0.75, dist: 175, radius: 13.5 }
+    ];
+
+    agentDefs.forEach(def => {
+      const node = {
+        id: def.id,
+        name: def.name,
+        role: def.role,
+        type: "agent",
+        x: orchestratorNode.x + Math.cos(def.angle) * def.dist,
+        y: orchestratorNode.y + Math.sin(def.angle) * def.dist,
+        targetAngle: def.angle,
+        targetDist: def.dist,
+        vx: 0,
+        vy: 0,
+        radius: def.radius,
+        baseRadius: def.radius,
+        color: def.color,
+        glow: def.color,
+        status: "READY",
+        active: false,
+        activeUntil: 0
+      };
+      nodes.push(node);
+      agentNodes[def.id] = node;
+
+      // STRICT Star Link: ONLY between Lead Orchestrator and Sub-Agent!
+      // Sub-agents NEVER link to each other!
+      links.push({
+        source: orchestratorNode,
+        target: node,
+        strength: 0.65,
+        color: "rgba(232, 176, 75, 0.22)"
+      });
+    });
+
+    // 3. Domain Folders (Generously Offset in Outer Quadrants so Text NEVER Overlaps)
+    const branchDefs = [
+      // Planner (Top-Left)
+      { id: "dir_docs", name: "docs/spec", owner: "planner", relX: -110, relY: -45, color: COLORS.planner },
+      // Coder (Top-Right)
+      { id: "dir_api", name: "api/pipeline", owner: "coder", relX: +35, relY: -85, color: COLORS.coder },
+      { id: "dir_parsers", name: "api/parsers", owner: "coder", relX: +125, relY: -15, color: COLORS.coder },
+      // Bug-Reviewer (Bottom-Right)
+      { id: "dir_web", name: "web/components", owner: "reviewer", relX: +125, relY: +35, color: COLORS.reviewer },
+      { id: "dir_app", name: "web/app", owner: "reviewer", relX: +35, relY: +110, color: COLORS.reviewer },
+      // Tester (Bottom-Left)
+      { id: "dir_tests", name: "tests", owner: "tester", relX: -40, relY: +105, color: COLORS.tester },
+      { id: "dir_eval", name: "eval/46_exam", owner: "tester", relX: -125, relY: +25, color: COLORS.tester }
+    ];
+
+    const branchNodes = {};
+    branchDefs.forEach(b => {
+      const parentAgent = agentNodes[b.owner];
+      const bNode = {
+        id: b.id,
+        name: b.name,
+        type: "branch",
+        ownerAgent: parentAgent,
+        relX: b.relX,
+        relY: b.relY,
+        x: parentAgent.x + b.relX,
+        y: parentAgent.y + b.relY,
+        targetX: parentAgent.x + b.relX,
+        targetY: parentAgent.y + b.relY,
+        vx: 0,
+        vy: 0,
+        radius: 6.5,
+        baseRadius: 6.5,
+        color: b.color,
+        glow: b.color,
+        active: false,
+        activeUntil: 0,
+        isExpanded: false
+      };
+      nodes.push(bNode);
+      branchNodes[b.id] = bNode;
+      links.push({
+        source: parentAgent,
+        target: bNode,
+        strength: 0.50,
+        color: "rgba(239, 234, 217, 0.12)"
+      });
+    });
+
+    // 4. Codebase Files
+    const initialFiles = [
+      // docs/spec
+      { path: "PLAN.md", branch: "dir_docs" },
+      { path: "SPEC.md", branch: "dir_docs" },
+      { path: "architecture.md", branch: "dir_docs" },
+      // api/pipeline
+      { path: "main.py", branch: "dir_api" },
+      { path: "pipeline.py", branch: "dir_api" },
+      { path: "retrieve.py", branch: "dir_api" },
+      { path: "rerank.py", branch: "dir_api" },
+      { path: "chunker.py", branch: "dir_api" },
+      { path: "cache.py", branch: "dir_api" },
+      // api/parsers
+      { path: "pdf.py", branch: "dir_parsers" },
+      { path: "ocr.py", branch: "dir_parsers" },
+      { path: "docx.py", branch: "dir_parsers" },
+      // web/components
+      { path: "SourcePanel.tsx", branch: "dir_web" },
+      { path: "TraceViewer.tsx", branch: "dir_web" },
+      { path: "CitationChip.tsx", branch: "dir_web" },
+      { path: "Drawer.tsx", branch: "dir_web" },
+      { path: "Toast.tsx", branch: "dir_web" },
+      // web/app
+      { path: "page.tsx", branch: "dir_app" },
+      { path: "exam.tsx", branch: "dir_app" },
+      { path: "how-it-works.tsx", branch: "dir_app" },
+      // tests
+      { path: "test_rerank.py", branch: "dir_tests" },
+      { path: "test_retrieve.py", branch: "dir_tests" },
+      { path: "test_health.py", branch: "dir_tests" },
+      { path: "test_security.py", branch: "dir_tests" },
+      // eval/46_exam
+      { path: "benchmark_46.json", branch: "dir_eval" },
+      { path: "run.py", branch: "dir_eval" }
+    ];
+
+    const fileNodes = {};
+    initialFiles.forEach(f => {
+      const parentBranch = branchNodes[f.branch];
+      const fNode = {
+        id: f.path,
+        name: f.path,
+        type: "file",
+        parentBranch: parentBranch,
+        x: parentBranch.x,
+        y: parentBranch.y,
+        targetX: parentBranch.x,
+        targetY: parentBranch.y,
+        vx: 0,
+        vy: 0,
+        radius: 3.5,
+        baseRadius: 3.5,
+        color: COLORS.file,
+        glow: COLORS.file,
+        active: false,
+        activeUntil: 0,
+        activeSince: 0,
+        isExpanded: false
+      };
+      nodes.push(fNode);
+      fileNodes[f.path] = fNode;
+      links.push({
+        source: parentBranch,
+        target: fNode,
+        strength: 0.35,
+        color: "rgba(239, 234, 217, 0.08)"
+      });
+    });
+
+    function getOrCreateFileNode(filepath) {
+      if (!filepath) return null;
+      let fname = filepath.split("/").pop().replace(/['"]/g, "").trim();
+      if (!fname) return null;
+      if (fileNodes[fname]) return fileNodes[fname];
+
+      let branchKey = "dir_api";
+      if (filepath.includes("web/app") || fname === "page.tsx" || fname === "exam.tsx") {
+        branchKey = "dir_app";
+      } else if (filepath.includes("web") || fname.endsWith(".tsx") || fname.endsWith(".ts")) {
+        branchKey = "dir_web";
+      } else if (filepath.includes("test") || fname.startsWith("test_")) {
+        branchKey = "dir_tests";
+      } else if (filepath.includes("eval")) {
+        branchKey = "dir_eval";
+      } else if (fname.endsWith(".md") || filepath.includes("doc")) {
+        branchKey = "dir_docs";
+      } else if (fname.endsWith(".py") && (fname.includes("pdf") || fname.includes("ocr") || fname.includes("docx"))) {
+        branchKey = "dir_parsers";
+      }
+
+      const parentBranch = branchNodes[branchKey] || branchNodes.dir_api;
+      const fNode = {
+        id: fname,
+        name: fname,
+        type: "file",
+        parentBranch: parentBranch,
+        x: parentBranch.x,
+        y: parentBranch.y,
+        targetX: parentBranch.x,
+        targetY: parentBranch.y,
+        vx: 0,
+        vy: 0,
+        radius: 3.5,
+        baseRadius: 3.5,
+        color: COLORS.file,
+        glow: COLORS.file,
+        active: false,
+        activeUntil: 0,
+        activeSince: 0,
+        isExpanded: parentBranch.isExpanded
+      };
+      nodes.push(fNode);
+      fileNodes[fname] = fNode;
+      links.push({
+        source: parentBranch,
+        target: fNode,
+        strength: 0.35,
+        color: "rgba(239, 234, 217, 0.08)"
+      });
+
+      if (parentBranch.isExpanded) {
+        computeFolderFilesLayout(parentBranch);
+      }
+      return fNode;
+    }
+
+    // ----------------------------------------------------
+    // DETERMINISTIC NON-OVERLAPPING FILE LAYOUT
+    // ----------------------------------------------------
+    function computeFolderFilesLayout(folderNode) {
+      const childFiles = nodes.filter(n => n.type === "file" && n.parentBranch === folderNode);
+      const N = childFiles.length;
+      if (!N) return;
+
+      const isRightSide = folderNode.x >= orchestratorNode.x;
+      const spacingY = 20;
+
+      // Top folder (api/pipeline): Files stack cleanly ABOVE the folder
+      if (folderNode.id === "dir_api") {
+        childFiles.forEach((fNode, idx) => {
+          const col = idx % 2;
+          const row = Math.floor(idx / 2);
+          fNode.targetX = folderNode.x + (col === 0 ? -54 : +54);
+          fNode.targetY = folderNode.y - 30 - (row * spacingY);
+          fNode.isExpanded = true;
+        });
+        return;
+      }
+
+      // Lateral folders: Files offset generously outward by 85px
+      const startY = folderNode.y - ((N - 1) * spacingY) / 2;
+      const offsetX = isRightSide ? 85 : -85;
+
+      childFiles.forEach((fNode, idx) => {
+        fNode.targetX = folderNode.x + offsetX;
+        fNode.targetY = startY + (idx * spacingY);
+        fNode.isExpanded = true;
+      });
+    }
+
+    function expandFolder(folderNode) {
+      if (!folderNode) return;
+      folderNode.isExpanded = true;
+      computeFolderFilesLayout(folderNode);
+      addRipple(folderNode.x, folderNode.y, folderNode.color);
+    }
+
+    function collapseFolder(folderNode) {
+      if (!folderNode) return;
+      folderNode.isExpanded = false;
+      const childFiles = nodes.filter(n => n.type === "file" && n.parentBranch === folderNode);
+      childFiles.forEach(fNode => {
+        fNode.isExpanded = false;
+        fNode.targetX = folderNode.x;
+        fNode.targetY = folderNode.y;
+        fNode.vx += (folderNode.x - fNode.x) * 0.45;
+        fNode.vy += (folderNode.y - fNode.y) * 0.45;
+      });
+      addRipple(folderNode.x, folderNode.y, folderNode.color);
+    }
+
+    function toggleAgentSection(agentId) {
+      const targetFolders = branchDefs.filter(b => b.owner === agentId).map(b => branchNodes[b.id]);
+      const anyExpanded = targetFolders.some(f => f.isExpanded);
+
+      if (anyExpanded) {
+        targetFolders.forEach(f => collapseFolder(f));
+        updateTicker(`[${agentNodes[agentId].name.toUpperCase()}] Domain section collapsed`, agentNodes[agentId].color);
+      } else {
+        targetFolders.forEach(f => expandFolder(f));
+        // Strict Star: Lead Orchestrator -> Sub-Agent -> Folders
+        fireLaser(orchestratorNode, agentNodes[agentId], COLORS.lead);
+        targetFolders.forEach(f => fireLaser(agentNodes[agentId], f, agentNodes[agentId].color));
+        updateTicker(`[${agentNodes[agentId].name.toUpperCase()}] Domain section opened`, agentNodes[agentId].color);
+      }
+    }
+
+    function expandAllFolders() {
+      Object.values(branchNodes).forEach(b => expandFolder(b));
+      addRipple(orchestratorNode.x, orchestratorNode.y, COLORS.lead);
+      updateTicker("[LEAD ORCHESTRATOR] All codebase sections opened", COLORS.lead);
+    }
+
+    function collapseAllFolders() {
+      Object.values(branchNodes).forEach(b => collapseFolder(b));
+      addRipple(orchestratorNode.x, orchestratorNode.y, COLORS.lead);
+      updateTicker("[LEAD ORCHESTRATOR] All codebase sections collapsed", COLORS.lead);
+    }
+
+    // Ripple
+    function addRipple(x, y, color) {
+      ripples.push({ x, y, color, radius: 4, maxRadius: 32, alpha: 0.95, speed: 1.8 });
+    }
+
+    // DIRECTIONAL LASER
+    // Strictly Star Topology: Sub-agents NEVER talk to each other!
+    function fireLaser(source, target, color, onComplete = null) {
+      if (!source || !target) return;
+      lasers.push({
+        source,
+        target,
+        color,
+        progress: 0,
+        speed: 0.054,
+        onComplete
+      });
+    }
+
+    // Hit Testing
+    function getNodeAt(worldX, worldY) {
+      // 1. Agents & Orchestrator
+      for (const n of nodes) {
+        if (n.type === "agent" || n.type === "orchestrator") {
+          const d = Math.hypot(n.x - worldX, n.y - worldY);
+          if (d <= n.radius + 16) return n;
+          if (Math.abs(worldX - n.x) <= 65 && worldY >= n.y && worldY <= n.y + n.radius + 28) return n;
+        }
+      }
+
+      // 2. Folder Nodes
+      for (const n of nodes) {
+        if (n.type === "branch") {
+          const d = Math.hypot(n.x - worldX, n.y - worldY);
+          if (d <= n.radius + 14) return n;
+          if (Math.abs(worldX - n.x) <= 55 && Math.abs(worldY - n.y) <= 16) return n;
+        }
+      }
+
+      // 3. Expanded File Nodes
+      for (const n of nodes) {
+        if (n.type === "file" && n.isExpanded) {
+          const d = Math.hypot(n.x - worldX, n.y - worldY);
+          if (d <= n.radius + 10) return n;
+          const isRight = n.x >= orchestratorNode.x;
+          if (isRight) {
+            if (worldX >= n.x && worldX <= n.x + 95 && Math.abs(worldY - n.y) <= 10) return n;
+          } else {
+            if (worldX <= n.x && worldX >= n.x - 95 && Math.abs(worldY - n.y) <= 10) return n;
+          }
+        }
+      }
+      return null;
+    }
+
+    let clickStartX = 0;
+    let clickStartY = 0;
+    let hoveredNode = null;
+
+    canvas.addEventListener("mousedown", (e) => {
+      if (e.button === 0) {
+        isDragging = true;
+        dragStartX = e.clientX - panX;
+        dragStartY = e.clientY - panY;
+        clickStartX = e.clientX;
+        clickStartY = e.clientY;
+      }
+    });
+
+    window.addEventListener("mousemove", (e) => {
+      if (isDragging) {
+        panX = e.clientX - dragStartX;
+        panY = e.clientY - dragStartY;
+      }
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      const worldX = (mouseX - (width / 2 + panX)) / zoom + width / 2;
+      const worldY = (mouseY - (height / 2 + panY)) / zoom + height / 2;
+
+      hoveredNode = getNodeAt(worldX, worldY);
+      canvas.style.cursor = hoveredNode ? "pointer" : (isDragging ? "grabbing" : "grab");
+    });
+
+    window.addEventListener("mouseup", (e) => {
+      const dragDist = Math.hypot(e.clientX - clickStartX, e.clientY - clickStartY);
+      isDragging = false;
+      canvas.style.cursor = hoveredNode ? "pointer" : "grab";
+
+      if (dragDist < 12) {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        const worldX = (mouseX - (width / 2 + panX)) / zoom + width / 2;
+        const worldY = (mouseY - (height / 2 + panY)) / zoom + height / 2;
+
+        const target = getNodeAt(worldX, worldY);
+        if (target) {
+          if (target.type === "orchestrator") {
+            const anyExp = Object.values(branchNodes).some(b => b.isExpanded);
+            if (anyExp) collapseAllFolders();
+            else expandAllFolders();
+          } else if (target.type === "agent") {
+            toggleAgentSection(target.id);
+          } else if (target.type === "branch") {
+            if (target.isExpanded) collapseFolder(target);
+            else expandFolder(target);
+          } else if (target.type === "file") {
+            dispatchDirectTask(target.name);
+          }
+        }
+      }
+    });
+
+    canvas.addEventListener("dblclick", () => {
+      zoom = 1.0;
+      panX = 0;
+      panY = 0;
+    });
+
+    const liveTextEl = document.getElementById("live-text");
+    const liveDotEl = document.getElementById("live-dot");
+
+    function updateTicker(text, color = COLORS.lead) {
+      if (liveTextEl) liveTextEl.textContent = text;
+      if (liveDotEl && color) {
+        liveDotEl.style.background = color;
+        liveDotEl.style.boxShadow = `0 0 10px ${color}`;
+      }
+    }
+
+    // Force Simulation with Dynamic Anti-Collision
+    function simulate() {
+      const now = Date.now();
+
+      // Orchestrator stays centered
+      orchestratorNode.vx += (width * 0.50 - orchestratorNode.x) * 0.04;
+      orchestratorNode.vy += (height * 0.50 - orchestratorNode.y) * 0.04;
+      orchestratorNode.x += orchestratorNode.vx;
+      orchestratorNode.y += orchestratorNode.vy;
+      orchestratorNode.vx *= 0.82;
+      orchestratorNode.vy *= 0.82;
+
+      // Sub-Agents anchored in 4 quadrants
+      agentDefs.forEach(def => {
+        const ag = agentNodes[def.id];
+        const tx = orchestratorNode.x + Math.cos(def.angle) * def.dist;
+        const ty = orchestratorNode.y + Math.sin(def.angle) * def.dist;
+        ag.vx += (tx - ag.x) * 0.08;
+        ag.vy += (ty - ag.y) * 0.08;
+        ag.x += ag.vx;
+        ag.y += ag.vy;
+        ag.vx *= 0.82;
+        ag.vy *= 0.82;
+      });
+
+      // Branch Folders follow agent offset
+      branchDefs.forEach(b => {
+        const bn = branchNodes[b.id];
+        const parentAgent = bn.ownerAgent;
+        const tx = parentAgent.x + b.relX;
+        const ty = parentAgent.y + b.relY;
+        bn.vx += (tx - bn.x) * 0.12;
+        bn.vy += (ty - bn.y) * 0.12;
+        bn.x += bn.vx;
+        bn.y += bn.vy;
+        bn.vx *= 0.82;
+        bn.vy *= 0.82;
+      });
+
+      // Files follow target
+      nodes.forEach(n => {
+        if (n.type === "file") {
+          if (n.isExpanded && n.targetX !== undefined) {
+            n.vx += (n.targetX - n.x) * 0.18;
+            n.vy += (n.targetY - n.y) * 0.18;
+          } else if (n.parentBranch) {
+            n.vx += (n.parentBranch.x - n.x) * 0.45;
+            n.vy += (n.parentBranch.y - n.y) * 0.45;
+          }
+
+          if (n.activeUntil && now > n.activeUntil) {
+            n.active = false;
+            n.activeUntil = 0;
+            n.color = COLORS.file;
+            n.glow = COLORS.file;
+          }
+
+          n.x += n.vx;
+          n.y += n.vy;
+          n.vx *= 0.82;
+          n.vy *= 0.82;
+        }
+      });
+
+      // Dynamic Anti-Collision for Expanded Files (AABB Separation)
+      const visibleFiles = nodes.filter(n => n.type === "file" && n.isExpanded);
+      for (let i = 0; i < visibleFiles.length; i++) {
+        for (let j = i + 1; j < visibleFiles.length; j++) {
+          const a = visibleFiles[i];
+          const b = visibleFiles[j];
+          const dx = b.x - a.x;
+          const dy = b.y - a.y;
+          const absX = Math.abs(dx);
+          const absY = Math.abs(dy);
+
+          if (absX < 85 && absY < 18) {
+            const pushY = (18 - absY) * 0.40 * (dy >= 0 ? 1 : -1);
+            b.vy += pushY;
+            a.vy -= pushY;
+          }
+        }
+      }
+    }
+
+    let frame = 0;
+    function render() {
+      frame++;
+      const now = Date.now();
+      ctx.clearRect(0, 0, width, height);
+
+      ctx.save();
+      ctx.translate(width / 2 + panX, height / 2 + panY);
+      ctx.scale(zoom, zoom);
+      ctx.translate(-width / 2, -height / 2);
+
+      // 1. Static Links
+      links.forEach(l => {
+        if (l.target.type === "file" && !l.target.isExpanded) return;
+
+        const isSourceActive = l.source.active || (l.source.activeUntil && now < l.source.activeUntil);
+        const isTargetActive = l.target.active || (l.target.activeUntil && now < l.target.activeUntil);
+        const isHot = isSourceActive && isTargetActive;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(l.source.x, l.source.y);
+        ctx.lineTo(l.target.x, l.target.y);
+
+        if (isHot) {
+          ctx.strokeStyle = l.target.color || COLORS.lead;
+          ctx.lineWidth = 1.8;
+          ctx.shadowColor = l.target.color || COLORS.lead;
+          ctx.shadowBlur = 8;
+        } else {
+          ctx.strokeStyle = l.color || "rgba(239, 234, 217, 0.10)";
+          ctx.lineWidth = l.source.type === "orchestrator" ? 1.2 : 0.8;
+        }
+        ctx.stroke();
+        ctx.restore();
+      });
+
+      // 2. Ripples
+      for (let i = ripples.length - 1; i >= 0; i--) {
+        const r = ripples[i];
+        r.radius += r.speed;
+        r.alpha -= 0.04;
+        if (r.alpha <= 0) {
+          ripples.splice(i, 1);
+          continue;
+        }
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = r.color;
+        ctx.globalAlpha = r.alpha;
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // 3. Directional Lasers / Chevrons
+      for (let i = lasers.length - 1; i >= 0; i--) {
+        const l = lasers[i];
+        l.progress += l.speed;
+        if (l.progress >= 1.0) {
+          addRipple(l.target.x, l.target.y, l.color);
+          if (l.onComplete) l.onComplete();
+          lasers.splice(i, 1);
+          continue;
+        }
+
+        const px = l.source.x + (l.target.x - l.source.x) * l.progress;
+        const py = l.source.y + (l.target.y - l.source.y) * l.progress;
+        const theta = Math.atan2(l.target.y - l.source.y, l.target.x - l.source.x);
+
+        ctx.save();
+        ctx.translate(px, py);
+        ctx.rotate(theta);
+        ctx.fillStyle = l.color;
+        ctx.shadowColor = l.color;
+        ctx.shadowBlur = 10;
+
+        ctx.beginPath();
+        ctx.moveTo(8, 0);
+        ctx.lineTo(-6, -5);
+        ctx.lineTo(-2, 0);
+        ctx.lineTo(-6, 5);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = "#FFFFFF";
+        ctx.beginPath();
+        ctx.arc(0, 0, 2.4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // 4. Render Nodes & Clean Non-Overlapping Labels
+      nodes.forEach(n => {
+        if (n.type === "file" && !n.isExpanded) return;
+
+        const isCurrentlyActive = n.active || (n.activeUntil && now < n.activeUntil);
+        ctx.save();
+
+        let blinkScale = 1.0;
+        if (n.type === "file" && isCurrentlyActive) {
+          const blinkPhase = Math.sin((now - (n.activeSince || 0)) * 0.012);
+          const blinkAlpha = 0.45 + 0.55 * Math.abs(blinkPhase);
+          blinkScale = 1.0 + 0.3 * Math.abs(blinkPhase);
+
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, n.radius + 6 + 3 * Math.abs(blinkPhase), 0, Math.PI * 2);
+          ctx.strokeStyle = n.color;
+          ctx.globalAlpha = blinkAlpha;
+          ctx.lineWidth = 1.6;
+          ctx.shadowColor = n.color;
+          ctx.shadowBlur = 14;
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        // Radial Glow
+        if (isCurrentlyActive) {
+          ctx.shadowColor = n.color;
+          ctx.shadowBlur = (n.type === "orchestrator") ? 20 : (n.type === "agent" ? 16 : 10);
+        } else if (n.type === "orchestrator") {
+          ctx.shadowColor = COLORS.lead;
+          ctx.shadowBlur = 8;
+        } else {
+          ctx.shadowBlur = 0;
+        }
+
+        // Circle Fill
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.radius * (isCurrentlyActive ? blinkScale : 1.0), 0, Math.PI * 2);
+        ctx.fillStyle = isCurrentlyActive ? n.color : (n.type === "file" ? COLORS.file : n.color);
+        ctx.fill();
+
+        ctx.strokeStyle = isCurrentlyActive ? "#FFFFFF" : (n.type === "file" ? "rgba(239, 234, 217, 0.20)" : "rgba(239, 234, 217, 0.6)");
+        ctx.lineWidth = isCurrentlyActive ? 1.5 : 0.8;
+        ctx.stroke();
+        ctx.restore();
+
+        // ------------------ TYPOGRAPHY (Zero overlapping boxes!) ------------------
+        ctx.save();
+        if (n.type === "orchestrator") {
+          ctx.textAlign = "center";
+          ctx.font = "bold 11.5px ui-monospace, 'JetBrains Mono', monospace";
+          ctx.fillStyle = COLORS.lead;
+          ctx.shadowColor = "rgba(0,0,0,0.95)";
+          ctx.shadowBlur = 4;
+          ctx.fillText("LEAD ORCHESTRATOR", n.x, n.y + n.radius + 14);
+
+          ctx.font = "bold 8.5px ui-monospace, 'JetBrains Mono', monospace";
+          ctx.fillStyle = "#A8A69A";
+          ctx.fillText("COORDINATOR", n.x, n.y + n.radius + 25);
+        }
+        else if (n.type === "agent") {
+          ctx.textAlign = "center";
+          ctx.font = "bold 11px ui-monospace, 'JetBrains Mono', monospace";
+          ctx.fillStyle = n.color;
+          ctx.shadowColor = "rgba(0,0,0,0.95)";
+          ctx.shadowBlur = 4;
+          ctx.fillText(n.name.toUpperCase(), n.x, n.y + n.radius + 13);
+
+          ctx.font = "8.5px ui-monospace, 'JetBrains Mono', monospace";
+          ctx.fillStyle = COLORS.inkGhost;
+          ctx.fillText(n.role, n.x, n.y + n.radius + 24);
+        }
+        else if (n.type === "branch") {
+          // Folder label with 📁 icon
+          const isTop = n.y < orchestratorNode.y - 40;
+          const labelY = isTop ? (n.y + n.radius + 13) : (n.y - n.radius - 7);
+          ctx.textAlign = "center";
+          ctx.font = "bold 10px ui-monospace, 'JetBrains Mono', monospace";
+          ctx.shadowColor = "rgba(0,0,0,0.95)";
+          ctx.shadowBlur = 4;
+          ctx.fillStyle = n.isExpanded ? n.color : COLORS.inkGhost;
+          ctx.fillText(`📁 ${n.name}`, n.x, labelY);
+        }
+        else if (n.type === "file" && n.isExpanded) {
+          // Clean file label beside circle - zero boxed overlap!
+          const isRight = n.x >= orchestratorNode.x;
+          ctx.textAlign = isRight ? "left" : "right";
+          ctx.font = "10.5px ui-monospace, 'JetBrains Mono', monospace";
+          ctx.shadowColor = "rgba(0,0,0,0.95)";
+          ctx.shadowBlur = 5;
+          ctx.fillStyle = isCurrentlyActive ? "#FFFFFF" : COLORS.fileText;
+          const labelX = isRight ? (n.x + n.radius + 6) : (n.x - n.radius - 6);
+          ctx.fillText(n.name, labelX, n.y + 3.5);
+        }
+        ctx.restore();
+      });
+
+      // 5. Hover ring
+      if (hoveredNode) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(hoveredNode.x, hoveredNode.y, hoveredNode.radius + 5, 0, Math.PI * 2);
+        ctx.strokeStyle = "#FFFFFF";
+        ctx.lineWidth = 1.2;
+        ctx.setLineDash([3, 3]);
+        ctx.shadowColor = hoveredNode.color || "#FFFFFF";
+        ctx.shadowBlur = 6;
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      ctx.restore();
+    }
+
+    function loop() {
+      simulate();
+      render();
+      requestAnimationFrame(loop);
+    }
+    loop();
+
+    // ==========================================
+    // STAR PROTOCOL DISPATCH:
+    // Outward: Lead Orchestrator -> Sub-Agent -> Folder -> File
+    // Inward:  File -> Folder -> Sub-Agent -> Lead Orchestrator
+    // Sub-agents NEVER communicate with each other!
+    // ==========================================
+    function dispatchDirectTask(filepath) {
+      const fileNode = getOrCreateFileNode(filepath);
+      if (!fileNode) return;
+
+      const folderNode = fileNode.parentBranch;
+      const agentNode = folderNode ? folderNode.ownerAgent : agentNodes.coder;
+
+      if (folderNode && !folderNode.isExpanded) {
+        expandFolder(folderNode);
+      }
+
+      const now = Date.now();
+      orchestratorNode.active = true;
+      orchestratorNode.activeUntil = now + 4500;
+
+      updateTicker(`[LEAD ORCHESTRATOR] Delegating task ➔ ${agentNode.name} ➔ ${fileNode.name}`, COLORS.lead);
+
+      // STEP 1: Orchestrator -> Sub-Agent
+      fireLaser(orchestratorNode, agentNode, COLORS.lead, () => {
+        agentNode.active = true;
+        agentNode.activeUntil = Date.now() + 3500;
+
+        // STEP 2: Sub-Agent -> Folder
+        fireLaser(agentNode, folderNode, agentNode.color, () => {
+          folderNode.active = true;
+          folderNode.activeUntil = Date.now() + 3200;
+
+          // STEP 3: Folder -> File (File Blinks)
+          fireLaser(folderNode, fileNode, agentNode.color, () => {
+            fileNode.active = true;
+            fileNode.activeSince = Date.now();
+            fileNode.activeUntil = Date.now() + 3000;
+            fileNode.color = agentNode.color;
+            fileNode.glow = agentNode.glow;
+            addRipple(fileNode.x, fileNode.y, agentNode.color);
+
+            updateTicker(`[${agentNode.name.toUpperCase()}] Working on ${fileNode.name}...`, agentNode.color);
+
+            // STEP 4: Return flow BACK to Lead Orchestrator
+            setTimeout(() => {
+              updateTicker(`[${agentNode.name.toUpperCase()}] Completed ${fileNode.name} ➔ Returning result to Lead Orchestrator`, agentNode.color);
+
+              fireLaser(fileNode, folderNode, agentNode.color, () => {
+                fireLaser(folderNode, agentNode, agentNode.color, () => {
+                  fireLaser(agentNode, orchestratorNode, agentNode.color, () => {
+                    orchestratorNode.active = true;
+                    orchestratorNode.activeUntil = Date.now() + 2500;
+                    addRipple(orchestratorNode.x, orchestratorNode.y, COLORS.lead);
+                    updateTicker(`[LEAD ORCHESTRATOR] Received verified response from ${agentNode.name} (${fileNode.name})`, COLORS.lead);
+                  });
+                });
+              });
+            }, 2000);
+          });
+        });
+      });
+    }
+
+    // Handles live events received from SSE or Polling
+    function handleSwarmEvent(ev) {
+      if (!ev || !ev.type) return;
+
+      if (ev.type === "DISPATCH") {
+        updateTicker(`[LEAD ORCHESTRATOR] ${ev.message || ev.goal || 'Coordinating swarm'}`, COLORS.lead);
+      }
+      else if (ev.type === "PLANNER_ACTIVE") {
+        dispatchDirectTask(ev.file || "PLAN.md");
+      }
+      else if (ev.type === "CODER_ACTIVE") {
+        dispatchDirectTask(ev.file || "main.py");
+      }
+      else if (ev.type === "REVIEWER_ACTIVE") {
+        dispatchDirectTask(ev.file || "SourcePanel.tsx");
+      }
+      else if (ev.type === "TESTER_ACTIVE") {
+        dispatchDirectTask(ev.file || "test_rerank.py");
+      }
+      else if (ev.type === "SWARM_COMPLETE" || ev.type === "STANDBY") {
+        orchestratorNode.status = "READY";
+        updateTicker(`[LEAD ORCHESTRATOR] ${ev.message || 'Swarm task completed.'}`, COLORS.lead);
+        addRipple(orchestratorNode.x, orchestratorNode.y, COLORS.lead);
+      }
+    }
+
+    // Dual-Channel Sync: Primary SSE + 700ms Polling Fallback
+    const eventSource = new EventSource("/events");
+    eventSource.onmessage = (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        handleSwarmEvent(data);
+      } catch (err) {}
+    };
+
+    let processedFp = new Set();
+    setInterval(async () => {
+      try {
+        const res = await fetch("/api/events/poll");
+        const json = await res.json();
+        if (json && json.events) {
+          json.events.forEach(ev => {
+            const fp = JSON.stringify(ev);
+            if (!processedFp.has(fp)) {
+              processedFp.add(fp);
+              handleSwarmEvent(ev);
+            }
+          });
+        }
+      } catch (e) {}
+    }, 700);
+  </script>
+</body>
+</html>
