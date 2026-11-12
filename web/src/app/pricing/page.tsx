@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useAuth } from "@clerk/nextjs";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { Check, Sparkles, X } from "lucide-react";
 import { getApiUrl } from "@/lib/api";
 
 export default function PricingPage() {
+  const { getToken } = useAuth();
   const [betaModalOpen, setBetaModalOpen] = useState(false);
   const [isLoadingCheckout, setIsLoadingCheckout] = useState(false);
   const isVisible = useDocumentVisibility();
@@ -19,10 +21,23 @@ export default function PricingPage() {
   const handleCheckout = async () => {
     setIsLoadingCheckout(true);
     try {
+      const token = await getToken();
+      if (!token) {
+        setBetaModalOpen(true);
+        return;
+      }
+
       const apiUrl = getApiUrl();
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const res = await fetch(`${apiUrl.replace(/\/$/, "")}/v1/stripe/checkout`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({}),
       });
       if (res.ok) {

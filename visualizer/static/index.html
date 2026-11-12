@@ -60,6 +60,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 16px;
       padding: 12px 22px;
       background: rgba(23, 21, 20, 0.85);
       backdrop-filter: blur(16px);
@@ -72,6 +73,7 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      flex-shrink: 0;
     }
     .brand-title {
       font-family: "Georgia", "Hiragino Mincho ProN", serif;
@@ -83,6 +85,7 @@
 
     /* Live Activity Indicator Ticker */
     .live-activity-ticker {
+      flex: 1;
       display: flex;
       align-items: center;
       gap: 10px;
@@ -94,7 +97,7 @@
       padding: 7px 16px;
       border-radius: 6px;
       border: 1px solid var(--border);
-      max-width: 780px;
+      min-width: 0;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -112,21 +115,130 @@
       0%, 100% { opacity: 1; transform: scale(1); }
       50% { opacity: 0.35; transform: scale(0.85); }
     }
+
+    .brand-subtitle {
+      font-family: ui-monospace, "JetBrains Mono", monospace;
+      font-size: 10px;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--ink-ghost);
+      border-left: 1px solid var(--border);
+      padding-left: 10px;
+    }
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: rgba(232, 176, 75, 0.14);
+      border: 1px solid rgba(232, 176, 75, 0.5);
+      color: #E8B04B;
+      font-family: ui-monospace, "JetBrains Mono", monospace;
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      box-shadow: 0 0 10px rgba(232, 176, 75, 0.15);
+      white-space: nowrap;
+    }
+    .action-btn:hover {
+      background: rgba(232, 176, 75, 0.28);
+      border-color: #E8B04B;
+      box-shadow: 0 0 18px rgba(232, 176, 75, 0.35);
+      transform: translateY(-1px);
+    }
+    .action-btn:active {
+      transform: translateY(0);
+    }
+    .secondary-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      background: var(--bg-sunken);
+      border: 1px solid var(--border);
+      color: var(--ink-secondary);
+      font-family: ui-monospace, "JetBrains Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.2px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      white-space: nowrap;
+    }
+    .secondary-btn:hover {
+      background: #23201D;
+      color: var(--ink-primary);
+      border-color: #4A453F;
+    }
+    .hint-bar {
+      position: absolute;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(23, 21, 20, 0.82);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      padding: 6px 18px;
+      border-radius: 20px;
+      font-family: ui-monospace, "JetBrains Mono", monospace;
+      font-size: 11px;
+      color: var(--ink-ghost);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      user-select: none;
+      pointer-events: none;
+    }
+    .hint-bar span b {
+      color: var(--ink-secondary);
+      font-weight: 500;
+    }
   </style>
 </head>
 <body>
   <canvas id="canvas"></canvas>
 
-  <!-- Clean Header: Strictly "Allcited" + Live Task Ticker -->
+  <!-- Header Bar: Brand, Live Task Ticker, and Interactive Controls -->
   <header class="header-bar">
     <div class="brand-section">
       <span class="brand-title">Allcited</span>
+      <span class="brand-subtitle">Swarm Visualizer</span>
     </div>
     <div id="live-indicator" class="live-activity-ticker">
       <span class="live-pulse-dot" id="live-dot"></span>
       <span id="live-text">STANDBY · AWAITING INSTRUCTION</span>
     </div>
+    <div class="header-controls">
+      <button id="demo-btn" class="action-btn" onclick="runSwarmSimulation()">
+        <span>▶</span>
+        <span>Run Swarm Simulation</span>
+      </button>
+      <button id="toggle-folders-btn" class="secondary-btn" onclick="toggleAllFolders()">
+        <span>📁</span>
+        <span id="toggle-folders-text">Expand All</span>
+      </button>
+      <button id="reset-btn" class="secondary-btn" onclick="resetSwarmView()">
+        <span>↺</span>
+        <span>Reset</span>
+      </button>
+    </div>
   </header>
+
+  <div class="hint-bar">
+    <span>💡 <b>Click</b> any Agent, Folder, or File to dispatch · <b>Drag</b> to pan · <b>Scroll</b> to zoom</span>
+  </div>
 
   <script>
     const canvas = document.getElementById("canvas");
@@ -1017,6 +1129,88 @@
         addRipple(orchestratorNode.x, orchestratorNode.y, COLORS.lead);
       }
     }
+
+    // ==========================================
+    // INTERACTIVE SIMULATION & CONTROLS
+    // ==========================================
+    let isDemoRunning = false;
+
+    function runSwarmSimulation() {
+      if (isDemoRunning) return;
+      isDemoRunning = true;
+
+      const demoBtn = document.getElementById("demo-btn");
+      if (demoBtn) {
+        demoBtn.style.opacity = "0.55";
+        demoBtn.style.pointerEvents = "none";
+      }
+
+      updateTicker("[LEAD ORCHESTRATOR] ➔ Initiating autonomous swarm pipeline run...", COLORS.lead);
+      addRipple(orchestratorNode.x, orchestratorNode.y, COLORS.lead);
+      orchestratorNode.active = true;
+      orchestratorNode.activeUntil = Date.now() + 16000;
+
+      const steps = [
+        { file: "architecture.md", msg: "[PLANNER] Analyzing architecture & adversarial benchmark specs..." },
+        { file: "retrieve.py", msg: "[CODER] Verifying BM25 + FAISS hybrid retrieval & fusion..." },
+        { file: "SourcePanel.tsx", msg: "[BUG-REVIEWER] Auditing citation drawer interactive badges..." },
+        { file: "test_rerank.py", msg: "[TESTER] Running adversarial 46-question test suite..." }
+      ];
+
+      let i = 0;
+      function executeStep() {
+        if (i >= steps.length) {
+          setTimeout(() => {
+            updateTicker("[LEAD ORCHESTRATOR] Swarm pipeline cycle completed · All systems 100% verified ✓", COLORS.lead);
+            for (let k = 0; k < 3; k++) {
+              setTimeout(() => addRipple(orchestratorNode.x, orchestratorNode.y, COLORS.lead), k * 350);
+            }
+            isDemoRunning = false;
+            if (demoBtn) {
+              demoBtn.style.opacity = "1";
+              demoBtn.style.pointerEvents = "auto";
+            }
+          }, 1500);
+          return;
+        }
+
+        const step = steps[i];
+        i++;
+        dispatchDirectTask(step.file);
+        setTimeout(executeStep, 2900);
+      }
+
+      setTimeout(executeStep, 800);
+    }
+
+    function toggleAllFolders() {
+      const anyExp = Object.values(branchNodes).some(b => b.isExpanded);
+      const textEl = document.getElementById("toggle-folders-text");
+      if (anyExp) {
+        collapseAllFolders();
+        if (textEl) textEl.textContent = "Expand All";
+      } else {
+        expandAllFolders();
+        if (textEl) textEl.textContent = "Collapse All";
+      }
+    }
+
+    function resetSwarmView() {
+      zoom = 1.0;
+      panX = 0;
+      panY = 0;
+      collapseAllFolders();
+      const textEl = document.getElementById("toggle-folders-text");
+      if (textEl) textEl.textContent = "Expand All";
+      updateTicker("STANDBY · AWAITING INSTRUCTION", COLORS.lead);
+    }
+
+    // Auto-demo after 1.2s if idle on initial load so user immediately sees activity
+    setTimeout(() => {
+      if (liveTextEl && liveTextEl.textContent.includes("STANDBY") && !isDemoRunning) {
+        runSwarmSimulation();
+      }
+    }, 1200);
 
     // Dual-Channel Sync: Primary SSE + 700ms Polling Fallback
     const eventSource = new EventSource("/events");

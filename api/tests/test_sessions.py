@@ -68,7 +68,7 @@ def test_session_caps_and_lru(monkeypatch):
 
     with pytest.raises(HTTPException) as exc_info:
         store.create_session_from_bytes("large.txt", fake_large_content)
-    assert exc_info.value.status_code == 400
+    assert exc_info.value.status_code == 402
     assert exc_info.value.detail["error"]["code"] == "plan_limit_reached"
 
     # LRU eviction when reaching 8 sessions

@@ -232,9 +232,11 @@ async def handle_document_upload(
             raise ValueError("Document file content is empty or download failed")
 
         store = get_session_store()
-        session: DocumentSession = store.create_session_from_bytes(
-            filename=file_name,
-            content=content,
+        filename = file_name
+        session: DocumentSession = await asyncio.to_thread(
+            store.create_session_from_bytes,
+            data=content,
+            filename=filename,
         )
         chat_sessions[chat_id] = session.session_id
 

@@ -23,9 +23,15 @@ services:
       ollama:
         condition: service_healthy
     command: >
-      sh -c "echo 'Checking/pulling qwen2.5:3b for private offline edition...' &&
-             curl -s -f -X POST http://ollama:11434/api/pull -d '{\"name\": \"qwen2.5:3b\", \"stream\": false}' &&
-             echo 'qwen2.5:3b ready.'"
+      sh -c "echo 'Checking for qwen2.5:3b in local Ollama...' &&
+             if curl -s http://ollama:11434/api/tags | grep -q 'qwen2.5:3b'; then
+               echo 'qwen2.5:3b is already available.';
+             else
+               echo 'Attempting to pull qwen2.5:3b for private offline edition...' &&
+               curl -s -f -X POST http://ollama:11434/api/pull -d '{\"name\": \"qwen2.5:3b\", \"stream\": false}' || echo 'Notice: Ollama pull skipped or offline; continuing.';
+             fi &&
+             echo 'Ollama check/pull complete.' &&
+             exit 0"
     restart: "no"
 
   api:
@@ -60,12 +66,14 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: http://localhost:8000
+        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:-pk_test_ci_mock_clerk_key_12345}
     container_name: allcited-web
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:-pk_test_ci_mock_clerk_key_12345}
     depends_on:
       api:
         condition: service_healthy

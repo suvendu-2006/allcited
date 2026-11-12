@@ -62,9 +62,23 @@ def test_parent_expansion_ranking():
     from app.pipeline.chunker import Chunk
     from app.pipeline.retrieve import ScoredChunk, apply_parent_expansion
 
-    c1 = Chunk(id="c1", doc_id="d", text="Child 1", token_count=10, parent_section_id="sec_a", content_hash="h1")
+    c1 = Chunk(
+        id="c1",
+        doc_id="d",
+        text="Child 1",
+        token_count=10,
+        parent_section_id="sec_a",
+        content_hash="h1",
+    )
     c2 = Chunk(id="c2", doc_id="d", text="Other hit", token_count=10, content_hash="h2")
-    c3 = Chunk(id="c3", doc_id="d", text="Parent section intro", token_count=15, parent_section_id="sec_a", content_hash="h3")
+    c3 = Chunk(
+        id="c3",
+        doc_id="d",
+        text="Parent section intro",
+        token_count=15,
+        parent_section_id="sec_a",
+        content_hash="h3",
+    )
 
     top_scored = [
         ScoredChunk(chunk=c1, rrf_score=0.10),

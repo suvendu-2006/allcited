@@ -5,7 +5,7 @@ import uuid
 from typing import Any, Dict, List, Optional
 
 import pymupdf as fitz
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 
 from app.pipeline.chunker import Chunk, chunk_blocks
 from app.pipeline.headers import generate_structural_headers
@@ -113,19 +113,23 @@ class SessionStore:
     def create_session_from_bytes(
         self,
         filename: str,
-        content: bytes,
+        content: bytes = b"",
         target_tokens: int = 400,
         overlap_ratio: float = 0.15,
         section_aware: bool = False,
         enable_headers: bool = True,
         max_file_size_bytes: int = MAX_FILE_SIZE_BYTES,
+        data: Optional[bytes] = None,
     ) -> DocumentSession:
+        if data is not None:
+            content = data
+
         # 1. Enforce file size cap
         file_size = len(content)
         if file_size > max_file_size_bytes:
             limit_mb = max_file_size_bytes // (1024 * 1024)
             raise HTTPException(
-                status_code=400,
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
                 detail={
                     "error": {
                         "code": "plan_limit_reached",

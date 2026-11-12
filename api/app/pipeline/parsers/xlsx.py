@@ -63,7 +63,11 @@ def parse_xlsx(
             if not data_rows:
                 # Single row sheet (header only)
                 table_md = (
-                    "| " + " | ".join(clean_headers) + " |\n| " + " | ".join(["---"] * max_cols) + " |"
+                    "| "
+                    + " | ".join(clean_headers)
+                    + " |\n| "
+                    + " | ".join(["---"] * max_cols)
+                    + " |"
                 )
                 blocks.append(
                     ParsedBlock(
