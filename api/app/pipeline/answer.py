@@ -303,9 +303,21 @@ async def stream_answer_pipeline(
     sanitized_query, query_injection_flagged = check_query_injection(query)
     effective_query = sanitized_query
 
+    # Provider resolution (needed early for router pass 2 disambiguation, HyDE, and downstream generation)
+    effective_preferred = preferred_provider
+    if effective_preferred is None and not byok_key and not settings.GROQ_API_KEY:
+        effective_preferred = "stub"
+
+    provider: ResolvedProvider = resolve_provider(
+        byok_key=byok_key,
+        byok_base_url=byok_base_url,
+        byok_model=byok_model,
+        preferred_provider=effective_preferred,
+    )
+
     # 1. Route
     t0 = time.perf_counter()
-    route_res = await route_query(effective_query)
+    route_res = await route_query(effective_query, provider=provider)
     latencies["route_ms"] = round((time.perf_counter() - t0) * 1000, 2)
     yield format_sse("route", {"route": route_res.route.value, "reason": route_res.reason})
 
@@ -325,18 +337,6 @@ async def stream_answer_pipeline(
         ):
             yield sse_piece
         return
-
-    # 2. Provider resolution (needed early for HyDE and downstream generation)
-    effective_preferred = preferred_provider
-    if effective_preferred is None and not byok_key and not settings.GROQ_API_KEY:
-        effective_preferred = "stub"
-
-    provider: ResolvedProvider = resolve_provider(
-        byok_key=byok_key,
-        byok_base_url=byok_base_url,
-        byok_model=byok_model,
-        preferred_provider=effective_preferred,
-    )
 
     # 2b. Conversational Greeting check
     clean_q = effective_query.strip().lower()

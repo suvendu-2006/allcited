@@ -24,32 +24,87 @@ class RouteDecision(BaseModel):
 # Keywords suggesting whole document aggregation or map-reduce
 DOC_WIDE_PATTERNS = [
     re.compile(
-        r"\b(summarize|summary of)\s+(the\s+)?(whole|entire|full|all|complete)\b", re.IGNORECASE
-    ),
-    re.compile(
-        r"\b(summarize|summary of)\s+(this|the)\s+(document|handbook|pdf|file|paper)\b",
+        r"\b(?:summarize|summary\s+of|give\s+me\s+a\s+summary\s+of)\s+(?:the\s+)?(?:whole|entire|full|all|complete)\b",
         re.IGNORECASE,
     ),
     re.compile(
-        r"\bwhat\s+(is|are)\s+(this|the)\s+(document|handbook|pdf|file|paper)\s+(all\s+)?(about|is\s+about)\b",
+        r"\b(?:summarize|summary\s+of|give\s+me\s+a\s+summary\s+of)\s+(?:this|the)\s+(?:(?:whole|entire|full|complete)\s+)?(?:document|handbook|pdf|file|paper|doc)\b",
         re.IGNORECASE,
     ),
     re.compile(
-        r"\bwhat\s+does\s+this\s+(document|handbook|pdf|file|paper)\s+(cover|contain|discuss|talk\s+about)\b",
+        r"\b(explain|describe)\s+(?:(?:to\s+)?me\s+)?(?:this|the|the\s+whole|the\s+entire|the\s+full|whole|entire|full)?\s*(?:document|handbook|pdf|file|paper|doc)\b",
         re.IGNORECASE,
     ),
     re.compile(
-        r"\b(tell\s+me\s+about|overview\s+of)\s+(this|the)\s+(document|handbook|pdf|file|paper)\b",
+        r"\bwhat\s+(?:is|are)\s+(?:this|the)\s+(?:(?:whole|entire|full|complete)\s+)?(?:document|handbook|pdf|file|paper|doc)(?:\s+(?:all\s+)?(?:about|is\s+about))?(?:[?!.]|\s|$)",
         re.IGNORECASE,
     ),
     re.compile(
-        r"\b(give\s+me\s+an\s+overview\s+of\s+(the\s+)?(whole|entire|document))\b", re.IGNORECASE
+        r"\bwhat\s+is\s+(?:in|inside)\s+(?:this|the)\s+(?:(?:whole|entire|full|complete)\s+)?(?:document|handbook|pdf|file|paper|doc)\b",
+        re.IGNORECASE,
     ),
-    re.compile(r"\b(table\s+of\s+contents|outline\s+of\s+the\s+document)\b", re.IGNORECASE),
     re.compile(
-        r"\b(executive\s+summary|high-level\s+summary)\s+of\s+the\s+document\b", re.IGNORECASE
+        r"\bwhat\s+does\s+(?:this|the)\s+(?:(?:whole|entire|full|complete)\s+)?(?:document|handbook|pdf|file|paper|doc)\s+(?:cover|contain|discuss|talk\s+about)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\bwhat\s+does\s+(?:this|the)\s+(?:(?:whole|entire|full|complete)\s+)?(?:document|handbook|pdf|file|paper|doc)\s+say\s*[?!.]*$",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\bwhere\s+is\s+(?:this|the)\s+(?:(?:whole|entire|full|complete)\s+)?(?:document|handbook|pdf|file|paper|doc)(?:\s+(?:is|from))?(?:[?!.]|\s|$)",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(?:tell\s+me\s+about|overview\s+of)\s+(?:this|the)\s+(?:(?:whole|entire|full|complete)\s+)?(?:document|handbook|pdf|file|paper|doc)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(?:give\s+me\s+an\s+overview\s+of\s+(?:the\s+)?(?:whole|entire|full|complete|document|handbook|pdf|file|paper|doc))\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(?:table\s+of\s+contents|outline\s+of\s+the\s+(?:document|handbook|pdf|file|paper|doc))\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(?:executive\s+summary|high-level\s+summary)\s+of\s+(?:this|the)\s+(?:document|handbook|pdf|file|paper|doc)\b",
+        re.IGNORECASE,
     ),
 ]
+
+DOC_OVERVIEW_STOP_WORDS = {
+    "what",
+    "is",
+    "are",
+    "where",
+    "explain",
+    "describe",
+    "tell",
+    "me",
+    "to",
+    "us",
+    "this",
+    "the",
+    "a",
+    "an",
+    "whole",
+    "entire",
+    "full",
+    "all",
+    "complete",
+    "about",
+    "from",
+    "in",
+    "inside",
+    "can",
+    "you",
+    "please",
+    "for",
+    "of",
+}
+
+DOC_TARGET_WORDS = {"pdf", "document", "handbook", "file", "paper", "doc"}
 
 # Targeted entity indicators that override generic words like 'compare' or 'list'
 TARGETED_ENTITY_PATTERNS = [
@@ -86,10 +141,23 @@ def classify_route_rule_based(query: str) -> Optional[RouteDecision]:
                 confidence=0.95,
             )
 
+    # Check if the query is an overview question targeting the document itself
+    tokens = set(re.findall(r"[a-zA-Z0-9]+", clean_q.lower()))
+    non_stop = tokens - DOC_OVERVIEW_STOP_WORDS
+    if non_stop and non_stop.issubset(DOC_TARGET_WORDS):
+        return RouteDecision(
+            route=QueryRoute.DOC_WIDE,
+            reason="Query targets holistic document overview or document metadata",
+            confidence=0.95,
+        )
+
     # Standard informational / targeted questions
     lookup_starters = [
         "what is",
         "what are",
+        "what does",
+        "what can",
+        "which",
         "how do",
         "how many",
         "how much",
@@ -97,6 +165,7 @@ def classify_route_rule_based(query: str) -> Optional[RouteDecision]:
         "is there",
         "who is",
         "when does",
+        "where is",
         "where can",
         "why",
         "does the",

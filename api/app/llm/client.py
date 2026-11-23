@@ -86,6 +86,40 @@ def _generate_stub_response(messages: List[Dict[str, str]]) -> str:
     q_lower = question_text.lower()
     system_content = messages[0].get("content", "").lower() if messages else ""
 
+    # 0a. Router system classification in stub/test mode
+    if "query classifier" in system_content or "classify the user's query" in system_content:
+        target_q = question_text
+        if "query:" in target_q.lower():
+            target_q = target_q.split(":", 1)[-1].strip()
+        from app.pipeline.router import QueryRoute, classify_route_rule_based
+
+        decision = classify_route_rule_based(target_q)
+        if decision is not None:
+            return decision.route.value
+        t_lower = target_q.lower()
+        if any(
+            w in t_lower
+            for w in [
+                "summarize",
+                "summary",
+                "overview",
+                "outline",
+                "table of contents",
+                "executive summary",
+                "whole pdf",
+                "whole document",
+                "entire",
+                "explain me this pdf",
+                "explain this pdf",
+                "explain the pdf",
+                "what is the whole pdf",
+                "what is this pdf",
+                "where is the pdf",
+            ]
+        ):
+            return QueryRoute.DOC_WIDE.value
+        return QueryRoute.LOOKUP.value
+
     # 0. Document-wide / MapReduce summarization requests
     if (
         "intermediate section summaries" in q_lower

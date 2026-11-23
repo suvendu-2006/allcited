@@ -34,3 +34,86 @@ def test_six_queries_labeled_correctly():
         assert async_decision.route == expected, (
             f"Async route for '{q}' expected {expected}, got {async_decision.route}"
         )
+
+
+def test_overview_and_meta_document_queries():
+    """
+    Verify that conversational overview and document-wide queries route
+    deterministically to DOC_WIDE rather than LOOKUP.
+    """
+    doc_wide_queries = [
+        "Explain me this PDF",
+        "What is the whole PDF is about?",
+        "Where is the PDF is?",
+        "Explain this PDF",
+        "Describe this document",
+        "What is this PDF?",
+        "Where is the PDF?",
+        "What does this document cover?",
+        "What is the whole PDF about?",
+        "What is in this document?",
+        "Tell me about this handbook",
+    ]
+
+    for q in doc_wide_queries:
+        # Pass 1 rule-based check
+        decision = classify_route_rule_based(q)
+        assert decision is not None, f"Query '{q}' should be classified by rule engine"
+        assert decision.route == QueryRoute.DOC_WIDE, (
+            f"Query '{q}' expected DOC_WIDE, got {decision.route}"
+        )
+
+        # Full async router pipeline check
+        async_decision = asyncio.run(route_query(q))
+        assert async_decision.route == QueryRoute.DOC_WIDE, (
+            f"Async route for '{q}' expected DOC_WIDE, got {async_decision.route}"
+        )
+
+
+def test_targeted_lookups_still_route_to_lookup():
+    """
+    Ensure specific topical/clause queries containing document words are not misrouted to DOC_WIDE.
+    """
+    lookup_queries = [
+        "Explain clause 4.2",
+        "What does this document say about annual leave?",
+        "Where is clause 5.1?",
+        "Describe the maternity benefit",
+        "Explain sick leave policy",
+        "What are the rules regarding Form HR-702?",
+    ]
+
+    for q in lookup_queries:
+        decision = classify_route_rule_based(q)
+        assert decision is not None, f"Query '{q}' should be classified by rule engine"
+        assert decision.route == QueryRoute.LOOKUP, (
+            f"Query '{q}' expected LOOKUP, got {decision.route}"
+        )
+
+        async_decision = asyncio.run(route_query(q))
+        assert async_decision.route == QueryRoute.LOOKUP, (
+            f"Async route for '{q}' expected LOOKUP, got {async_decision.route}"
+        )
+
+
+def test_router_pass2_llm_disambiguation(monkeypatch):
+    """Verify Pass 2 LLM routing path with stub provider."""
+    import app.pipeline.router as router_mod
+    from app.llm.provider import resolve_provider
+
+    # Force classify_route_rule_based to return None to exercise LLM pass 2
+    monkeypatch.setattr(router_mod, "classify_route_rule_based", lambda q: None)
+
+    stub_provider = resolve_provider(preferred_provider="stub")
+
+    doc_wide_res = asyncio.run(
+        router_mod.route_query("Explain me this PDF", provider=stub_provider)
+    )
+    assert doc_wide_res.route == QueryRoute.DOC_WIDE
+    assert "LLM classified as document-wide synthesis" in doc_wide_res.reason
+
+    lookup_res = asyncio.run(
+        router_mod.route_query("What is the notice period?", provider=stub_provider)
+    )
+    assert lookup_res.route == QueryRoute.LOOKUP
+    assert "LLM classified as targeted lookup" in lookup_res.reason
