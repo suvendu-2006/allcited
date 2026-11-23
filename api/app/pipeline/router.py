@@ -32,19 +32,19 @@ DOC_WIDE_PATTERNS = [
         re.IGNORECASE,
     ),
     re.compile(
-        r"\b(explain|describe)\s+(?:(?:to\s+)?me\s+)?(?:this|the|the\s+whole|the\s+entire|the\s+full|whole|entire|full)?\s*(?:document|handbook|pdf|file|paper|doc)\b",
+        r"\b(explain|describe)\s+(?:(?:to\s+)?me\s+)?(?:this|the|the\s+whole|the\s+entire|the\s+full|whole|entire|full)?\s*(?:document|handbook|pdf|file|paper|doc)\s*[?!.]*$",
         re.IGNORECASE,
     ),
     re.compile(
-        r"\bwhat\s+(?:is|are)\s+(?:this|the)\s+(?:(?:whole|entire|full|complete)\s+)?(?:document|handbook|pdf|file|paper|doc)(?:\s+(?:all\s+)?(?:about|is\s+about))?(?:[?!.]|\s|$)",
+        r"\bwhat\s+(?:is|are)\s+(?:this|the)\s+(?:(?:whole|entire|full|complete)\s+)?(?:document|handbook|pdf|file|paper|doc)(?:\s+(?:all\s+)?(?:about|is\s+about))?\s*[?!.]*$",
         re.IGNORECASE,
     ),
     re.compile(
-        r"\bwhat\s+is\s+(?:in|inside)\s+(?:this|the)\s+(?:(?:whole|entire|full|complete)\s+)?(?:document|handbook|pdf|file|paper|doc)\b",
+        r"\bwhat\s+is\s+(?:in|inside)\s+(?:this|the)\s+(?:(?:whole|entire|full|complete)\s+)?(?:document|handbook|pdf|file|paper|doc)\s*[?!.]*$",
         re.IGNORECASE,
     ),
     re.compile(
-        r"\bwhat\s+does\s+(?:this|the)\s+(?:(?:whole|entire|full|complete)\s+)?(?:document|handbook|pdf|file|paper|doc)\s+(?:cover|contain|discuss|talk\s+about)\b",
+        r"\bwhat\s+does\s+(?:this|the)\s+(?:(?:whole|entire|full|complete)\s+)?(?:document|handbook|pdf|file|paper|doc)\s+(?:cover|contain|discuss|talk\s+about)\s*[?!.]*$",
         re.IGNORECASE,
     ),
     re.compile(
@@ -52,15 +52,15 @@ DOC_WIDE_PATTERNS = [
         re.IGNORECASE,
     ),
     re.compile(
-        r"\bwhere\s+is\s+(?:this|the)\s+(?:(?:whole|entire|full|complete)\s+)?(?:document|handbook|pdf|file|paper|doc)(?:\s+(?:is|from))?(?:[?!.]|\s|$)",
+        r"\bwhere\s+is\s+(?:this|the)\s+(?:(?:whole|entire|full|complete)\s+)?(?:document|handbook|pdf|file|paper|doc)(?:\s+(?:is|from))?\s*[?!.]*$",
         re.IGNORECASE,
     ),
     re.compile(
-        r"\b(?:tell\s+me\s+about|overview\s+of)\s+(?:this|the)\s+(?:(?:whole|entire|full|complete)\s+)?(?:document|handbook|pdf|file|paper|doc)\b",
+        r"\b(?:tell\s+me\s+about|overview\s+of)\s+(?:this|the)\s+(?:(?:whole|entire|full|complete)\s+)?(?:document|handbook|pdf|file|paper|doc)\s*[?!.]*$",
         re.IGNORECASE,
     ),
     re.compile(
-        r"\b(?:give\s+me\s+an\s+overview\s+of\s+(?:the\s+)?(?:whole|entire|full|complete|document|handbook|pdf|file|paper|doc))\b",
+        r"\b(?:give\s+me\s+an\s+overview\s+of\s+(?:the\s+)?(?:(?:whole|entire|full|complete)\s+)?(?:document|handbook|pdf|file|paper|doc))\s*[?!.]*$",
         re.IGNORECASE,
     ),
     re.compile(
@@ -171,6 +171,7 @@ def classify_route_rule_based(query: str) -> Optional[RouteDecision]:
         "does the",
         "explain",
         "describe",
+        "tell me",
     ]
     lower_q = clean_q.lower()
     if any(lower_q.startswith(starter) for starter in lookup_starters):

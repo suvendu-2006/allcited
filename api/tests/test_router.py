@@ -81,6 +81,10 @@ def test_targeted_lookups_still_route_to_lookup():
         "Describe the maternity benefit",
         "Explain sick leave policy",
         "What are the rules regarding Form HR-702?",
+        "Explain this document's policy on remote work",
+        "Describe this PDF's guidelines on vacation leave",
+        "What does this document cover regarding health insurance?",
+        "Tell me about this document's grievance procedure",
     ]
 
     for q in lookup_queries:
