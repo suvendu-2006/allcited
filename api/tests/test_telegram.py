@@ -64,30 +64,35 @@ class MockTelegramClient(TelegramClient):
 def test_telegram_secret_token_verification():
     """Verify webhook enforces X-Telegram-Bot-Api-Secret-Token when secret is configured."""
     client = TestClient(app)
+    mock_tg = MockTelegramClient()
+    set_telegram_client(mock_tg)
     settings = get_settings()
 
-    with patch.object(settings, "TELEGRAM_WEBHOOK_SECRET", "super_secret_webhook_key"):
-        # Missing header -> 401
-        res1 = client.post(
-            "/v1/telegram/webhook", json={"message": {"chat": {"id": 123}, "text": "/start"}}
-        )
-        assert res1.status_code == 401
+    try:
+        with patch.object(settings, "TELEGRAM_WEBHOOK_SECRET", "super_secret_webhook_key"):
+            # Missing header -> 401
+            res1 = client.post(
+                "/v1/telegram/webhook", json={"message": {"chat": {"id": 123}, "text": "/start"}}
+            )
+            assert res1.status_code == 401
 
-        # Invalid header -> 401
-        res2 = client.post(
-            "/v1/telegram/webhook",
-            json={"message": {"chat": {"id": 123}, "text": "/start"}},
-            headers={"X-Telegram-Bot-Api-Secret-Token": "wrong_key"},
-        )
-        assert res2.status_code == 401
+            # Invalid header -> 401
+            res2 = client.post(
+                "/v1/telegram/webhook",
+                json={"message": {"chat": {"id": 123}, "text": "/start"}},
+                headers={"X-Telegram-Bot-Api-Secret-Token": "wrong_key"},
+            )
+            assert res2.status_code == 401
 
-        # Correct header -> 200
-        res3 = client.post(
-            "/v1/telegram/webhook",
-            json={"message": {"chat": {"id": 123}, "text": "/start"}},
-            headers={"X-Telegram-Bot-Api-Secret-Token": "super_secret_webhook_key"},
-        )
-        assert res3.status_code == 200
+            # Correct header -> 200
+            res3 = client.post(
+                "/v1/telegram/webhook",
+                json={"message": {"chat": {"id": 123}, "text": "/start"}},
+                headers={"X-Telegram-Bot-Api-Secret-Token": "super_secret_webhook_key"},
+            )
+            assert res3.status_code == 200
+    finally:
+        set_telegram_client(None)
 
 
 def test_telegram_start_and_clear_commands():
